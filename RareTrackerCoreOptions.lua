@@ -45,33 +45,34 @@ local sound_options = {
     [554236] = "I see you",
 }
 
-local defaults = {
-    global = {
-        communication = {
-            raid_communication = true,
+function RT:InitializeRareTrackerDatabase()
+    self.defaults = {
+        global = {
+            communication = {
+                raid_communication = true,
+            },
+            debug = {
+                enable = false,
+            },
+            favorite_alert = {
+                favorite_sound_alert = 552503,
+            },
+            window = {
+                hide = false,
+            }
         },
-        debug = {
-            enable = false,
+        profile = {
+            minimap = {
+                hide = false,
+            },
         },
-        favorite_alert = {
-            favorite_sound_alert = 552503,
-        },
-        window = {
-            hide = false,
-        }
-    },
-    profile = {
-        minimap = {
-            hide = false,
-        },
-    },
-}
-
-function RT:InitializeRareTrackerData()
-    -- Load the database.
-    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", defaults)
+    }
     
-    -- Register the data broker.
+    -- Load the database.
+    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", self.defaults)
+end
+
+function RT:InitializeRareTrackerLDB()
     self.ldb_data = {
         type = "data source",
         text = "RT",
@@ -105,6 +106,9 @@ function RT:InitializeRareTrackerData()
     -- Register the icon.
     self.icon = LibStub("LibDBIcon-1.0")
     self.icon:Register("RareTrackerIcon", self.ldb, self.db.profile.minimap)
+    if self.db.profile.minimap.hide then
+        self.icon:Hide("RareTrackerIcon")
+    end
 end
 
 function RT:InitializeOptionsMenu()
@@ -117,68 +121,82 @@ function RT:InitializeOptionsMenu()
         args = {
             general = {
                 type = "group",
-                name = "General Options",
+                name = "General",
                 order = self.GetOrder(),
                 args = {
-                    minimap = {
-                        type = "toggle",
-                        name = "Show minimap icon",
-                        desc = "Show/hide the RT minimap icon.",
-                        width = "full",
-                        order = self.GetOrder(),
-                        get = function() 
-                            return not self.db.profile.minimap.hide 
-                        end,
-                        set = function(info, val)
-                            self.db.profile.minimap.hide = not val
-                        end
-                    },
-                    communication = {
-                        type = "toggle",
-                        name = "Enable communication over party/raid channel",
-                        desc = "Enable communication over party/raid channel, to provide CRZ functionality while in a party or raid group.",
-                        width = "full",
-                        order = self.GetOrder(),
-                        get = function() 
-                            return self.db.global.communication.raid_communication 
-                        end,
-                        set = function(info, val)
-                            self.db.global.communication.raid_communication = val
-                        end
-                    },
-                    debug = {
-                        type = "toggle",
-                        name = "Enable debug mode",
-                        desc = "Show RT debug output in the chat.",
-                        width = "full",
-                        order = self.GetOrder(),
-                        get = function() 
-                            return self.db.global.debug.enable
-                        end,
-                        set = function(info, val)
-                            self.db.global.debug.enable = val
-                        end
-                    },
-                    favorite_alert = {
-                        type = "select",
-                        name = "Favorite sound alert",
-                        style = "dropdown",
-                        values = sound_options,
-                        order = self.GetOrder(),
-                        get = function() 
-                            return self.db.global.favorite_alert.favorite_sound_alert 
-                        end,
-                        set = function(info, val)
-                            self.db.global.favorite_alert.favorite_sound_alert = val
-                        end
-                    },
+                    general = {
+                        type = "group",
+						name = "Shared Options",
+						order = self.GetOrder(),
+						inline = true,
+                        args = {
+                            minimap = {
+                                type = "toggle",
+                                name = "Show minimap icon",
+                                desc = "Show/hide the RT minimap icon.",
+                                width = "full",
+                                order = self.GetOrder(),
+                                get = function() 
+                                    return not self.db.profile.minimap.hide 
+                                end,
+                                set = function(info, val)
+                                    self.db.profile.minimap.hide = not val
+                                    if self.db.profile.minimap.hide then
+                                        self.icon:Hide("RareTrackerIcon")
+                                    else
+                                        self.icon:Show("RareTrackerIcon")
+                                    end
+                                end
+                            },
+                            communication = {
+                                type = "toggle",
+                                name = "Enable communication over party/raid channel",
+                                desc = "Enable communication over party/raid channel, to provide CRZ functionality while in a party or raid group.",
+                                width = "full",
+                                order = self.GetOrder(),
+                                get = function() 
+                                    return self.db.global.communication.raid_communication 
+                                end,
+                                set = function(info, val)
+                                    self.db.global.communication.raid_communication = val
+                                end
+                            },
+                            debug = {
+                                type = "toggle",
+                                name = "Enable debug mode",
+                                desc = "Show RT debug output in the chat.",
+                                width = "full",
+                                order = self.GetOrder(),
+                                get = function() 
+                                    return self.db.global.debug.enable
+                                end,
+                                set = function(info, val)
+                                    self.db.global.debug.enable = val
+                                end
+                            },
+                            favorite_alert = {
+                                type = "select",
+                                name = "Favorite sound alert",
+                                style = "dropdown",
+                                values = sound_options,
+                                order = self.GetOrder(),
+                                get = function() 
+                                    return self.db.global.favorite_alert.favorite_sound_alert 
+                                end,
+                                set = function(info, val)
+                                    self.db.global.favorite_alert.favorite_sound_alert = val
+                                end
+                            },
+                        }
+                    }
                 }
             }
         }
     }
     
+    -- Add all the options defined by the modules.
     for _, module in pairs(self.zone_modules) do
-        RTU:AddModuleOptions(self.options_table.args)
+        module:AddModuleOptions(self.options_table.args)
     end
     
     -- Register the options.

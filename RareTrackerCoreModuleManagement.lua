@@ -14,12 +14,12 @@ function RT:NotifyZoneModuleLoaded(module)
         self.zone_id_to_module[key] = module
     end
     module.module_loaded = true
-    self:ExecuteAllModulesLoaded()
+    self:CheckAllModulesLoaded()
     
     self:OnZoneTransition()
 end
 
-function RT:ExecuteAllModulesLoaded()
+function RT:CheckAllModulesLoaded()
     -- Check if all modules have been loaded.
     for _, module in pairs(self.zone_modules) do
         if not module.module_loaded then
@@ -27,6 +27,8 @@ function RT:ExecuteAllModulesLoaded()
         end
     end
     
-    -- Add all the module options to the option menu.
+    -- Do a delayed initialization of the addon such that all module options can be loaded beforehand.
+    self:InitializeRareTrackerDatabase()
+    self:InitializeRareTrackerLDB()
     self:InitializeOptionsMenu()
 end
