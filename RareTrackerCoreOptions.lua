@@ -47,9 +47,6 @@ local sound_options = {
 
 local defaults = {
     global = {
-        minimap = {
-            hide = false,
-        },
         communication = {
             raid_communication = true,
         },
@@ -59,27 +56,51 @@ local defaults = {
         favorite_alert = {
             favorite_sound_alert = 552503,
         },
+        window = {
+            hide = false,
+        }
+    },
+    profile = {
+        minimap = {
+            hide = false,
+        },
     },
 }
 
-local ldb_data = {
-    type = "data source",
-    text = "RT",
-    icon = "Interface\\AddOns\\RareTrackerCore\\Icons\\RareTrackerIcon",
-    OnClick = function(_, button)
-        local i = 0
-    end,
-    OnTooltipShow = function(tooltip)
-        tooltip:SetText("RareTracker")
-        tooltip:AddLine(L["Left-click: hide/show RT"], 1, 1, 1)
-        tooltip:AddLine(L["Right-click: show options"], 1, 1, 1)
-        tooltip:Show()
-    end
-}
-
-function RT:InitializeRareTrackerDB()
+function RT:InitializeRareTrackerData()
+    -- Load the database.
     self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", defaults)
-    self.ldb = LibStub("LibDataBroker-1.1"):NewDataObject("RareTracker", ldb_data)
+    
+    -- Register the data broker.
+    self.ldb_data = {
+        type = "data source",
+        text = "RT",
+        icon = "Interface\\AddOns\\RareTrackerCore\\Icons\\RareTrackerIcon",
+        OnClick = function(_, button)
+            if button == "LeftButton" then
+                if self.last_zone_id and self.zone_id_to_module[self.last_zone_id] then
+                    local module = self.zone_id_to_module[self.last_zone_id]
+                    if module:IsShown() then
+                        module:Hide()
+                        self.db.global.window.hide = true
+                    else
+                        module:Show()
+                        self.db.global.window.hide = false
+                    end
+                end
+            else
+                InterfaceOptionsFrame_Show()
+                InterfaceOptionsFrame_OpenToCategory(self.options_frame)
+            end
+        end,
+        OnTooltipShow = function(tooltip)
+            tooltip:SetText("RareTracker")
+            tooltip:AddLine(L["Left-click: hide/show RT"], 1, 1, 1)
+            tooltip:AddLine(L["Right-click: show options"], 1, 1, 1)
+            tooltip:Show()
+        end
+    }
+    self.ldb = LibStub("LibDataBroker-1.1"):NewDataObject("RareTracker", self.ldb_data)
     
     -- Register the icon.
     self.icon = LibStub("LibDBIcon-1.0")
@@ -106,10 +127,10 @@ function RT:InitializeOptionsMenu()
                         width = "full",
                         order = self.GetOrder(),
                         get = function() 
-                            return not self.db.global.minimap.hide 
+                            return not self.db.profile.minimap.hide 
                         end,
                         set = function(info, val)
-                            self.db.global.minimap.hide = not val
+                            self.db.profile.minimap.hide = not val
                         end
                     },
                     communication = {
@@ -151,18 +172,14 @@ function RT:InitializeOptionsMenu()
                             self.db.global.favorite_alert.favorite_sound_alert = val
                         end
                     },
-                    -- window_scale = {
-                    --     type = "range",
-                    --     name = "Rare window scale",
-                    --     min = 0.5,
-                    --     max = 2,
-                    --     step = 0.05,
-                    --     order = self.GetOrder(),
-                    -- }
                 }
             }
         }
     }
+    
+    for _, module in pairs(self.zone_modules) do
+        RTU:AddModuleOptions(self.options_table.args)
+    end
     
     -- Register the options.
     LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTracker", self.options_table)

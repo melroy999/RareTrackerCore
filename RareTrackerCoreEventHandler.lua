@@ -29,20 +29,19 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 -- ####################################################################
 
 function RT:OnEnable()
-    self.Debug("Enabling RareTracker")
     self:RegisterEvent("ZONE_CHANGED")
     self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
     self:RegisterEvent("PLAYER_ENTERING_WORLD")
 end
 
 function RT:OnInitialize()
-    self.Debug("Initializing RareTracker")
-    self:InitializeRareTrackerDB()
-    self:InitializeOptionsMenu()
+    self:InitializeRareTrackerData()
+    self:RegisterChatCommand("rt", "ChatCommand")
+    self:RegisterChatCommand("raretracker", "ChatCommand")
 end
 
 function RT:OnDisable()
-    self.Debug("Disabling RareTracker")
+    
 end
 
 function RT:ZONE_CHANGED()
@@ -81,6 +80,31 @@ function RT:OnZoneTransition()
     end
     
     self.last_zone_id = zone_id
+end
+
+-- ####################################################################
+-- ##                            Commands                            ##
+-- ####################################################################
+
+function RT:ChatCommand(input)
+    input = input:trim()
+    if not input or input == "" then
+        InterfaceOptionsFrame_Show()
+        InterfaceOptionsFrame_OpenToCategory(self.options_frame)
+    else
+        local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
+        if cmd == "show" then
+            if self.last_zone_id and self.zone_id_to_module[self.last_zone_id] then
+                self.zone_id_to_module[self.last_zone_id]:Show()
+                self.db.global.window.hide = false
+            end
+        elseif cmd == "hide" then
+            if self.last_zone_id and self.zone_id_to_module[self.last_zone_id] then
+                self.zone_id_to_module[self.last_zone_id]:Hide()
+            end
+            self.db.global.window.hide = true
+        end
+    end
 end
 
 -- ####################################################################

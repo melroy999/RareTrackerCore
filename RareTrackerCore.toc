@@ -33,5 +33,5 @@ Locales\frFR.lua
 RareTrackerCore.lua
 RareTrackerCoreGlobals.lua
 RareTrackerCoreEventHandler.lua
-RareTrackerCoreManagement.lua
+RareTrackerCoreModuleManagement.lua
 RareTrackerCoreOptions.lua

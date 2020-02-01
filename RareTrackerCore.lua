@@ -53,30 +53,8 @@ function RT.GetTargetHealthPercentage()
 end
 
 -- A print function used for debug purposes.
-function RT.Debug(...)
-	if RTDB.debug_enabled then
+function RT:Debug(...)
+	if self.db.global.debug.enable then
 		print(...)
 	end
 end
-
--- ####################################################################
--- ##                          Minimap Icon                          ##
--- ####################################################################
-
--- local RT_LDB = LibStub("LibDataBroker-1.1"):NewDataObject("RareTracker", {
--- 	type = "data source",
--- 	text = "RT",
--- 	icon = "Interface\\AddOns\\RareTrackerCore\\Icons\\RareTrackerIcon",
--- 	OnClick = function(_, button)
---         local i = 0
--- 	end,
--- 	OnTooltipShow = function(tooltip)
--- 		tooltip:SetText("RareTracker")
--- 		tooltip:AddLine(L["Left-click: hide/show RT"], 1, 1, 1)
--- 		tooltip:AddLine(L["Right-click: show options"], 1, 1, 1)
--- 		tooltip:Show()
--- 	end
--- })
--- 
--- RT.icon = LibStub("LibDBIcon-1.0")
--- RT.icon:Hide("RT_icon")
