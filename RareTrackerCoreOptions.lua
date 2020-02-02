@@ -1,3 +1,9 @@
+-- Redefine often used functions locally.
+local InterfaceOptionsFrame_Show = InterfaceOptionsFrame_Show
+local InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
+local LibStub = LibStub
+local pairs = pairs
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -12,8 +18,8 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 -- Get an incremental order index to enforce the ordering of options.
 RT.current_order_index = 0
 function RT:GetOrder()
-    RT.current_order_index = RT.current_order_index + 1
-    return RT.current_order_index
+    self.current_order_index = self.current_order_index + 1
+    return self.current_order_index
 end
 
 -- ####################################################################
@@ -131,17 +137,17 @@ function RT:InitializeOptionsMenu()
         handler = RT,
         type = 'group',
         childGroups = "tree",
-        order = self.GetOrder(),
+        order = self:GetOrder(),
         args = {
             general = {
                 type = "group",
                 name = "General",
-                order = self.GetOrder(),
+                order = self:GetOrder(),
                 args = {
                     general = {
                         type = "group",
 						name = "Shared Options",
-						order = self.GetOrder(),
+						order = self:GetOrder(),
 						inline = true,
                         args = {
                             minimap = {
@@ -149,11 +155,11 @@ function RT:InitializeOptionsMenu()
                                 name = "Show minimap icon",
                                 desc = "Show/hide the RT minimap icon.",
                                 width = "full",
-                                order = self.GetOrder(),
-                                get = function() 
-                                    return not self.db.profile.minimap.hide 
+                                order = self:GetOrder(),
+                                get = function()
+                                    return not self.db.profile.minimap.hide
                                 end,
-                                set = function(info, val)
+                                set = function(_, val)
                                     self.db.profile.minimap.hide = not val
                                     if self.db.profile.minimap.hide then
                                         self.icon:Hide("RareTrackerIcon")
@@ -165,13 +171,14 @@ function RT:InitializeOptionsMenu()
                             communication = {
                                 type = "toggle",
                                 name = "Enable communication over party/raid channel",
-                                desc = "Enable communication over party/raid channel, to provide CRZ functionality while in a party or raid group.",
+                                desc = "Enable communication over party/raid channel, "..
+                                    "to provide CRZ functionality while in a party or raid group.",
                                 width = "full",
-                                order = self.GetOrder(),
-                                get = function() 
-                                    return self.db.global.communication.raid_communication 
+                                order = self:GetOrder(),
+                                get = function()
+                                    return self.db.global.communication.raid_communication
                                 end,
-                                set = function(info, val)
+                                set = function(_, val)
                                     self.db.global.communication.raid_communication = val
                                 end
                             },
@@ -180,11 +187,11 @@ function RT:InitializeOptionsMenu()
                                 name = "Enable debug mode",
                                 desc = "Show RT debug output in the chat.",
                                 width = "full",
-                                order = self.GetOrder(),
-                                get = function() 
+                                order = self:GetOrder(),
+                                get = function()
                                     return self.db.global.debug.enable
                                 end,
-                                set = function(info, val)
+                                set = function(_, val)
                                     self.db.global.debug.enable = val
                                 end
                             },
@@ -193,11 +200,11 @@ function RT:InitializeOptionsMenu()
                                 name = "Favorite sound alert",
                                 style = "dropdown",
                                 values = sound_options,
-                                order = self.GetOrder(),
-                                get = function() 
-                                    return self.db.global.favorite_alert.favorite_sound_alert 
+                                order = self:GetOrder(),
+                                get = function()
+                                    return self.db.global.favorite_alert.favorite_sound_alert
                                 end,
-                                set = function(info, val)
+                                set = function(_, val)
                                     self.db.global.favorite_alert.favorite_sound_alert = val
                                 end
                             },

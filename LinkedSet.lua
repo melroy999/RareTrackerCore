@@ -1,3 +1,7 @@
+-- Redefine often used functions locally.
+local setmetatable = setmetatable
+local print = print
+
 LinkedSet = {
 	__n = 0,
 	__raw_data_table = {},

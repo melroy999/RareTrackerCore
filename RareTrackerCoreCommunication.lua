@@ -1,3 +1,30 @@
+-- Redefine often used functions locally.
+local CreateFrame = CreateFrame
+local LibStub = LibStub
+local GetTime = GetTime
+local strsplit = strsplit
+local UnitName = UnitName
+local GetRealmName = GetRealmName
+local GetServerTime = GetServerTime
+local GetChannelName = GetChannelName
+local JoinTemporaryChannel = JoinTemporaryChannel
+local UnitInRaid = UnitInRaid
+local UnitInParty = UnitInParty
+local select = select
+local GetNumDisplayChannels = GetNumDisplayChannels
+local next = next
+local tonumber = tonumber
+local IsQuestFlaggedCompleted = IsQuestFlaggedCompleted
+local PlaySoundFile = PlaySoundFile
+local pairs = pairs
+local LeaveChannelByName = LeaveChannelByName
+
+-- Redefine global variables locally.
+local UIParent = UIParent
+local C_ChatInfo = C_ChatInfo
+local string = string
+local TomTom = TomTom
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -34,11 +61,11 @@ RT.last_health_report = {
 
 -- Decorate the module with the default communication functions, if not specified by the module itself.
 function RT:AddDefaultCommunicationFunctions(module)
-    self:AddDefaultHelperCommunicationFunctions(module)
-    self:AddDefaultShardRegistrationFunctions(module)
-    self:AddDefaultShardAcknowledgementFunctions(module)
-    self:AddDefaultEntityDataShareFunctions(module)
-    self:AddDefaultCoreChatManagementFunction(module)
+    self.AddDefaultHelperCommunicationFunctions(module)
+    self.AddDefaultShardRegistrationFunctions(module)
+    self.AddDefaultShardAcknowledgementFunctions(module)
+    self.AddDefaultEntityDataShareFunctions(module)
+    self.AddDefaultCoreChatManagementFunction(module)
 end
 
 -- ####################################################################
@@ -76,7 +103,7 @@ function RT.GetGeneralChatId()
 end
 
 -- Add the default helper functions.
-function RT:AddDefaultHelperCommunicationFunctions(module)
+function RT.AddDefaultHelperCommunicationFunctions(module)
     if not module.SendRateLimitedAddonMessage then
         module.SendRateLimitedAddonMessage = function(self, message, target, target_id, target_channel)
             -- We only allow one message to be sent every ~5 seconds.
@@ -135,14 +162,17 @@ end
 -- ####################################################################
 
 -- Add the default shard group management register functions.
-function RT:AddDefaultShardRegistrationFunctions(module)
+function RT.AddDefaultShardRegistrationFunctions(module)
     if not module.RegisterArrival then
         -- Inform other clients of your arrival.
         module.RegisterArrival = function(self, shard_id)
             -- Attempt to load previous data from our cache.
             if self.db.global.previous_records[shard_id] then
                 if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp < 900 then
-                    print(string.format("<%s> Restoring data from previous session in shard "..(shard_id + 42)..".", self.addon_code))
+                    print(string.format(
+                        "<%s> Restoring data from previous session in shard "..(shard_id + 42)..".",
+                        self.addon_code
+                    ))
                     self.last_recorded_death = self.db.global.previous_records[shard_id].time_table
                 else
                     self.db.global.previous_records[shard_id] = nil
@@ -166,7 +196,9 @@ function RT:AddDefaultShardRegistrationFunctions(module)
                 
                 -- We want to avoid overwriting existing channel numbers. So delay the channel join.
                 RT.DelayedExecution(1, function()
-                        print(string.format("<%s> Requesting rare kill data for shard "..(shard_id + 42)..".", self.addon_code))
+                        print(string.format(
+                                "<%s> Requesting rare kill data for shard "..(shard_id + 42)..".", self.addon_code
+                        ))
                         C_ChatInfo.SendAddonMessage(
                             self.addon_code,
                             "A-"..shard_id.."-"..self.version..":"..self.arrival_register_time,
@@ -188,9 +220,9 @@ function RT:AddDefaultShardRegistrationFunctions(module)
             -- Register your arrival within the group.
             if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
                 C_ChatInfo.SendAddonMessage(
-                    self.addon_code, 
-                    "AP-"..shard_id.."-"..self.version..":"..self.arrival_register_time, 
-                    "RAID", 
+                    self.addon_code,
+                    "AP-"..shard_id.."-"..self.version..":"..self.arrival_register_time,
+                    "RAID",
                     nil
                 )
             end
@@ -260,7 +292,7 @@ end
 -- ####################################################################
 
 -- Add the default shard group management acknowledgement functions.
-function RT:AddDefaultShardAcknowledgementFunctions(module)
+function RT.AddDefaultShardAcknowledgementFunctions(module)
     if not module.AcknowledgeArrival then
         -- Acknowledge that the player has arrived and whisper your data table.
         module.AcknowledgeArrival = function(self, player, time_stamp)
@@ -268,7 +300,7 @@ function RT:AddDefaultShardAcknowledgementFunctions(module)
             if RT.player_name ~= player then
                 self:RegisterPresenceWhisper(self.current_shard_id, player, time_stamp)
             end
-        end 
+        end
     end
     
     if not module.AcknowledgeArrivalGroup then
@@ -276,7 +308,8 @@ function RT:AddDefaultShardAcknowledgementFunctions(module)
         module.AcknowledgeArrivalGroup = function(self, player, time_stamp)
             -- Notify the newly arrived user of your presence through a whisper.
             if RT.player_name ~= player then
-                if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+                if RT.db.global.communication.raid_communication
+                        and (UnitInRaid("player") or UnitInParty("player")) then
                     self:RegisterPresenceGroup(self.current_shard_id, time_stamp)
                 end
             end
@@ -296,7 +329,7 @@ end
 -- ####################################################################
 
 -- Add the default entity information share functions.
-function RT:AddDefaultEntityDataShareFunctions(module)
+function RT.AddDefaultEntityDataShareFunctions(module)
     if not module.RegisterEntityDeath then
         -- Inform the others that a specific entity has died.
         module.RegisterEntityDeath = function(self, shard_id, npc_id, spawn_uid)
@@ -320,7 +353,8 @@ function RT:AddDefaultEntityDataShareFunctions(module)
                     select(1, GetChannelName(self.channel_name))
                 )
             
-                if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+                if RT.db.global.communication.raid_communication
+                        and (UnitInRaid("player") or UnitInParty("player")) then
                     C_ChatInfo.SendAddonMessage(
                         self.addon_code,
                         "EDP-"..shard_id.."-"..self.version..":"..npc_id.."-"..spawn_uid,
@@ -356,7 +390,8 @@ function RT:AddDefaultEntityDataShareFunctions(module)
                         select(1, GetChannelName(self.channel_name))
                     )
                 
-                    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+                    if RT.db.global.communication.raid_communication
+                            and (UnitInRaid("player") or UnitInParty("player")) then
                         C_ChatInfo.SendAddonMessage(
                             self.addon_code,
                             "EAP-"..shard_id.."-"..self.version..":"..npc_id.."-"..spawn_uid.."-"..x.."-"..y,
@@ -372,7 +407,8 @@ function RT:AddDefaultEntityDataShareFunctions(module)
                         select(1, GetChannelName(self.channel_name))
                     )
                 
-                    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+                    if RT.db.global.communication.raid_communication
+                            and (UnitInRaid("player") or UnitInParty("player")) then
                         C_ChatInfo.SendAddonMessage(
                             self.addon_code,
                             "EAP-"..shard_id.."-"..self.version..":"..npc_id.."-"..spawn_uid.."--",
@@ -403,7 +439,8 @@ function RT:AddDefaultEntityDataShareFunctions(module)
                     select(1, GetChannelName(self.channel_name))
                 )
                 
-                if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+                if RT.db.global.communication.raid_communication
+                        and (UnitInRaid("player") or UnitInParty("player")) then
                     C_ChatInfo.SendAddonMessage(
                         self.addon_code,
                         "ETP-"..shard_id.."-"..self.version..":"..npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
@@ -435,7 +472,8 @@ function RT:AddDefaultEntityDataShareFunctions(module)
             end
             
             if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-                if not RT.last_health_report["RAID"][npc_id] or GetTime() - RT.last_health_report["RAID"][npc_id] > 2 then
+                if not RT.last_health_report["RAID"][npc_id]
+                        or GetTime() - RT.last_health_report["RAID"][npc_id] > 2 then
                     -- Mark the entity as targeted and alive.
                     self.is_alive[npc_id] = GetServerTime()
                     self.current_health[npc_id] = percentage
@@ -557,7 +595,7 @@ end
 -- ####################################################################
 
 -- Add the default entity information share functions.
-function RT:AddDefaultCoreChatManagementFunction(module)
+function RT.AddDefaultCoreChatManagementFunction(module)
     if not module.OnChatMessageReceived then
         -- Determine what to do with the received chat message.
         module.OnChatMessageReceived = function(self, player, prefix, shard_id, addon_version, payload)
@@ -565,7 +603,10 @@ function RT:AddDefaultCoreChatManagementFunction(module)
             -- To ensure optimal performance, all users should use the latest version.
             if not self.reported_version_mismatch and self.version < addon_version and addon_version ~= 9001 then
                 print(string.format("<%s> Your version of the %s addon is outdated. "..
-                    "Please update to the most recent version at the earliest convenience.", self.addon_code, self.addon_code))
+                    "Please update to the most recent version at the earliest convenience.",
+                    self.addon_code,
+                    self.addon_code
+                ))
                 self.reported_version_mismatch = true
             end
             

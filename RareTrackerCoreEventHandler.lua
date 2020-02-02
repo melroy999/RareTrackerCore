@@ -8,6 +8,11 @@ local GetServerTime = GetServerTime
 local LinkedSet = LinkedSet
 local CreateFrame = CreateFrame
 local GetChannelList = GetChannelList
+local GetTime = GetTime
+local InterfaceOptionsFrame_Show = InterfaceOptionsFrame_Show
+local InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
+local pairs = pairs
+local select = select
 
 -- Redefine often used variables locally.
 local C_Map = C_Map
@@ -15,7 +20,8 @@ local COMBATLOG_OBJECT_TYPE_GUARDIAN = COMBATLOG_OBJECT_TYPE_GUARDIAN
 local COMBATLOG_OBJECT_TYPE_PET = COMBATLOG_OBJECT_TYPE_PET
 local COMBATLOG_OBJECT_TYPE_OBJECT = COMBATLOG_OBJECT_TYPE_OBJECT
 local UIParent = UIParent
-local C_MapExplorationInfo = C_MapExplorationInfo
+local string = string
+local bit = bit
 
 -- ####################################################################
 -- ##                      Localization Support                      ##
@@ -38,10 +44,6 @@ function RT:OnInitialize()
     self:InitializeRareTrackerDatabase()
     self:RegisterChatCommand("rt", "ChatCommand")
     self:RegisterChatCommand("raretracker", "ChatCommand")
-end
-
-function RT:OnDisable()
-    
 end
 
 function RT:ZONE_CHANGED()
@@ -82,7 +84,7 @@ function RT:OnZoneTransition()
     self.last_zone_id = zone_id
 end
 
-function RT:AddDefaultEventHandlerFunctions(module)
+function RT.AddDefaultEventHandlerFunctions(module)
     -- Start by defining the default variables.
     module.is_alive = {}
     module.current_health = {}
@@ -94,7 +96,7 @@ function RT:AddDefaultEventHandlerFunctions(module)
     module.reported_spawn_uids = {}
     
     -- Continue by adding the default functions.
-    if not module.OnEvent then 
+    if not module.OnEvent then
         -- Listen to a given set of events and handle them accordingly.
         module.OnEvent = function(self, event, ...)
             if event == "PLAYER_TARGET_CHANGED" then
@@ -163,7 +165,7 @@ function RT:AddDefaultEventHandlerFunctions(module)
     
     if not module.CheckForRedirectedRareIds then
         -- Check whether the given npc id needs to be redirected under the current circumstances.
-        module.CheckForRedirectedRareIds = function(self, npc_id)
+        module.CheckForRedirectedRareIds = function(npc_id)
             -- Unused by most plugins.
             return npc_id
         end
@@ -260,7 +262,9 @@ function RT:AddDefaultEventHandlerFunctions(module)
     
     if not module.OnCombatLogEvent then
         -- The flag used to detect guardians or pets.
-        local flag_mask = bit.bor(COMBATLOG_OBJECT_TYPE_GUARDIAN, COMBATLOG_OBJECT_TYPE_PET, COMBATLOG_OBJECT_TYPE_OBJECT)
+        local flag_mask = bit.bor(
+            COMBATLOG_OBJECT_TYPE_GUARDIAN, COMBATLOG_OBJECT_TYPE_PET, COMBATLOG_OBJECT_TYPE_OBJECT
+        )
 
         -- Called when a unit health update event is fired.
         module.OnCombatLogEvent = function(self)
@@ -277,7 +281,8 @@ function RT:AddDefaultEventHandlerFunctions(module)
             if not npc_id then return end
             
             -- Blacklist the entity.
-            if not self.db.global.banned_NPC_ids[npc_id] and bit.band(destFlags, flag_mask) > 0 and not self.rare_ids_set[npc_id] then
+            if not self.db.global.banned_NPC_ids[npc_id]
+                    and bit.band(destFlags, flag_mask) > 0 and not self.rare_ids_set[npc_id] then
                 self.db.global.banned_NPC_ids[npc_id] = true
             end
             
@@ -434,7 +439,9 @@ function RT:AddDefaultEventHandlerFunctions(module)
                     self.db.global.banned_NPC_ids[npc_id] = nil
                 end
                 
-                if not self.db.global.rare_ordering or not self.db.global.version or self.db.global.version ~= self.version then
+                -- Check if the rare ordering has to be reset/initialized.
+                if not self.db.global.rare_ordering or not self.db.global.version
+                        or self.db.global.version ~= self.version then
                     RT:Debug(string.format("<%s> Resetting ordering", self.addon_code))
                     self.db.global.rare_ordering = LinkedSet:New()
                     for i=1, #self.rare_ids do
@@ -446,13 +453,6 @@ function RT:AddDefaultEventHandlerFunctions(module)
                     self.db.global.rare_ordering = LinkedSet:New(self.db.global.rare_ordering)
                 end
                 
-                -- Initialize the frame.
-                self:InitializeInterface()
-                self:CorrectFavoriteMarks()
-                
-                -- Initialize the configuration menu.
-                self:InitializeConfigMenu()
-                
                 -- Remove any data in the previous records that have expired.
                 for key, _ in pairs(self.db.global.previous_records) do
                     if GetServerTime() - self.db.global.previous_records[key].time_stamp > 900 then
@@ -460,6 +460,13 @@ function RT:AddDefaultEventHandlerFunctions(module)
                         self.db.global.previous_records[key] = nil
                     end
                 end
+                
+                -- Initialize the frame.
+                self:InitializeInterface()
+                self:CorrectFavoriteMarks()
+                
+                -- Initialize the configuration menu.
+                self:InitializeConfigMenu()
                 
                 -- Notify the core library that the plugin has loaded successfully.
                 RT:NotifyZoneModuleLoaded(self)
@@ -495,7 +502,7 @@ function RT:AddDefaultEventHandlerFunctions(module)
     
     if not module.UnregisterEvents then
         -- Unregister from the events, to disable the tracking functionality.
-        module.UnregisterEvents = function()
+        module.UnregisterEvents = function(self)
             self:UnregisterEvent("PLAYER_TARGET_CHANGED")
             self:UnregisterEvent("UNIT_HEALTH")
             self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
@@ -506,12 +513,12 @@ function RT:AddDefaultEventHandlerFunctions(module)
     end
     
     -- Add the remaining default objects.
-    self:AddDefaultUpdateAndEventSubscriptions(module)
-    self:AddDefaultDailyResetHandler(module)
+    RT.AddDefaultUpdateAndEventSubscriptions(module)
+    RT.AddDefaultDailyResetHandler(module)
 end
 
 -- Certain frames and event subscriptions always have to be made.
-function RT:AddDefaultUpdateAndEventSubscriptions(module)
+function RT.AddDefaultUpdateAndEventSubscriptions(module)
     -- Create a frame that handles the frame updates of the addon.
     module.updateHandler = CreateFrame("Frame", string.format("%s.updateHandler", module.addon_code), module)
     module.updateHandler:SetScript("OnUpdate",
@@ -535,8 +542,10 @@ end
 -- ##                      Daily Reset Handling                      ##
 -- ####################################################################
 
-function RT:AddDefaultDailyResetHandler(module)
-    module.daily_reset_handling_frame = CreateFrame("Frame", string.format("%s.daily_reset_handling_frame", module.addon_code), UIParent)
+function RT.AddDefaultDailyResetHandler(module)
+    module.daily_reset_handling_frame = CreateFrame(
+        "Frame", string.format("%s.daily_reset_handling_frame", module.addon_code), UIParent
+    )
 
     -- Which timestamp was the last hour?
     local time_table = date("*t", GetServerTime())

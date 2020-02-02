@@ -1,17 +1,18 @@
--- ####################################################################
--- ##                      Localization Support                      ##
--- ####################################################################
+-- Redefine often used functions locally.
+local LibStub = LibStub
+local UnitHealthMax = UnitHealthMax
+local UnitHealth = UnitHealth
+local print = print
 
--- Get an object we can use for the localization of the addon.
-local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
+-- Redefine often used variables locally.
+local math = math
 
 -- ####################################################################
 -- ##                              Core                              ##
 -- ####################################################################
 
+-- Create the primary addon object.
 RT = LibStub("AceAddon-3.0"):NewAddon("RareTracker", "AceConsole-3.0", "AceEvent-3.0")
-
--- local RT = CreateFrame("Frame", "RT", UIParent);
 
 -- Create a list of pointers to each of the zone modules.
 RT.zone_modules = {}
@@ -55,6 +56,6 @@ end
 -- A print function used for debug purposes.
 function RT:Debug(...)
 	if self.db.global.debug.enable then
-		print(...)
+		print("[Debug]", ...)
 	end
 end

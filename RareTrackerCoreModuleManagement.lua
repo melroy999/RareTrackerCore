@@ -1,3 +1,6 @@
+-- Redefine often used functions locally.
+local pairs = pairs
+
 -- ####################################################################
 -- ##                       Module Management                        ##
 -- ####################################################################
@@ -9,7 +12,8 @@ function RT:RegisterZoneModule(module)
     
     -- Add default decoration functions.
     self:AddDefaultCommunicationFunctions(module)
-    self:AddDefaultEventHandlerFunctions(module)
+    self.AddDefaultEventHandlerFunctions(module)
+    self.AddDefaultInterfaceFunctions(module)
 end
 
 -- Perform all actions that can only be done after a module has been loaded.

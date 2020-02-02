@@ -1,6 +1,9 @@
 -- Redefine often used functions locally.
 local floor = floor
 
+-- Redefine often used variables locally.
+local table = table
+
 -- The characters to be used in the base64 string.
 local digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 

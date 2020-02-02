@@ -3,7 +3,8 @@
 ## Notes: The core of the RareTracker addons.
 ## Author: Melroy
 ## Version: 0.0.0
-##SavedVariables: RareTrackerDB
+## SavedVariables: RareTrackerDB
+## OptionalDeps: TomTom
 
 libs\LibDBIcon-1.0\LibStub\LibStub.lua
 libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
@@ -34,6 +35,7 @@ RareTrackerCore.lua
 Base64.lua
 LinkedSet.lua
 RareTrackerCoreGlobals.lua
+RareTrackerCoreInterface.lua
 RareTrackerCoreEventHandler.lua
 RareTrackerCoreModuleManagement.lua
 RareTrackerCoreCommunication.lua
