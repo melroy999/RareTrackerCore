@@ -133,7 +133,7 @@ end
 
 function RT:InitializeOptionsMenu()
     self.options_table = {
-        name = "RareTracker",
+        name = "RareTracker (v"..GetAddOnMetadata("RareTrackerCore", "Version")..")",
         handler = RT,
         type = 'group',
         childGroups = "tree",
