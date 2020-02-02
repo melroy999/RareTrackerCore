@@ -35,6 +35,7 @@ function RT:OnEnable()
 end
 
 function RT:OnInitialize()
+    self:InitializeRareTrackerDatabase()
     self:RegisterChatCommand("rt", "ChatCommand")
     self:RegisterChatCommand("raretracker", "ChatCommand")
 end

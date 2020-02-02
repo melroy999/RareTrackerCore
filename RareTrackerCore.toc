@@ -31,7 +31,9 @@ Locales\zhCN.lua
 Locales\frFR.lua
 
 RareTrackerCore.lua
+Base64.lua
 RareTrackerCoreGlobals.lua
 RareTrackerCoreEventHandler.lua
 RareTrackerCoreModuleManagement.lua
+RareTrackerCoreCommunication.lua
 RareTrackerCoreOptions.lua

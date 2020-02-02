@@ -6,6 +6,9 @@
 function RT:RegisterZoneModule(module)
     self.zone_modules[#RT.zone_modules + 1] = module
     module.module_loaded = false
+    
+    -- Add default decoration functions.
+    self:AddDefaultCommunicationFunctions(module)
 end
 
 -- Perform all actions that can only be done after a module has been loaded.
@@ -28,7 +31,6 @@ function RT:CheckAllModulesLoaded()
     end
     
     -- Do a delayed initialization of the addon such that all module options can be loaded beforehand.
-    self:InitializeRareTrackerDatabase()
     self:InitializeRareTrackerLDB()
     self:InitializeOptionsMenu()
 end
