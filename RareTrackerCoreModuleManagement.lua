@@ -9,6 +9,7 @@ function RT:RegisterZoneModule(module)
     
     -- Add default decoration functions.
     self:AddDefaultCommunicationFunctions(module)
+    self:AddDefaultEventHandlerFunctions(module)
 end
 
 -- Perform all actions that can only be done after a module has been loaded.

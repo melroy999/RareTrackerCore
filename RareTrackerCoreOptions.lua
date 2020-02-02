@@ -45,6 +45,20 @@ local sound_options = {
     [554236] = "I see you",
 }
 
+function RT.GetDefaultModuleDatabaseValues()
+    return {
+        global = {
+            enable_rare_filter = true,
+            window_scale = 1.0,
+            favorite_rares = {},
+            previous_records = {},
+            ignore_rares = {},
+            banned_NPC_ids = {},
+            version = 0,
+        }
+    }
+end
+
 function RT:InitializeRareTrackerDatabase()
     self.defaults = {
         global = {
