@@ -142,7 +142,7 @@ function RT:AddDefaultShardRegistrationFunctions(module)
             -- Attempt to load previous data from our cache.
             if self.db.global.previous_records[shard_id] then
                 if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp < 900 then
-                    print("<RT> Restoring data from previous session in shard "..(shard_id + 42)..".")
+                    print(string.format("<%s> Restoring data from previous session in shard "..(shard_id + 42)..".", self.addon_code))
                     self.last_recorded_death = self.db.global.previous_records[shard_id].time_table
                 else
                     self.db.global.previous_records[shard_id] = nil
@@ -166,7 +166,7 @@ function RT:AddDefaultShardRegistrationFunctions(module)
                 
                 -- We want to avoid overwriting existing channel numbers. So delay the channel join.
                 RT.DelayedExecution(1, function()
-                        print("<RT> Requesting rare kill data for shard "..(shard_id + 42)..".")
+                        print(string.format("<%s> Requesting rare kill data for shard "..(shard_id + 42)..".", self.addon_code))
                         C_ChatInfo.SendAddonMessage(
                             self.addon_code,
                             "A-"..shard_id.."-"..self.version..":"..self.arrival_register_time,
@@ -176,7 +176,7 @@ function RT:AddDefaultShardRegistrationFunctions(module)
                     end
                 )
             else
-                print("<RT> Requesting rare kill data for shard "..(shard_id + 42)..".")
+                print(string.format("<%s> Requesting rare kill data for shard "..(shard_id + 42)..".", self.addon_code))
                 C_ChatInfo.SendAddonMessage(
                     self.addon_code,
                     "A-"..shard_id.."-"..self.version..":"..self.arrival_register_time,
@@ -564,8 +564,8 @@ function RT:AddDefaultCoreChatManagementFunction(module)
             -- The format of messages might change over time and as such, versioning is needed.
             -- To ensure optimal performance, all users should use the latest version.
             if not self.reported_version_mismatch and self.version < addon_version and addon_version ~= 9001 then
-                print("<RT> Your version or RareTrackerUldum is outdated. "..
-                    "Please update to the most recent version at the earliest convenience.")
+                print(string.format("<%s> Your version of the %s addon is outdated. "..
+                    "Please update to the most recent version at the earliest convenience.", self.addon_code, self.addon_code))
                 self.reported_version_mismatch = true
             end
             
