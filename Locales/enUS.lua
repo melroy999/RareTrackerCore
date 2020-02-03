@@ -40,6 +40,4 @@ L["<%s> Requesting rare kill data for shard "] = "<%s> Requesting rare kill data
 -- Option menu strings.
 L["Favorite sound alert"] = "Favorite sound alert"
 L["Show minimap icon"] = "Show minimap icon"
-L["Disable All"] = "Disable All"
-L["Enable All"] = "Enable All"
 L["Enable debug mode"] = "Enable debug mode"

@@ -40,6 +40,4 @@ L["<%s> Requesting rare kill data for shard "] = "<%s> Requête des données pou
 -- Option menu strings.
 L["Favorite sound alert"] = "Son d'alerte favori."
 L["Show minimap icon"] = "Afficher l'icone de la minimap."
-L["Disable All"] = "Désactiver tous"
-L["Enable All"] = "Activer tous."
 L["Enable debug mode"] = "Activer le mode debug."

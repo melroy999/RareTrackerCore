@@ -40,6 +40,4 @@ L["<%s> Requesting rare kill data for shard "] = "<%s> 从分片请求稀有的�
 -- Option menu strings.
 L["Favorite sound alert"] = "偏好警报声"
 L["Show minimap icon"] = "显示小地图图标"
-L["Disable All"] = "禁用全部"
-L["Enable All"] = "启用全部"
 L["Enable debug mode"] = "启用Debug模式"
