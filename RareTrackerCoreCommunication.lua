@@ -30,7 +30,7 @@ local TomTom = TomTom
 -- ####################################################################
 
 -- Get an object we can use for the localization of the addon.
-local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
+local L = LibStub("AceLocale-3.0"):GetLocale("RareTrackerCore", true)
 
 -- ####################################################################
 -- ##                    Communication Variables                     ##
@@ -170,7 +170,7 @@ function RT.AddDefaultShardRegistrationFunctions(module)
             if self.db.global.previous_records[shard_id] then
                 if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp < 900 then
                     print(string.format(
-                        "<%s> Restoring data from previous session in shard "..(shard_id + 42)..".",
+                        L["<%s> Restoring data from previous session in shard "]..(shard_id + 42)..".",
                         self.addon_code
                     ))
                     self.last_recorded_death = self.db.global.previous_records[shard_id].time_table
@@ -197,7 +197,7 @@ function RT.AddDefaultShardRegistrationFunctions(module)
                 -- We want to avoid overwriting existing channel numbers. So delay the channel join.
                 RT.DelayedExecution(1, function()
                         print(string.format(
-                                "<%s> Requesting rare kill data for shard "..(shard_id + 42)..".", self.addon_code
+                                L["<%s> Requesting rare kill data for shard "]..(shard_id + 42)..".", self.addon_code
                         ))
                         C_ChatInfo.SendAddonMessage(
                             self.addon_code,
@@ -208,7 +208,7 @@ function RT.AddDefaultShardRegistrationFunctions(module)
                     end
                 )
             else
-                print(string.format("<%s> Requesting rare kill data for shard "..(shard_id + 42)..".", self.addon_code))
+                print(string.format(L["<%s> Requesting rare kill data for shard "]..(shard_id + 42)..".", self.addon_code))
                 C_ChatInfo.SendAddonMessage(
                     self.addon_code,
                     "A-"..shard_id.."-"..self.version..":"..self.arrival_register_time,
@@ -602,8 +602,8 @@ function RT.AddDefaultCoreChatManagementFunction(module)
             -- The format of messages might change over time and as such, versioning is needed.
             -- To ensure optimal performance, all users should use the latest version.
             if not self.reported_version_mismatch and self.version < addon_version and addon_version ~= 9001 then
-                print(string.format("<%s> Your version of the %s addon is outdated. "..
-                    "Please update to the most recent version at the earliest convenience.",
+                print(string.format(L["<%s> Your version of the %s addon is outdated. "..
+                    "Please update to the most recent version at the earliest convenience."],
                     self.addon_code,
                     self.addon_code
                 ))

@@ -9,7 +9,7 @@ local pairs = pairs
 -- ####################################################################
 
 -- Get an object we can use for the localization of the addon.
-local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
+local L = LibStub("AceLocale-3.0"):GetLocale("RareTrackerCore", true)
 
 -- ####################################################################
 -- ##                        Helper Functions                        ##
@@ -20,6 +20,11 @@ RT.current_order_index = 0
 function RT:GetOrder()
     self.current_order_index = self.current_order_index + 1
     return self.current_order_index
+end
+
+-- Refresh the option menu.
+function RT:NotifyOptionsChange()
+    LibStub("AceConfigRegistry-3.0"):NotifyChange("RareTrackerCore")
 end
 
 -- ####################################################################
@@ -89,7 +94,7 @@ function RT:InitializeRareTrackerDatabase()
     }
     
     -- Load the database.
-    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", self.defaults)
+    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", self.defaults, true)
 end
 
 function RT:InitializeRareTrackerLDB()
@@ -121,7 +126,7 @@ function RT:InitializeRareTrackerLDB()
             tooltip:Show()
         end
     }
-    self.ldb = LibStub("LibDataBroker-1.1"):NewDataObject("RareTracker", self.ldb_data)
+    self.ldb = LibStub("LibDataBroker-1.1"):NewDataObject("RareTrackerCore", self.ldb_data)
     
     -- Register the icon.
     self.icon = LibStub("LibDBIcon-1.0")
@@ -152,8 +157,8 @@ function RT:InitializeOptionsMenu()
                         args = {
                             minimap = {
                                 type = "toggle",
-                                name = "Show minimap icon",
-                                desc = "Show/hide the RT minimap icon.",
+                                name = L["Show minimap icon"],
+                                desc = L["Show/hide the RT minimap icon."],
                                 width = "full",
                                 order = self:GetOrder(),
                                 get = function()
@@ -170,9 +175,9 @@ function RT:InitializeOptionsMenu()
                             },
                             communication = {
                                 type = "toggle",
-                                name = "Enable communication over party/raid channel",
-                                desc = "Enable communication over party/raid channel, "..
-                                    "to provide CRZ functionality while in a party or raid group.",
+                                name = L["Enable communication over party/raid channel"],
+                                desc = L["Enable communication over party/raid channel, "..
+                                    "to provide CRZ functionality while in a party or raid group."],
                                 width = "full",
                                 order = self:GetOrder(),
                                 get = function()
@@ -184,8 +189,8 @@ function RT:InitializeOptionsMenu()
                             },
                             debug = {
                                 type = "toggle",
-                                name = "Enable debug mode",
-                                desc = "Show RT debug output in the chat.",
+                                name = L["Enable debug mode"],
+                                desc = L["Show RT debug output in the chat."],
                                 width = "full",
                                 order = self:GetOrder(),
                                 get = function()
@@ -197,7 +202,7 @@ function RT:InitializeOptionsMenu()
                             },
                             favorite_alert = {
                                 type = "select",
-                                name = "Favorite sound alert",
+                                name = L["Favorite sound alert"],
                                 style = "dropdown",
                                 values = sound_options,
                                 order = self:GetOrder(),
@@ -221,6 +226,11 @@ function RT:InitializeOptionsMenu()
     end
     
     -- Register the options.
-    LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTracker", self.options_table)
-    self.options_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTracker", "RareTracker")
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTrackerCore", self.options_table)
+    self.options_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTrackerCore", "RareTracker")
+    
+    -- Create a profiles tab.
+    self.profile_options = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTrackerCore-Profiles", self.profile_options)
+    self.profile_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTrackerCore-Profiles", "Profiles", "RareTracker")
 end

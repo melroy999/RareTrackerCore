@@ -12,7 +12,7 @@ local math = math
 -- ####################################################################
 
 -- Create the primary addon object.
-RT = LibStub("AceAddon-3.0"):NewAddon("RareTracker", "AceConsole-3.0", "AceEvent-3.0")
+RT = LibStub("AceAddon-3.0"):NewAddon("RareTrackerCore", "AceConsole-3.0", "AceEvent-3.0")
 
 -- Create a list of pointers to each of the zone modules.
 RT.zone_modules = {}

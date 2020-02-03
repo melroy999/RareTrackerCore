@@ -28,7 +28,7 @@ local bit = bit
 -- ####################################################################
 
 -- Get an object we can use for the localization of the addon.
-local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
+local L = LibStub("AceLocale-3.0"):GetLocale("RareTrackerCore", true)
 
 -- ####################################################################
 -- ##                         Event Handlers                         ##
@@ -145,7 +145,7 @@ function RT.AddDefaultEventHandlerFunctions(module)
             local has_changed = false
 
             if self.current_shard_id ~= zone_uid and zone_uid ~= nil then
-                print(string.format("<%s> Moving to shard ", self.addon_code)..(zone_uid + 42)..".")
+                print(string.format(L["<%s> Moving to shard "], self.addon_code)..(zone_uid + 42)..".")
                 self:UpdateShardNumber(zone_uid)
                 has_changed = true
                 
@@ -442,7 +442,7 @@ function RT.AddDefaultEventHandlerFunctions(module)
                 -- Check if the rare ordering has to be reset/initialized.
                 if not self.db.global.rare_ordering or not self.db.global.version
                         or self.db.global.version ~= self.version then
-                    RT:Debug(string.format("<%s> Resetting ordering", self.addon_code))
+                    RT:Debug(string.format(L["<%s> Resetting ordering"], self.addon_code))
                     self.db.global.rare_ordering = LinkedSet:New()
                     for i=1, #self.rare_ids do
                         local npc_id = self.rare_ids[i]
@@ -456,7 +456,7 @@ function RT.AddDefaultEventHandlerFunctions(module)
                 -- Remove any data in the previous records that have expired.
                 for key, _ in pairs(self.db.global.previous_records) do
                     if GetServerTime() - self.db.global.previous_records[key].time_stamp > 900 then
-                        print(string.format("<%s> Removing cached data for shard ", self.addon_code)..(key + 42)..".")
+                        print(string.format(L["<%s> Removing cached data for shard "], self.addon_code)..(key + 42)..".")
                         self.db.global.previous_records[key] = nil
                     end
                 end
@@ -464,9 +464,6 @@ function RT.AddDefaultEventHandlerFunctions(module)
                 -- Initialize the frame.
                 self:InitializeInterface()
                 self:CorrectFavoriteMarks()
-                
-                -- Initialize the configuration menu.
-                self:InitializeConfigMenu()
                 
                 -- Notify the core library that the plugin has loaded successfully.
                 RT:NotifyZoneModuleLoaded(self)
@@ -563,7 +560,7 @@ function RT.AddDefaultDailyResetHandler(module)
                 
                 if module.entities_frame ~= nil then
                     module:UpdateAllDailyKillMarks()
-                    RT:Debug(string.format("<%s> Updating daily kill marks.", module.addon_code))
+                    RT:Debug(string.format(L["<%s> Updating daily kill marks."], module.addon_code))
                 end
             end
         end
