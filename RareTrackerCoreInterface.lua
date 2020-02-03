@@ -140,11 +140,15 @@ function RT.AddDefaultEntityFrameFunctions(module)
     if not module.CreateRareTableEntry then
         -- Create an entry within the entity frame for the given entity.
         module.CreateRareTableEntry = function(self, npc_id, parent_frame)
-            local f = CreateFrame("Frame", string.format("%s.entities_frame.entities[%s]", self.addon_code, npc_id), parent_frame)
+            local f = CreateFrame(
+                "Frame", string.format("%s.entities_frame.entities[%s]", self.addon_code, npc_id), parent_frame
+            )
             f:SetSize(entity_name_width + entity_status_width + 3 * frame_padding + 2 * favorite_rares_width, 12)
             
             -- Add the favorite button.
-            f.favorite = CreateFrame("CheckButton", string.format("%s.entities_frame.entities[%s].favorite", self.addon_code, npc_id), f)
+            f.favorite = CreateFrame(
+                "CheckButton", string.format("%s.entities_frame.entities[%s].favorite", self.addon_code, npc_id), f
+            )
             f.favorite:SetSize(10, 10)
             local texture = f.favorite:CreateTexture(nil, "BACKGROUND")
             texture:SetColorTexture(0, 0, 0, front_opacity)
@@ -165,7 +169,9 @@ function RT.AddDefaultEntityFrameFunctions(module)
             end)
             
             -- Add the announce/waypoint button.
-            f.announce = CreateFrame("Button", string.format("%s.entities_frame.entities[%s].announce", self.addon_code, npc_id), f)
+            f.announce = CreateFrame(
+                "Button", string.format("%s.entities_frame.entities[%s].announce", self.addon_code, npc_id), f
+            )
             f.announce:SetSize(10, 10)
             texture = f.announce:CreateTexture(nil, "BACKGROUND")
             texture:SetColorTexture(0, 0, 0, front_opacity)
@@ -201,7 +207,14 @@ function RT.AddDefaultEntityFrameFunctions(module)
                             -- SendChatMessage
                             if loc then
                                 SendChatMessage(
-                                    string.format(L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"], self.addon_code, name, health, loc.x, loc.y),
+                                    string.format(
+                                        L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"],
+                                        self.addon_code,
+                                        name,
+                                        health,
+                                        loc.x,
+                                        loc.y
+                                    ),
                                     target,
                                     nil,
                                     channel_id
@@ -238,8 +251,12 @@ function RT.AddDefaultEntityFrameFunctions(module)
                         elseif self.is_alive[npc_id] then
                             if loc then
                                 SendChatMessage(
-                                    string.format(L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"], name, loc.x, loc.y),
-                                        self.addon_code,
+                                    string.format(
+                                        L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"],
+                                        self.addon_code, name,
+                                        loc.x,
+                                        loc.y
+                                    ),
                                     target,
                                     nil,
                                     channel_id
@@ -340,14 +357,18 @@ function RT.AddDefaultEntityFrameFunctions(module)
             -- First, add the frames for the backdrop and make sure that the hierarchy is created.
             f:SetPoint("TOPLEFT", frame_padding, -(2 * frame_padding + shard_id_frame_height))
             
-            f.entity_name_backdrop = CreateFrame("Frame", string.format("%s.entities_frame.entity_name_backdrop", self.addon_code), f)
+            f.entity_name_backdrop = CreateFrame(
+                "Frame", string.format("%s.entities_frame.entity_name_backdrop", self.addon_code), f
+            )
             local texture = f.entity_name_backdrop:CreateTexture(nil, "BACKGROUND")
             texture:SetColorTexture(0, 0, 0, front_opacity)
             texture:SetAllPoints(f.entity_name_backdrop)
             f.entity_name_backdrop.texture = texture
             f.entity_name_backdrop:SetPoint("TOPLEFT", f, 2 * frame_padding + 2 * favorite_rares_width, 0)
             
-            f.entity_status_backdrop = CreateFrame("Frame", string.format("%s.entities_frame.entity_status_backdrop", self.addon_code), f)
+            f.entity_status_backdrop = CreateFrame(
+                "Frame", string.format("%s.entities_frame.entity_status_backdrop", self.addon_code), f
+            )
             texture = f.entity_status_backdrop:CreateTexture(nil, "BACKGROUND")
             texture:SetColorTexture(0, 0, 0, front_opacity)
             texture:SetAllPoints(f.entity_status_backdrop)
@@ -424,7 +445,8 @@ function RT.AddDefaultEntityFrameFunctions(module)
             local npc_ids = self.completion_quest_inverse[completion_quest_id]
             
             for _, target_npc_id in pairs(npc_ids) do
-                if self.completion_quest_ids[target_npc_id] and IsQuestFlaggedCompleted(self.completion_quest_ids[target_npc_id]) then
+                if self.completion_quest_ids[target_npc_id]
+                        and IsQuestFlaggedCompleted(self.completion_quest_ids[target_npc_id]) then
                     self.entities_frame.entities[target_npc_id].name:SetText(self.rare_display_names[target_npc_id])
                     self.entities_frame.entities[target_npc_id].name:SetFontObject("GameFontRed")
                 else
@@ -482,7 +504,9 @@ function RT.AddDefaultEntityFrameFunctions(module)
         module.InitializeAnnounceIconFrame = function(self)
             self.broadcast_icon = CreateFrame("Frame", string.format("%s.broadcast_icon", self.addon_code), self)
             self.broadcast_icon:SetSize(10, 10)
-            self.broadcast_icon:SetPoint("TOPLEFT", self, 2 * frame_padding + favorite_rares_width + 1, -(frame_padding + 3))
+            self.broadcast_icon:SetPoint(
+                "TOPLEFT", self, 2 * frame_padding + favorite_rares_width + 1, -(frame_padding + 3)
+            )
 
             self.broadcast_icon.texture = self.broadcast_icon:CreateTexture(nil, "OVERLAY")
             self.broadcast_icon.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Broadcast.tga")
@@ -540,7 +564,9 @@ function RT.AddDefaultEntityFrameFunctions(module)
         module.InitializeReloadButton = function(self)
             self.reload_button = CreateFrame("Button", string.format("%s.reload_button", self.addon_code), self)
             self.reload_button:SetSize(10, 10)
-            self.reload_button:SetPoint("TOPRIGHT", self, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3))
+            self.reload_button:SetPoint(
+                "TOPRIGHT", self, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3)
+            )
 
             self.reload_button.texture = self.reload_button:CreateTexture(nil, "OVERLAY")
             self.reload_button.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Reload.tga")
@@ -568,7 +594,9 @@ function RT.AddDefaultEntityFrameFunctions(module)
             self.reload_button.tooltip.text2:SetJustifyH("LEFT")
             self.reload_button.tooltip.text2:SetJustifyV("TOP")
             self.reload_button.tooltip.text2:SetPoint("TOPLEFT", self.reload_button.tooltip, 5, -15)
-            self.reload_button.tooltip.text2:SetText(L["Note: you do not need to press this button to receive new timers."])
+            self.reload_button.tooltip.text2:SetText(
+                L["Note: you do not need to press this button to receive new timers."]
+            )
             
             -- Hide and show the tooltip on mouseover.
             self.reload_button:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
@@ -576,7 +604,9 @@ function RT.AddDefaultEntityFrameFunctions(module)
             
             self.reload_button:SetScript("OnClick", function()
                 if self.current_shard_id ~= nil and GetServerTime() - self.last_reload_time > 600 then
-                    print(string.format(L["<%s> Resetting current rare timers and requesting up-to-date data."], self.addon_code))
+                    print(string.format(
+                        L["<%s> Resetting current rare timers and requesting up-to-date data."], self.addon_code
+                    ))
                     self.is_alive = {}
                     self.current_health = {}
                     self.last_recorded_death = {}
@@ -595,9 +625,11 @@ function RT.AddDefaultEntityFrameFunctions(module)
                     print(string.format(L["<%s> Please target a non-player entity prior to resetting, "..
                             "such that the addon can determine the current shard id."], self.addon_code))
                 else
-                    print(string.format(L["<%s> The reset button is on cooldown. Please note that a reset is not needed "..
+                    print(string.format(
+                        L["<%s> The reset button is on cooldown. Please note that a reset is not needed "..
                         "to receive new timers. If it is your intention to reset the data, "..
-                        "please do a /reload and click the reset button again."], self.addon_code))
+                        "please do a /reload and click the reset button again."], self.addon_code
+                    ))
                 end
             end)
         end
