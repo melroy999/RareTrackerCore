@@ -220,11 +220,6 @@ function RT:InitializeOptionsMenu()
         }
     }
     
-    -- Add all the options defined by the modules.
-    for _, module in pairs(self.zone_modules) do
-        module:AddModuleOptions(self.options_table.args)
-    end
-    
     -- Register the options.
     LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTrackerCore", self.options_table)
     self.options_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTrackerCore", "RareTracker")
