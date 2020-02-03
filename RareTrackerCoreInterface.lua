@@ -263,8 +263,7 @@ function RT.AddDefaultEntityFrameFunctions(module)
                                 )
                             else
                                 SendChatMessage(
-                                    string.format(L["<%s> %s seen alive (combat log)"], name),
-                                    self.addon_code,
+                                    string.format(L["<%s> %s seen alive (combat log)"], self.addon_code, name),
                                     target,
                                     nil,
                                     channel_id
