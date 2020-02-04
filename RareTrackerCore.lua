@@ -20,22 +20,6 @@ RT.zone_modules = {}
 -- Create a mapping from zone id to module.
 RT.zone_id_to_module = {}
 
--- The zone_uid can be used to distinguish different shards of the zone.
-RT.current_shard_id = nil
-
--- The last zone the user was in.
-RT.last_zone_id = nil
-
--- ####################################################################
--- ##                         Saved Variables                        ##
--- ####################################################################
-
--- Setting saved in the saved variables.
-RTDB = {}
-
--- Remember whether the user wants to see the window or not.
-RTDB.show_window = nil
-
 -- ####################################################################
 -- ##                        Helper functions                        ##
 -- ####################################################################

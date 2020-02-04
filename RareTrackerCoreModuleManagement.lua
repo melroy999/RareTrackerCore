@@ -25,5 +25,5 @@ function RT:NotifyZoneModuleLoaded(module)
     module:AddModuleOptions(self.options_table.args)
     LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTrackerCore", self.options_table)
     
-    self:OnZoneTransition()
+    module:OnZoneTransition()
 end

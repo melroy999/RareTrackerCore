@@ -34,12 +34,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTrackerCore", true)
 -- ##                         Event Handlers                         ##
 -- ####################################################################
 
-function RT:OnEnable()
-    self:RegisterEvent("ZONE_CHANGED")
-    self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD")
-end
-
 function RT:OnInitialize()
     self:InitializeRareTrackerDatabase()
     self:InitializeRareTrackerLDB()
@@ -48,43 +42,9 @@ function RT:OnInitialize()
     self:RegisterChatCommand("raretracker", "ChatCommand")
 end
 
-function RT:ZONE_CHANGED()
-    self:OnZoneTransition()
-end
-
-function RT:ZONE_CHANGED_NEW_AREA()
-    self:OnZoneTransition()
-end
-
-function RT:PLAYER_ENTERING_WORLD()
-    self:OnZoneTransition()
-end
-
 -- ####################################################################
 -- ##                        Event Functions                         ##
 -- ####################################################################
-
-function RT:OnZoneTransition()
-    -- The zone the player is in.
-    local zone_id = C_Map.GetBestMapForUnit("player")
-    
-    -- Find the associated modules of the current zone and the last zone.
-    local current_zone_module = self.zone_id_to_module[zone_id]
-    local previous_zone_module = self.zone_id_to_module[self.last_zone_id]
-    
-    -- Check if we have to leave the previous zone.
-    if previous_zone_module and not previous_zone_module.target_zones[zone_id] then
-        previous_zone_module:RegisterDeparture(previous_zone_module.current_shard_id)
-        previous_zone_module:CloseInterface()
-    end
-    
-    -- Check if we have entered a new zone.
-    if current_zone_module and not current_zone_module.target_zones[self.last_zone_id] then
-        current_zone_module:StartInterface()
-    end
-    
-    self.last_zone_id = zone_id
-end
 
 function RT.AddDefaultEventHandlerFunctions(module)
     -- Start by defining the default variables.
@@ -107,6 +67,8 @@ function RT.AddDefaultEventHandlerFunctions(module)
                 self:OnUnitHealth(...)
             elseif event == "COMBAT_LOG_EVENT_UNFILTERED" and RT.chat_frame_loaded then
                 self:OnCombatLogEvent()
+            elseif event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_ENTERING_WORLD" or event == "ZONE_CHANGED" then
+                self:OnZoneTransition()
             elseif event == "CHAT_MSG_ADDON" then
                 self:OnChatMsgAddon(...)
             elseif event == "VIGNETTE_MINIMAP_UPDATED" and RT.chat_frame_loaded then
@@ -118,6 +80,26 @@ function RT.AddDefaultEventHandlerFunctions(module)
             elseif event == "PLAYER_LOGOUT" then
                 self:OnPlayerLogout()
             end
+        end
+    end
+    
+    if not module.OnZoneTransition then
+        -- Add a last zone id to the module.
+        module.last_zone_id = nil
+        
+        -- Called whenever an event occurs that could indicate a zone change.
+        module.OnZoneTransition = function(self)
+            -- The zone the player is in.
+            local zone_id = C_Map.GetBestMapForUnit("player")
+                
+            if self.target_zones[zone_id] and not self.target_zones[self.last_zone_id] then
+                self:StartInterface()
+            elseif not self.target_zones[zone_id] then
+                self:RegisterDeparture(self.current_shard_id)
+                self:CloseInterface()
+            end
+            
+            self.last_zone_id = zone_id
         end
     end
     
@@ -323,7 +305,7 @@ function RT.AddDefaultEventHandlerFunctions(module)
             local vignetteInfo = C_VignetteInfo.GetVignetteInfo(vignetteGUID)
             local vignetteLocation = C_VignetteInfo.GetVignettePosition(vignetteGUID, C_Map.GetBestMapForUnit("player"))
 
-            if vignetteInfo then
+            if vignetteInfo and vignetteLocation then
                 -- Report the entity.
                 -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
                 local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", vignetteInfo.objectGUID)
