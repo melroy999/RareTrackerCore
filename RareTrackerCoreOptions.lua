@@ -59,7 +59,6 @@ local sound_options = {
 function RT.GetDefaultModuleDatabaseValues()
     return {
         global = {
-            enable_rare_filter = true,
             window_scale = 1.0,
             favorite_rares = {},
             previous_records = {},
