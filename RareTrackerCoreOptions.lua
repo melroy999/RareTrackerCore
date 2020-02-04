@@ -103,8 +103,9 @@ function RT:InitializeRareTrackerLDB()
         icon = "Interface\\AddOns\\RareTrackerCore\\Icons\\RareTrackerIcon",
         OnClick = function(_, button)
             if button == "LeftButton" then
-                if self.last_zone_id and self.zone_id_to_module[self.last_zone_id] then
-                    local module = self.zone_id_to_module[self.last_zone_id]
+                local zone_id = C_Map.GetBestMapForUnit("player")
+                if zone_id and self.zone_id_to_module[zone_id] then
+                    local module = self.zone_id_to_module[zone_id]
                     if module:IsShown() then
                         module:Hide()
                         self.db.global.window.hide = true

@@ -566,14 +566,15 @@ function RT:ChatCommand(input)
         InterfaceOptionsFrame_OpenToCategory(self.options_frame)
     else
         local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
+        local zone_id = C_Map.GetBestMapForUnit("player")
         if cmd == "show" then
-            if self.last_zone_id and self.zone_id_to_module[self.last_zone_id] then
-                self.zone_id_to_module[self.last_zone_id]:Show()
+            if zone_id and self.zone_id_to_module[zone_id] then
+                self.zone_id_to_module[zone_id]:Show()
                 self.db.global.window.hide = false
             end
         elseif cmd == "hide" then
-            if self.last_zone_id and self.zone_id_to_module[self.last_zone_id] then
-                self.zone_id_to_module[self.last_zone_id]:Hide()
+            if zone_id and self.zone_id_to_module[zone_id] then
+                self.zone_id_to_module[zone_id]:Hide()
             end
             self.db.global.window.hide = true
         end
