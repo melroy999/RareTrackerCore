@@ -478,6 +478,9 @@ function RT.AddDefaultEventHandlerFunctions(module)
             self:RegisterEvent("CHAT_MSG_ADDON")
             self:RegisterEvent("VIGNETTE_MINIMAP_UPDATED")
             self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
+            self:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+            self:RegisterEvent("PLAYER_ENTERING_WORLD")
+            self:RegisterEvent("ZONE_CHANGED")
         end
     end
     
@@ -490,6 +493,9 @@ function RT.AddDefaultEventHandlerFunctions(module)
             self:UnregisterEvent("CHAT_MSG_ADDON")
             self:UnregisterEvent("VIGNETTE_MINIMAP_UPDATED")
             self:UnregisterEvent("CHAT_MSG_MONSTER_YELL")
+            self:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
+            self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+            self:UnregisterEvent("ZONE_CHANGED")
         end
     end
     
