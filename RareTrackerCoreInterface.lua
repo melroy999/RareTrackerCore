@@ -687,6 +687,9 @@ function RT.AddDefaultEntityFrameFunctions(module)
             self:InitializeCloseButton()
             self:SetClampedToScreen(true)
             
+            -- Enforce the user-defined scale of the window.
+            self:SetScale(self.db.global.window_scale)
+            
             self:Hide()
         end
     end

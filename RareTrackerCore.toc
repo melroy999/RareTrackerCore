@@ -26,7 +26,6 @@ Locales\frFR.lua
 RareTrackerCore.lua
 Base64.lua
 LinkedSet.lua
-RareTrackerCoreGlobals.lua
 RareTrackerCoreInterface.lua
 RareTrackerCoreEventHandler.lua
 RareTrackerCoreModuleManagement.lua
