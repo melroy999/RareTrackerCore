@@ -8,6 +8,7 @@ L["Right-click: show options"] = "Right-click: show options"
 
 -- Chat messages.
 L["<%s> %s has died"] = "<%s> %s has died"
+L["<%s> %s (%s%%)"] = "<%s> %s (%s%%)"
 L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<%s> %s (%s%%) seen at ~(%.2f, %.2f)"
 L["<%s> %s was last seen ~%s minutes ago"] = "<%s> %s was last seen ~%s minutes ago"
 L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<%s> %s seen alive, vignette at ~(%.2f, %.2f)"
@@ -36,8 +37,15 @@ L["<%s> Moving to shard "] = "<%s> Moving to shard "
 L["<%s> Removing cached data for shard "] = "<%s> Removing cached data for shard "
 L["<%s> Restoring data from previous session in shard "] = "<%s> Restoring data from previous session in shard "
 L["<%s> Requesting rare kill data for shard "] = "<%s> Requesting rare kill data for shard "
+L["<%s> Resetting ordering"] = "<%s> Resetting ordering"
+L["<%s> Updating daily kill marks."] = "<%s> Updating daily kill marks."
+L["<%s> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = "<%s> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."
 
 -- Option menu strings.
 L["Favorite sound alert"] = "Favorite sound alert"
 L["Show minimap icon"] = "Show minimap icon"
 L["Enable debug mode"] = "Enable debug mode"
+L["Show RT debug output in the chat."] = "Show RT debug output in the chat."
+L["Show/hide the RT minimap icon."] = "Show/hide the RT minimap icon."
+L["Enable communication over party/raid channel"] = "Enable communication over party/raid channel"
+L["Enable communication over party/raid channel, to provide CRZ functionality while in a party or raid group."] = "Enable communication over party/raid channel, to provide CRZ functionality while in a party or raid group."

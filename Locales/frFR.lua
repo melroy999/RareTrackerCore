@@ -8,6 +8,7 @@ L["Right-click: show options"] = "Clique-droit : afficher les options."
 
 -- Chat messages.
 L["<%s> %s has died"] = "<%s> %s est mort."
+L["<%s> %s (%s%%)"] = "<%s> %s (%s%%)"
 L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<%s> %s (%s%%) vu à ~(%.2f, %.2f)"
 L["<%s> %s was last seen ~%s minutes ago"] = "<%s> %s vu pour la dernière fois il y a ~%s minutes"
 L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<%s> %s vu en vie à la position ~(%.2f, %.2f)"

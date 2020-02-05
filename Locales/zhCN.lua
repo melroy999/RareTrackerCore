@@ -8,6 +8,7 @@ L["Right-click: show options"] = "右键: 显示选项"
 
 -- Chat messages.
 L["<%s> %s has died"] = "<%s> %s 已经挂了"
+L["<%s> %s (%s%%)"] = "<%s> %s (%s%%)"
 L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<%s> %s (%s%%) 发现了 ~(%.2f, %.2f)"
 L["<%s> %s was last seen ~%s minutes ago"] = "<%s> %s 上次刷新在 ~%s 分钟以前"
 L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<%s> %s 还活着, 坐标点在 ~(%.2f, %.2f)"
