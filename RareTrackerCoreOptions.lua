@@ -113,6 +113,8 @@ function RT:InitializeRareTrackerLDB()
                         module:Show()
                         self.db.global.window.hide = false
                     end
+                else
+                    print("<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules.")
                 end
             else
                 InterfaceOptionsFrame_Show()
@@ -138,7 +140,7 @@ end
 
 function RT:InitializeOptionsMenu()
     self.options_table = {
-        name = "RareTracker (v"..GetAddOnMetadata("RareTrackerCore", "Version")..")",
+        name = "RareTracker (RT)",
         handler = RT,
         type = 'group',
         childGroups = "tree",

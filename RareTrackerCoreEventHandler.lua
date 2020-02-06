@@ -571,6 +571,8 @@ function RT:ChatCommand(input)
             if zone_id and self.zone_id_to_module[zone_id] then
                 self.zone_id_to_module[zone_id]:Show()
                 self.db.global.window.hide = false
+            else
+                print("<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules.")
             end
         elseif cmd == "hide" then
             if zone_id and self.zone_id_to_module[zone_id] then
