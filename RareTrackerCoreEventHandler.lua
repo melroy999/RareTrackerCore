@@ -338,14 +338,17 @@ function RT.AddDefaultEventHandlerFunctions(module)
     if not module.OnChatMsgMonsterYell then
         -- Called when a monster or entity does a yell emote.
         module.OnChatMsgMonsterYell = function(self, ...)
-            local entity_name = select(2, ...)
-            local npc_id = self.yell_announcing_rares[entity_name]
-            
-            if npc_id ~= nil then
-                -- Mark the entity as alive.
-                self.is_alive[npc_id] = GetServerTime()
-                self.current_coordinates[npc_id] = self.rare_coordinates[npc_id]
-                self:PlaySoundNotification(npc_id, npc_id)
+            -- Check whether the module provides yell announcing rares.
+            if self.yell_announcing_rares then
+                local entity_name = select(2, ...)
+                local npc_id = self.yell_announcing_rares[entity_name]
+                
+                if npc_id ~= nil then
+                    -- Mark the entity as alive.
+                    self.is_alive[npc_id] = GetServerTime()
+                    self.current_coordinates[npc_id] = self.rare_coordinates[npc_id]
+                    self:PlaySoundNotification(npc_id, npc_id)
+                end
             end
         end
     end
