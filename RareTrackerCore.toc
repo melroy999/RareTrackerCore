@@ -2,7 +2,7 @@
 ## Title: RareTrackerCore
 ## Notes: The core of the RareTracker addons.
 ## Author: Melroy
-## Version: 1.0.7
+## Version: 1.0.8
 ## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 
