@@ -465,6 +465,12 @@ function RT.AddDefaultEventHandlerFunctions(module)
         module.OnPlayerLogout = function(self)
             if self.current_shard_id then
                 -- Save the records, such that we can use them after a reload.
+                if self.db.global.previous_records == nil then
+                    -- Because of an unknown reason, the previous records table is considered nil during logout.
+                    -- If so, just re-initialize it as an empty table.
+                    self.db.global.previous_records = {}
+                end
+                
                 self.db.global.previous_records[self.current_shard_id] = {}
                 self.db.global.previous_records[self.current_shard_id].time_stamp = GetServerTime()
                 self.db.global.previous_records[self.current_shard_id].time_table = self.last_recorded_death
