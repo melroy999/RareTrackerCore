@@ -2,7 +2,7 @@
 ## Title: RareTrackerCore
 ## Notes: The core of the RareTracker addons.
 ## Author: Melroy
-## Version: 1.0.10
+## Version: 1.0.11
 ## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 
@@ -22,6 +22,7 @@ libs\AceConfig-3.0\AceConfig-3.0.xml
 Locales\enUS.lua
 Locales\zhCN.lua
 Locales\frFR.lua
+Locales\ruRU.lua
 
 RareTrackerCore.lua
 Base64.lua
