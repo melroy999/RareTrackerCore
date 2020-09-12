@@ -7,7 +7,7 @@ local IsLeftAltKeyDown = IsLeftAltKeyDown
 local IsRightAltKeyDown = IsRightAltKeyDown
 local SendChatMessage = SendChatMessage
 local GetServerTime = GetServerTime
-local IsQuestFlaggedCompleted = IsQuestFlaggedCompleted
+local IsQuestFlaggedCompleted = C_QuestLog.IsQuestFlaggedCompleted
 local pairs = pairs
 local print = print
 

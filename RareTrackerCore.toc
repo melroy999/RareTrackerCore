@@ -2,13 +2,13 @@
 ## Title: RareTrackerCore
 ## Notes: The core of the RareTracker addons.
 ## Author: Melroy
-## Version: 1.0.11
+## Version: 1.0.12
 ## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 
 libs\LibDBIcon-1.0\LibStub\LibStub.lua
-libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDBIcon-1.0\LibDataBroker-1.1\LibDataBroker-1.1.lua
 libs\LibDBIcon-1.0\LibDBIcon-1.0\LibDBIcon-1.0.lua
 libs\LibStub\LibStub.lua
 libs\AceAddon-3.0\AceAddon-3.0.xml
@@ -17,6 +17,7 @@ libs\AceDB-3.0\AceDB-3.0.xml
 libs\AceDBOptions-3.0\AceDBOptions-3.0.xml
 libs\AceLocale-3.0\AceLocale-3.0.xml
 libs\AceConsole-3.0\AceConsole-3.0.xml
+libs\AceGUI-3.0\AceGUI-3.0.xml
 libs\AceConfig-3.0\AceConfig-3.0.xml
 
 Locales\enUS.lua
