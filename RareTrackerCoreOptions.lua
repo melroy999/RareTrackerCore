@@ -213,6 +213,7 @@ function RT:InitializeOptionsMenu()
                                 end,
                                 set = function(_, val)
                                     self.db.global.favorite_alert.favorite_sound_alert = val
+                                    PlaySoundFile(val)
                                 end
                             },
                         }
