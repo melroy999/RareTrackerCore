@@ -1,8 +1,8 @@
 ## Interface: 90001
-## Title: RareTrackerCore
-## Notes: The core of the RareTracker addons.
+## Title: RareTracker
+## Notes: The core module of the RareTracker addons.
 ## Author: Melroy
-## Version: 1.0.13
+## Version: 2.0.0
 ## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 
@@ -25,11 +25,10 @@ Locales\zhCN.lua
 Locales\frFR.lua
 Locales\ruRU.lua
 
-RareTrackerCore.lua
+RareTracker.lua
 Base64.lua
-LinkedSet.lua
-RareTrackerCoreInterface.lua
-RareTrackerCoreEventHandler.lua
-RareTrackerCoreModuleManagement.lua
-RareTrackerCoreCommunication.lua
-RareTrackerCoreOptions.lua
+RareTrackerInterface.lua
+RareTrackerEventHandler.lua
+RareTrackerModuleManagement.lua
+RareTrackerCommunication.lua
+RareTrackerOptions.lua
