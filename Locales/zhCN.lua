@@ -1,5 +1,5 @@
 -- The locale for the Chinese language, provided generously by cikichen.
-local L = LibStub("AceLocale-3.0"):NewLocale("RareTrackerCore", "zhCN")
+local L = LibStub("AceLocale-3.0"):NewLocale("RareTracker", "zhCN")
 if not L then return end
 
 -- Addon icon instructions.

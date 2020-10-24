@@ -1,5 +1,5 @@
 -- The default locale, which is in the English language.
-local L = LibStub("AceLocale-3.0"):NewLocale("RareTrackerCore", "enUS", true, true)
+local L = LibStub("AceLocale-3.0"):NewLocale("RareTracker", "enUS", true, true)
 if not L then return end
 
 -- Addon icon instructions.

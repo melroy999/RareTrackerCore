@@ -3,7 +3,7 @@
 ## Notes: The core module of the RareTracker addons.
 ## Author: Melroy
 ## Version: 2.0.0
-## SavedVariables: RareTrackerDB
+## SavedVariables: RareTrackerDB2
 ## OptionalDeps: TomTom
 
 libs\LibDBIcon-1.0\LibStub\LibStub.lua
@@ -40,3 +40,16 @@ RareTrackerEventHandler.lua
 RareTrackerModuleManagement.lua
 RareTrackerCommunication.lua
 RareTrackerOptions.lua
+
+Plugins\Nazjatar\Locales\enUS.lua
+Plugins\Nazjatar\Locales\deDE.lua
+Plugins\Nazjatar\Locales\esES.lua
+Plugins\Nazjatar\Locales\esMX.lua
+Plugins\Nazjatar\Locales\frFR.lua
+Plugins\Nazjatar\Locales\itIT.lua
+Plugins\Nazjatar\Locales\koKR.lua
+Plugins\Nazjatar\Locales\ptBR.lua
+Plugins\Nazjatar\Locales\ptPT.lua
+Plugins\Nazjatar\Locales\ruRU.lua
+Plugins\Nazjatar\Locales\zhCN.lua
+Plugins\Nazjatar\Nazjatar.lua

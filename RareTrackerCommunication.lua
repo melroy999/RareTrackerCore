@@ -10,38 +10,228 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 -- ####################################################################
 
 -- The communication prefix of the addon.
-RareTracker.communication_prefix = "RareTracker"
+local communication_prefix = "RareTracker"
+
+-- The time at which the user joined the channel.
+local arrival_register_time = nil
+
+-- The name of the channel.
+local channel_name = nil
+
+-- The communication channel version.
+local version = 100
 
 -- Track when the last rate-limited message was sent over the specified channel. The table returns the value 0 as default.
-RareTracker.last_message_sent = {}
-setmetatable(RareTracker.last_message_sent, {__index = function () return 0 end})
+local last_message_sent = {}
+setmetatable(last_message_sent, {__index = function () return 0 end})
 
 -- ####################################################################
 -- ##                       Communication Core                       ##
 -- ####################################################################
 
 -- Function that is called when the addon receives a communication.
-function RareTracker:OnCommReceived(prefix, message, distribution, sender)
-    local decoded, error_code = self:Decode(message)
-    print(prefix, decoded, distribution, sender)
+function RareTracker:OnCommReceived(_, message, distribution, sender)
+    local header, payload = strsplit(":", message)
+    local _type, shard_id, message_version = strsplit("-", header)
+    message_version = tonumber(message_version)
+    
+    local decoded, error_code = self:Decode(payload)
+    self:Debug(_type, shard_id, message_version, decoded, distribution, sender)
 end
 
-function RareTracker:SendComm(message, target, target_id)
+-- Send a message with the given type and message.
+function RareTracker:SendAddonMessage(_type, message, target, target_id)
     local encoded = self:Encode(message)
     
     -- ChatThrottleLib does not take kindly to using the wrong target. Demote to party if needed.
     if target == "Raid" and UnitInParty("player") then
         target = "Party"
-    elseif target == "Party" and UnitInRaid("player") then
-        target = "Raid"
     end
     
-    self:SendCommMessage(self.communication_prefix, encoded, target, target_id)
+    self:SendCommMessage(communication_prefix, _type.."-"..self.shard_id.."-"..version..":"..encoded, target, target_id)
 end
 
-function RareTracker:SendCommTest()
-    self:SendComm("Hello", "Raid", nil)
-    self:SendRateLimitedAddonMessage(RTU.rare_names, "Raid", nil, 5)
+-- ####################################################################
+-- ##            Shard Group Management Register Functions           ##
+-- ####################################################################
+
+function RareTracker:AnnounceArrival()
+    -- Save the current channel name and join a channel.
+    channel_name = self.addon_code..self.shard_id
+            
+    local is_in_channel = false
+    if select(1, GetChannelName(channel_name)) ~= 0 then
+        is_in_channel = true
+    end
+
+    -- Announce to the others that you have arrived.
+    arrival_register_time = GetServerTime()
+    -- TODO self.rare_table_updated = false
+        
+    if not is_in_channel then
+        -- Join the appropriate channel.
+        JoinTemporaryChannel(channel_name)
+        
+        -- We want to avoid overwriting existing channel numbers. So delay the channel join.
+        self.DelayedExecution(1, function()
+                self:Debug("Requesting rare kill data for shard "..self.shard_id)
+                self:SendAddonMessage(
+                    "A", 
+                    arrival_register_time,
+                    "CHANNEL",
+                    select(1, GetChannelName(channel_name))
+                )
+            end
+        )
+    else
+        self:Debug("Requesting rare kill data for shard "..self.shard_id)
+        self:SendAddonMessage(
+            "A",
+            arrival_register_time,
+            "CHANNEL",
+            select(1, GetChannelName(channel_name))
+        )
+    end
+    
+    -- Register your arrival within the group.
+    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        self:SendAddonMessage(
+            "AP",
+            arrival_register_time,
+            "RAID",
+            nil
+        )
+    end
+end
+
+function RareTracker:AnnouncePresenceWhisper()
+    
+end
+
+function RareTracker:AnnouncePresenceGroup()
+    
+end
+
+
+function RareTracker:LeaveAllShardChannels()
+    local n_channels = GetNumDisplayChannels()
+    local channels_to_leave = {}
+    
+    -- Leave all channels with the addon prefix.
+    for i = 1, n_channels do
+        local _, channel_name = GetChannelName(i)
+        if channel_name and channel_name:find(communication_prefix) then
+            channels_to_leave[channel_name] = true
+        end
+    end
+    
+    for channel_name, _ in pairs(channels_to_leave) do
+        LeaveChannelByName(channel_name)
+    end
+end
+
+-- ####################################################################
+-- ##                 Channel Announcement Functions                 ##
+-- ####################################################################
+
+-- Inform the others that a specific entity has died.
+function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid)
+    self:SendAddonMessage(
+        "ED",
+        npc_id.."-"..spawn_uid,
+        "CHANNEL",
+        select(1, GetChannelName(channel_name))
+    )
+
+    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        self:SendAddonMessage(
+            "EDP",
+            npc_id.."-"..spawn_uid,
+            "RAID",
+            nil
+        )
+    end
+end
+
+-- Inform the others that you have spotted an alive entity.
+function RareTracker:AnnounceEntityAlive(npc_id, spawn_uid)
+    self:SendAddonMessage(
+        "EA",
+        npc_id.."-"..spawn_uid,
+        "CHANNEL",
+        select(1, GetChannelName(channel_name))
+    )
+
+    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        self:SendAddonMessage(
+            "EAP",
+            npc_id.."-"..spawn_uid,
+            "RAID",
+            nil
+        )
+    end
+    
+end
+
+-- Inform the others that you have spotted an alive entity and include the coordinates.
+function RareTracker:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
+    self:SendAddonMessage(
+        "EA",
+        npc_id.."-"..spawn_uid.."-"..x.."-"..y,
+        "CHANNEL",
+        select(1, GetChannelName(channel_name))
+    )
+
+    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        self:SendAddonMessage(
+            "EAP",
+            npc_id.."-"..spawn_uid.."-"..x.."-"..y,
+            "RAID",
+            nil
+        )
+    end
+end
+
+-- Inform the others that you have spotted an alive entity.
+function RareTracker:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
+    self:SendAddonMessage(
+        "ET",
+        npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
+        "CHANNEL",
+        select(1, GetChannelName(channel_name))
+    )
+    
+    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        self:SendAddonMessage(
+            "ETP",
+            npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
+            "RAID",
+            nil
+        )
+    end
+end
+
+-- Inform the others the health of a specific entity.
+function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
+    -- Send the health message, using a rate limited function.
+    self:SendRateLimitedAddonMessage(
+        "EH",
+        npc_id.."-"..spawn_uid.."-"..percentage,
+        "CHANNEL",
+        select(1, GetChannelName(channel_name)),
+        "CHANNEL"
+    )
+    
+    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        -- Send the health message, using a rate limited function.
+        self:SendRateLimitedAddonMessage(
+            "EHP",
+            npc_id.."-"..spawn_uid.."-"..percentage,
+            "RAID",
+            nil,
+            "RAID"
+        )
+    end
 end
 
 -- ####################################################################
@@ -90,9 +280,9 @@ end
 
 -- A function that ensures that a message is sent only once every 'refresh_time' seconds.
 function RareTracker:SendRateLimitedAddonMessage(message, target, target_id, refresh_time)
-    -- We only allow one message to be sent every ~5 seconds.
-    if GetTime() - self.last_message_sent[target] > 5 then
-        self:SendComm(message, target, target_id)
-        self.last_message_sent[target] = GetTime()
+    -- We only allow one message to be sent every ~'refresh_time' seconds.
+    if GetTime() - last_message_sent[target] > refresh_time then
+        self:SendAddonMessage(message, target, target_id)
+        last_message_sent[target] = GetTime()
     end
 end

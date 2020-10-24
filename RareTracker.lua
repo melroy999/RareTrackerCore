@@ -5,13 +5,50 @@
 -- Create the primary addon object.
 RareTracker = LibStub("AceAddon-3.0"):NewAddon("RareTracker", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceSerializer-3.0")
 
-
 -- ####################################################################
 -- ##                           Variables                            ##
 -- ####################################################################
 
 -- Create a mapping from the zone id to the primary zone id.
 RareTracker.zone_id_to_primary_id = {}
+
+-- Create a mapping from primary id to zone data.
+RareTracker.primary_id_to_data = {}
+    
+-- The short-hand code of the addon.
+RareTracker.addon_code = "RT"
+
+-- Keep a list of modules that have been registered, such that we can add them when loaded.
+local plugin_data = {}
+
+-- Define the default settings.
+local defaults = {
+    global = {
+        communication = {
+            raid_communication = true,
+        },
+        debug = {
+            enable = true,
+        },
+        favorite_alert = {
+            favorite_sound_alert = 552503,
+        },
+        window = {
+            hide = false,
+        },
+        window_scale = 1.0,
+        favorite_rares = {},
+        previous_records = {},
+        ignore_rares = {},
+        banned_NPC_ids = {},
+        version = 0,
+    },
+    profile = {
+        minimap = {
+            hide = false,
+        },
+    },
+}
 
 -- ####################################################################
 -- ##                     Standard Ace3 Methods                      ##
@@ -21,6 +58,18 @@ RareTracker.zone_id_to_primary_id = {}
 function RareTracker:OnInitialize()
     -- Register the addon's prefix and the associated communication function.
     RareTracker:RegisterComm("RareTracker")
+    
+    -- Load the database.
+    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB2", defaults, true)
+
+    -- Register the callback to the logout function.
+    self.db.RegisterCallback(self, "OnDatabaseShutdown", "OnDatabaseShutdown")
+    
+    -- Add all the requested zones and rares.
+    for key, rare_data in pairs(plugin_data) do
+        self:AddRaresForZone(rare_data)
+        plugin_data[key] = nil
+    end
 end
 
 -- A function that is called whenever the addon is enabled by the user.
@@ -35,7 +84,7 @@ end
 
 -- Called when the player logs out, such that we can save the current time table for later use.
 function RareTracker:OnDatabaseShutdown()
-    
+    self:SaveRecordedData()
 end
 
 -- ####################################################################
@@ -54,22 +103,31 @@ end
 -- ##                      Module Registration                       ##
 -- ####################################################################
 
-RareTracker.rare_data = {
-    -- Define the zone(s) in which the rares are present.
-    ["target_zones"] = {1355},
-    ["zone_name"] = "Nazjatar",
-    ["rare_ids"] = {0, 1, 2, 3, 4}
-}
-
--- Register a list of rare entities for a given zone id/zone ids.
+-- Register a list of rare data that will be processed upon successful load.
 function RareTracker:RegisterRaresForZone(rare_data)
-    -- Only define the data for the zone once by making a pointer to the primary id.
-    for _, value in pairs(rare_data.target_zones) do
-        self.zone_id_to_primary_id[value] = rare_data.target_zones[1]
-    end
+    tinsert(plugin_data, rare_data)
 end
 
-RareTracker:RegisterRaresForZone(RareTracker.rare_data)
+-- Register a list of rare entities for a given zone id/zone ids.
+function RareTracker:AddRaresForZone(rare_data)
+    local primary_id = rare_data.target_zones[1]
+    
+    -- Only define the data for the zone once by making a pointer to the primary id.
+    for _, value in pairs(rare_data.target_zones) do
+        self.zone_id_to_primary_id[value] = primary_id
+    end
+    
+    -- Store the data.
+    self.primary_id_to_data[primary_id] = rare_data
+    
+    -- Create a table for favorite and ignored rares for the zone, if they don't exist yet.
+    if not self.db.global.favorite_rares[primary_id] then
+        self.db.global.favorite_rares[primary_id] = {}
+    end
+    if not self.db.global.ignore_rares[primary_id] then
+        self.db.global.ignore_rares[primary_id] = {}
+    end
+end
 
 -- ####################################################################
 -- ##                        Helper functions                        ##
@@ -108,8 +166,7 @@ end
 
 -- A print function used for debug purposes.
 function RareTracker:Debug(...)
-	if true then
-	-- if self.db.global.debug.enable then
-		print("[Debug]", ...)
+	if self.db.global.debug.enable then
+		print("[Debug.RT]", ...)
 	end
 end

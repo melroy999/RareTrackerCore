@@ -1,5 +1,5 @@
 -- The locale for the Russian language, provided generously by dak1ne-4th.
-local L = LibStub("AceLocale-3.0"):NewLocale("RareTrackerCore", "ruRU")
+local L = LibStub("AceLocale-3.0"):NewLocale("RareTracker", "ruRU")
 if not L then return end
 
 -- Addon icon instructions.

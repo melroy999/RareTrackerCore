@@ -12,10 +12,37 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 -- The last zone id that was encountered.
 RareTracker.last_zone_id = nil
 
+-- The current shard id.
+RareTracker.shard_id = nil
+
 -- A flag used to detect guardians or pets.
-RareTracker.pet_mask = bit.bor(
+local pet_mask = bit.bor(
     COMBATLOG_OBJECT_TYPE_GUARDIAN, COMBATLOG_OBJECT_TYPE_PET, COMBATLOG_OBJECT_TYPE_OBJECT
 )
+
+-- A flag that will notify whether the char frame has loaded successfully, to avoid overwriting the chat order.
+local chat_frame_loaded = false
+
+-- Track whether an entity is considered to be alive.
+RareTracker.is_alive = {}
+
+-- Track the current health of the entity.
+RareTracker.current_health = {}
+
+-- Track when the entity was last seen dead.
+RareTracker.last_recorded_death = {}
+
+-- Track the reported current coordinates of the rares.
+RareTracker.current_coordinates = {}
+
+-- Record all entities that died, such that we don't overwrite existing death.
+local recorded_entity_death_ids = {}
+
+-- Record all vignettes that are detected, such that we don't report the same spawn multiple times.
+local reported_vignettes = {}
+
+-- Record all spawn uids that are detected, such that we don't report the same spawn multiple times.
+local reported_spawn_uids = {}
 
 -- ####################################################################
 -- ##                           Event Handlers                       ##
@@ -41,38 +68,137 @@ function RareTracker:OnZoneTransition()
     end
 
     -- Update the zone id.
-    self.last_zone_id = zone_id
+    self.last_zone_id = self.zone_id_to_primary_id[zone_id]
 end
 
 -- Fetch the new list of rares and ensure that these rares are properly displayed.
 function RareTracker:ChangeZone(zone_id)
+    -- Leave the channel associated with the current shard id and save the data.
+    self:LeaveAllShardChannels()
+    self:SaveRecordedData()
+    
+    -- Reset all tracked data.
+    self:ResetTrackedData()
+    
+    -- Reset the shard id
+    self.shard_id = nil
+    
+    -- Update the GUI such that it contains the correct list of rares.
     -- TODO
-    print("Changing zone to", zone_id)
+    
+    self:Debug("Changing zone to", zone_id)
+end
+
+-- Transfer to a new shard, reset current data and join the appropriate channel.
+function RareTracker:ChangeShard(zone_uid)
+    -- Leave the channel associated with the current shard id and save the data.
+    self:LeaveAllShardChannels()
+    self:SaveRecordedData()
+    
+    -- Reset all tracked data.
+    self:ResetTrackedData()
+    
+    -- Set the new shard id.
+    self.shard_id = zone_uid
+    
+    -- Update the shard number in the display.
+    self:UpdateShardNumber()
+    
+    -- Change the shard id to the new shard and add the channel.
+    self:LoadRecordedData()
+    self:AnnounceArrival()
+end
+
+-- Check whether the user has changed shards and proceed accordingly. 
+-- Return true if the shard changed, false otherwise.
+function RareTracker:CheckForShardChange(zone_uid)
+    if self.shard_id ~= zone_uid and zone_uid ~= nil then
+        self:Debug("Moving to shard "..zone_uid)
+        self:ChangeShard(zone_uid)
+        return true
+    end
+    return false
+end
+
+-- Check whether the given npc id needs to be redirected under the current circumstances.
+function RareTracker:CheckForRedirectedRareIds(npc_id)
+    local redirection = self.primary_id_to_data[self.last_zone_id].redirection
+    if redirection then
+        return redirection(npc_id)
+    end
+    return npc_id
 end
 
 -- This event is fired whenever the player's target is changed, including when the target is lost. 
 function RareTracker:PLAYER_TARGET_CHANGED()
-
+    -- Get information about the target.
+    local guid = UnitGUID("target")
+    
+    if chat_frame_loaded and guid then
+        -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
+        local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", guid)
+        npc_id = tonumber(npc_id)
+        
+        -- It might occur that the NPC id is nil. Do not proceed in such a case.
+        if not npc_id then return end
+        
+        -- Certain entities retain their zone_uid even after moving shards. Ignore them.
+        if not self.db.global.banned_NPC_ids[npc_id] then
+            if self:CheckForShardChange(zone_uid) then
+                self:Debug("[Target]", guid)
+            end
+        end
+        
+        --A special check for duplicate NPC ids in different environments (Mecharantula).
+        npc_id = self:CheckForRedirectedRareIds(npc_id)
+        
+        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].rares[npc_id] then
+            -- Find the health of the entity.
+            local health = UnitHealth("target")
+        
+            if health > 0 then
+                -- Get the current position of the player and the health of the entity.
+                local pos = C_Map.GetPlayerMapPosition(C_Map.GetBestMapForUnit("player"), "player")
+                local x, y = math.floor(pos.x * 10000 + 0.5) / 100, math.floor(pos.y * 10000 + 0.5) / 100
+                local percentage = self.GetTargetHealthPercentage()
+                
+                -- Mark the entity as alive and report to your peers.
+                self:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y)
+            else
+                -- Mark the entity has dead and report to your peers.
+                self:ProcessEntityDeath(npc_id, spawn_uid)
+            end
+        end
+    end
 end
 
 -- Fired whenever a unit's health is affected. 
 function RareTracker:UNIT_HEALTH(unit)
+    if chat_frame_loaded then
+        
+    end
     
 end
 
 -- Fires for combat events such as a player casting a spell or an NPC taking damage.
 function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
-
+    if chat_frame_loaded then
+        
+    end
 end
 
 -- Fired whenever a vignette appears or disappears in the minimap.
 function RareTracker:VIGNETTE_MINIMAP_UPDATED(vignetteGUID, _)
-    
+    if chat_frame_loaded then
+        
+    end
 end
 
 -- Fires when an NPC yells, such as a raid boss or in Alterac Valley.
 function RareTracker:CHAT_MSG_MONSTER_YELL(...)
-    
+    if chat_frame_loaded then
+        
+    end
 end
 
 -- ####################################################################
@@ -97,6 +223,108 @@ function RareTracker:UnregisterTrackingEvents()
     self:UnregisterEvent("CHAT_MSG_MONSTER_YELL")
 end
 
+-- Reset all the currently tracked data.
+function RareTracker:ResetTrackedData()
+    self.is_alive = {}
+    self.current_health = {}
+    self.last_recorded_death = {}
+    self.current_coordinates = {}
+    recorded_entity_death_ids = {}
+    reported_spawn_uids = {}
+    reported_vignettes = {}
+end
+
+-- Save all the recorded data in the database.
+function RareTracker:SaveRecordedData()
+    if self.shard_id then
+        -- Store the timer data for the shard in the saved variables.
+        self.db.global.previous_records[self.shard_id] = {}
+        self.db.global.previous_records[self.shard_id].time_stamp = GetServerTime()
+        self.db.global.previous_records[self.shard_id].time_table = self.last_recorded_death
+    end
+end
+
+-- Attempt to load previous data from our cache.
+function RareTracker:LoadRecordedData()
+    if self.db.global.previous_records[shard_id] then
+        if GetServerTime() - self.db.global.previous_records[self.shard_id].time_stamp < 900 then
+            print("Restoring data from previous session in shard "..self.shard_id)
+            self.last_recorded_death = self.db.global.previous_records[self.shard_id].time_table
+        else
+            self.db.global.previous_records[self.shard_id] = nil
+        end
+    end
+end
+
+-- ####################################################################
+-- ##                Process Rare Event Helper Functions             ##
+-- ####################################################################
+
+-- Process that an entity has died.
+function RareTracker:ProcessEntityDeath(npc_id, spawn_uid)
+    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+        -- Mark the entity as dead.
+        self.last_recorded_death[npc_id] = GetServerTime()
+        self.is_alive[npc_id] = nil
+        self.current_health[npc_id] = nil
+        self.current_coordinates[npc_id] = nil
+        recorded_entity_death_ids[spawn_uid..npc_id] = true
+        reported_spawn_uids[npc_id] = nil
+                
+        -- We want to avoid overwriting existing channel numbers. So delay the channel join.
+        -- TODO self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id) end)
+        
+        -- Send the death message.
+        self:AnnounceEntityDeath(npc_id, spawn_uid)
+    end
+end
+
+-- Process that an entity has been seen alive.
+function RareTracker:ProcessEntityAlive()
+    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+        -- Mark the entity as alive.
+        self.is_alive[npc_id] = GetServerTime()
+    
+        -- Send the alive message.
+        if (x == nil or y == nil) and self.rare_coordinates[npc_id] then
+            local location = self.rare_coordinates[npc_id]
+            x = location.x
+            y = location.y
+        end
+        
+        if x ~= nil and y ~= nil then
+            self.current_coordinates[npc_id] = {["x"] = x, ["y"] = y}
+            self:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
+        else
+            self:AnnounceEntityAlive(npc_id, spawn_uid)
+        end
+    end
+end
+
+-- Process that an entity has been targeted.
+function RareTracker:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y)
+    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+        -- Mark the entity as targeted and alive.
+        self.is_alive[npc_id] = GetServerTime()
+        self.current_health[npc_id] = percentage
+        self.current_coordinates[npc_id] = {["x"] = x, ["y"] = y}
+        -- TODO self:UpdateStatus(npc_id)
+    
+        -- Send the target message.
+        self:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
+    end
+end
+
+-- Process an enemy health update.
+function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage)
+    self.is_alive[npc_id] = GetServerTime()
+    self.current_health[npc_id] = percentage
+    -- TODO self:UpdateStatus(npc_id)
+    
+    -- Send the health update message.
+    self:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
+end
+
 -- ####################################################################
 -- ##                   Event Handling Initialization                ##
 -- ####################################################################
@@ -105,3 +333,27 @@ end
 RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
 RareTracker:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
 RareTracker:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
+
+-- ####################################################################
+-- ##                       Channel Wait Frame                       ##
+-- ####################################################################
+
+-- One of the issues encountered is that the chat might be joined before the default channels.
+-- In such a situation, the order of the channels changes, which is undesirable.
+-- Thus, we block certain events until these chats have been loaded.
+local message_delay_frame = CreateFrame("Frame", "RareTracker.message_delay_frame", UIParent)
+message_delay_frame.start_time = GetServerTime()
+message_delay_frame:SetScript("OnUpdate",
+	function(self)
+		if GetServerTime() - self.start_time > 0 then
+			if #{GetChannelList()} == 0 then
+				self.start_time = GetServerTime()
+			else
+				chat_frame_loaded = true
+				self:SetScript("OnUpdate", nil)
+				self:Hide()
+			end
+		end
+	end
+)
+message_delay_frame:Show()
