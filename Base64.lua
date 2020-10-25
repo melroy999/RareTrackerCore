@@ -6,6 +6,8 @@ local table = table
 
 -- The characters to be used in the base64 string.
 local digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local base = #digits
 
 -- A cheat sheet used to easily convert back to decimal.
 local inverse_map = {}
@@ -15,7 +17,7 @@ for i = 1, #digits do
 end
 
 -- Convert a decimal number to a base64 string.
-function RareTracker:toBase64(number)
+function RareTracker:ToBase64(number)
     local t = {}
 	
 	if number < 0 then
@@ -23,8 +25,8 @@ function RareTracker:toBase64(number)
 	end
 	
     repeat
-        local d = (number % 64) + 1
-        number = floor(number / 64)
+        local d = (number % base) + 1
+        number = floor(number / base)
         table.insert(t, 1, digits:sub(d, d))
     until number == 0
 	
@@ -32,7 +34,7 @@ function RareTracker:toBase64(number)
 end
 
 -- Convert a decimal number to a base64 string.
-function RareTracker:toBase10(base64)
+function RareTracker:ToBase10(base64)
 	local n = 0
 	local j = 1
 	
@@ -40,7 +42,7 @@ function RareTracker:toBase10(base64)
 		local k = #base64 - i + 1
 		local c = base64:sub(k, k)
 		n = n + j * inverse_map[c]
-		j = j * 64
+		j = j * base
 	end
 	
 	return n

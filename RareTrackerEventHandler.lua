@@ -38,6 +38,9 @@ RareTracker.current_coordinates = {}
 -- Record all entities that died, such that we don't overwrite existing death.
 local recorded_entity_death_ids = {}
 
+-- A list of waypoints.
+RareTracker.waypoints = {}
+
 -- Record all vignettes that are detected, such that we don't report the same spawn multiple times.
 local reported_vignettes = {}
 
@@ -163,10 +166,10 @@ function RareTracker:PLAYER_TARGET_CHANGED()
                 local percentage = self.GetTargetHealthPercentage()
                 
                 -- Mark the entity as alive and report to your peers.
-                self:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y)
+                self:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y, true)
             else
                 -- Mark the entity has dead and report to your peers.
-                self:ProcessEntityDeath(npc_id, spawn_uid)
+                self:ProcessEntityDeath(npc_id, spawn_uid, true)
             end
         end
     end
@@ -201,10 +204,10 @@ function RareTracker:UNIT_HEALTH(_, unit)
             -- Does the entity have any health left?
             if percentage > 0 then
                 -- Report the health of the entity to your peers.
-                self:ProcessEntityHealth(npc_id, spawn_uid, percentage)
+                self:ProcessEntityHealth(npc_id, spawn_uid, percentage, true)
             else
                 -- Mark the entity has dead and report to your peers.
-                self:ProcessEntityDeath(npc_id, spawn_uid)
+                self:ProcessEntityDeath(npc_id, spawn_uid, true)
             end
         end
     end
@@ -245,12 +248,12 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
         if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if subevent == "UNIT_DIED" then
                 -- Mark the entity has dead and report to your peers.
-                self:ProcessEntityDeath(npc_id, spawn_uid)
+                self:ProcessEntityDeath(npc_id, spawn_uid, true)
             elseif subevent ~= "PARTY_KILL" then
                 -- Report the entity as alive to your peers, if it is not marked as alive already.
-                if self.is_alive[npc_id] == nil then
+                if not self.is_alive[npc_id] then
                     -- The combat log range is quite long, so no coordinates can be provided.
-                    self:ProcessEntityAlive(npc_id, spawn_uid, nil, nil)
+                    self:ProcessEntityAlive(npc_id, spawn_uid, nil, nil, true)
                 end
             end
         end
@@ -285,7 +288,7 @@ function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
                 if self.primary_id_to_data[self.last_zone_id].entities[npc_id] and not reported_vignettes[vignetteGUID] then
                     reported_vignettes[vignetteGUID] = {npc_id, spawn_uid}
                     local x, y = 100 * vignetteLocation.x, 100 * vignetteLocation.y
-                    self:ProcessEntityAlive(npc_id, spawn_uid, x, y)
+                    self:ProcessEntityAlive(npc_id, spawn_uid, x, y, true)
                 end
             end
         end
@@ -371,7 +374,15 @@ end
 
 -- Play a sound notification if applicable
 function RareTracker:PlaySoundNotification(npc_id, spawn_uid)
-    -- TODO
+    if self.db.global.favorite_rares[self.last_zone_id][npc_id] and not self.reported_spawn_uids[spawn_uid] and not self.reported_spawn_uids[npc_id] then
+        -- Play a sound file.
+        local completion_quest_id = self.primary_id_to_data[self.last_zone_id].entities[npc_id].quest_id
+        self.reported_spawn_uids[spawn_uid] = true
+        
+        if not IsQuestFlaggedCompleted(completion_quest_id) then
+            PlaySoundFile(RT.db.global.favorite_alert.favorite_sound_alert)
+        end
+    end
 end
 
 -- ####################################################################
@@ -379,7 +390,7 @@ end
 -- ####################################################################
 
 -- Process that an entity has died.
-function RareTracker:ProcessEntityDeath(npc_id, spawn_uid)
+function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
     if not recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as dead.
         self.last_recorded_death[npc_id] = GetServerTime()
@@ -388,59 +399,101 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid)
         self.current_coordinates[npc_id] = nil
         recorded_entity_death_ids[spawn_uid..npc_id] = true
         reported_spawn_uids[npc_id] = nil
+        
+        -- Update the status of the rare in the display.
+        self:UpdateStatus(npc_id)
                 
-        -- We want to avoid overwriting existing channel numbers. So delay the channel join.
+        -- We need to delay the update daily kill mark check, since the servers don't update it instantly.
         self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id) end)
         
+        -- Remove the waypoint if applicable.
+        if self.waypoints[npc_id] and TomTom then
+            TomTom:RemoveWaypoint(self.waypoints[npc_id])
+            self.waypoints[npc_id] = nil
+        end
+        
         -- Send the death message.
-        self:AnnounceEntityDeath(npc_id, spawn_uid)
+        if make_announcement then
+            self:AnnounceEntityDeath(npc_id, spawn_uid)
+        end
     end
 end
 
 -- Process that an entity has been seen alive.
-function RareTracker:ProcessEntityAlive(npc_id, spawn_uid, x, y)
+function RareTracker:ProcessEntityAlive(npc_id, spawn_uid, x, y, make_announcement)
     if not recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as alive.
         self.is_alive[npc_id] = GetServerTime()
-    
-        -- Send the alive message.
+        
+        -- Update the status of the rare in the display.
+        self:UpdateStatus(npc_id)
+
+        -- Find coordinates.
         if (x == nil or y == nil) and self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates then
             local location = self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates
             x = location.x
             y = location.y
         end
         
+        -- Make a sound announcement if appropriate.
+        self:PlaySoundNotification(npc_id, spawn_uid)
+        
+        -- Send the alive message.
         if x ~= nil and y ~= nil then
             self.current_coordinates[npc_id] = {["x"] = x, ["y"] = y}
-            self:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
-        else
+            if make_announcement then
+                self:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
+            end
+        elseif make_announcement then
             self:AnnounceEntityAlive(npc_id, spawn_uid)
         end
     end
 end
 
 -- Process that an entity has been targeted.
-function RareTracker:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y)
+function RareTracker:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y, make_announcement)
     if not recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as targeted and alive.
+        self.last_recorded_death[npc_id] = nil
         self.is_alive[npc_id] = GetServerTime()
         self.current_health[npc_id] = percentage
         self.current_coordinates[npc_id] = {["x"] = x, ["y"] = y}
+        
+        -- Update the status of the rare in the display.
         self:UpdateStatus(npc_id)
+        
+        -- Make a sound announcement if appropriate.
+        self:PlaySoundNotification(npc_id, spawn_uid)
     
         -- Send the target message.
-        self:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
+        if make_announcement then
+            self:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
+        end
     end
 end
 
 -- Process an enemy health update.
-function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage)
-    self.is_alive[npc_id] = GetServerTime()
-    self.current_health[npc_id] = percentage
-    self:UpdateStatus(npc_id)
-    
-    -- Send the health update message.
-    self:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
+function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, make_announcement)
+    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+        -- Update the health of the entity.
+        self.last_recorded_death[npc_id] = nil
+        self.is_alive[npc_id] = GetServerTime()
+        self.current_health[npc_id] = percentage
+        self:UpdateStatus(npc_id)
+        
+        -- Update the status of the rare in the display.
+        self:UpdateStatus(npc_id)
+        
+        -- Make a sound announcement if appropriate.
+        self:PlaySoundNotification(npc_id, spawn_uid)
+        
+        -- Send the health update message.
+        if make_announcement then
+            self:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
+        end
+        
+        -- TODO: ensure that the rate limiting will still works when multiple people report the rare.
+    end
 end
 
 -- ####################################################################

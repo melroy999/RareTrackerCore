@@ -19,7 +19,10 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 100
+local version = 1
+
+-- The name and realm of the player.
+local player_name = UnitName("player").."-"..GetRealmName()
 
 -- Track when the last rate-limited message was sent over the specified channel. The table returns the value 0 as default.
 local last_message_sent = {}
@@ -30,25 +33,85 @@ setmetatable(last_message_sent, {__index = function() return 0 end})
 -- ####################################################################
 
 -- Function that is called when the addon receives a communication.
-function RareTracker:OnCommReceived(_, message, distribution, sender)
-    local header, payload = strsplit(":", message)
-    local _type, shard_id, message_version = strsplit("-", header)
-    message_version = tonumber(message_version)
+function RareTracker:OnCommReceived(_, message, distribution, player)
+    -- Skip if the message is sent by the player.
+    if player_name == player then return end
     
-    local decoded, error_code = self:Decode(payload)
-    self:Debug(_type, shard_id, message_version, decoded, distribution, sender)
+    local header, serialization = strsplit(":", message)
+    local prefix, shard_id, message_version = strsplit("-", header)
+    message_version = tonumber(message_version)
+    local deserialization_success, payload = self:Deserialize(serialization)
+
+    self:Debug(prefix, shard_id, message_version, serialization, distribution, player)
+    
+    -- The format of messages might change over time and as such, versioning is needed.
+    -- To ensure optimal performance, all users should use the latest version.
+    if not self.reported_version_mismatch and version < message_version and message_version ~= 9001 then
+        print("<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience.")
+        self.reported_version_mismatch = true
+    end
+    
+    -- Only allow communication if the users are on the same shards and if their addon version is equal.
+    if self.shard_id == shard_id and version == message_version then
+        if prefix == "A" then
+            local time_stamp = tonumber(payload)
+            self:AcknowledgeArrival(player, time_stamp)
+        elseif prefix == "PW" then
+            self:AcknowledgeRecordedData(payload)
+        elseif prefix == "ED" then
+            local npc_id, spawn_uid = strsplit("-", payload)
+            npc_id = tonumber(npc_id)
+            self:AcknowledgeEntityDeath(npc_id, spawn_uid)
+        elseif prefix == "EA" then
+            local npc_id, spawn_uid, x, y = strsplit("-", payload)
+            npc_id, x, y = tonumber(npc_id), tonumber(x), tonumber(y)
+            self:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
+        elseif prefix == "ET" then
+            local npc_id, spawn_uid, percentage, x, y = strsplit("-", payload)
+            npc_id, percentage, x, y = tonumber(npc_id), tonumber(percentage), tonumber(x), tonumber(y)
+            self:AcknowledgeEntityTarget(npc_id, spawn_uid, percentage, x, y)
+        elseif prefix == "EH" then
+            local npc_id, spawn_uid, percentage = strsplit("-", payload)
+            npc_id, percentage = tonumber(npc_id), tonumber(percentage)
+            self:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage)
+        elseif RT.db.global.communication.raid_communication then
+            if prefix == "AP" then
+                local time_stamp = tonumber(payload)
+                self:AcknowledgeGroupArrival(player, time_stamp)
+            elseif prefix == "PP" then
+                self:AcknowledgePresence(payload)
+            elseif prefix == "EDP" then
+                local npc_id, spawn_uid = strsplit("-", payload)
+                npc_id = tonumber(npc_id)
+                self:AcknowledgeEntityDeath(npc_id, spawn_uid)
+            elseif prefix == "EAP" then
+                local npcs_id, spawn_uid, x, y = strsplit("-", payload)
+                npc_id, x, y = tonumber(npc_id), tonumber(x), tonumber(y)
+                self:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
+            elseif prefix == "ETP" then
+                local npc_id, spawn_uid, percentage, x, y = strsplit("-", payload)
+                npc_id, percentage, x, y = tonumber(npc_id), tonumber(percentage), tonumber(x), tonumber(y)
+                self:AcknowledgeEntityTarget(npc_id, spawn_uid, percentage, x, y)
+            elseif prefix == "EHP" then
+                local npc_id, spawn_uid, percentage = strsplit("-", payload)
+                npc_id, percentage = tonumber(npc_id), tonumber(percentage)
+                self:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
+            end
+        end
+    end
 end
 
 -- Send a message with the given type and message.
-function RareTracker:SendAddonMessage(_type, message, target, target_id)
-    local encoded = self:Encode(message)
-    
+function RareTracker:SendAddonMessage(prefix, message, target, target_id)
+    -- Serialize the message.
+    message = self:Serialize(message)
+
     -- ChatThrottleLib does not take kindly to using the wrong target. Demote to party if needed.
     if target == "Raid" and UnitInParty("player") then
         target = "Party"
     end
     
-    self:SendCommMessage(communication_prefix, _type.."-"..self.shard_id.."-"..version..":"..encoded, target, target_id)
+    self:SendCommMessage(communication_prefix, prefix.."-"..self.shard_id.."-"..version..":"..message, target, target_id)
 end
 
 -- ####################################################################
@@ -104,15 +167,37 @@ function RareTracker:AnnounceArrival()
     end
 end
 
-function RareTracker:AnnouncePresenceWhisper()
-    -- TODO
+-- Present your data through a whisper.
+function RareTracker:PresentRecordedDataThroughWhisper(target, time_stamp)  
+    if next(self.last_recorded_death) then
+        local time_table = {}
+        for npc_id, kill_time in pairs(self.last_recorded_death) do
+            time_table[self:ToBase64(npc_id)] = self:ToBase64(time_stamp - kill_time)
+        end
+        
+        -- Add the time stamp to the table, such that the receiver can verify.
+        time_table["time_stamp"] = self:ToBase64(time_stamp)
+        
+        self:SendAddonMessage("PW", time_table, "WHISPER", target)
+    end
 end
 
-function RareTracker:AnnouncePresenceGroup()
-    -- TODO
+-- Present your data through a party/raid message.
+function RareTracker:PresentRecordedDataInGroup(time_stamp)
+    if next(self.last_recorded_death) then
+        local time_table = {}
+        for npc_id, kill_time in pairs(self.last_recorded_death) do
+            time_table[self:ToBase64(npc_id)] = self:ToBase64(time_stamp - kill_time)
+        end
+        
+        -- Add the time stamp to the table, such that the receiver can verify.
+        time_table["time_stamp"] = self:ToBase64(time_stamp)
+        
+        self:SendAddonMessage("PP", time_table, "Raid", nil)
+    end
 end
 
-
+-- Leave all the RareTracker shard channels that the player is currently part of.
 function RareTracker:LeaveAllShardChannels()
     local n_channels = GetNumDisplayChannels()
     local channels_to_leave = {}
@@ -131,7 +216,47 @@ function RareTracker:LeaveAllShardChannels()
 end
 
 -- ####################################################################
--- ##                 Channel Announcement Functions                 ##
+-- ##          Shard Group Management Acknowledge Functions          ##
+-- ####################################################################
+
+-- Acknowledge that the player has arrived and whisper your data table.
+function RareTracker:AcknowledgeArrival(player, time_stamp)
+    -- Notify the newly arrived user of your presence through a whisper.
+    self:PresentRecordedDataThroughWhisper(player, time_stamp)
+end
+
+-- Acknowledge that the player has arrived and send your data table to the group.
+function RareTracker:AcknowledgeGroupArrival(time_stamp)
+    -- Notify the newly arrived user of your presence through a whisper.
+    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        self:PresentRecordedDataInGroup(time_stamp)
+    end
+end
+
+-- Acknowledge the welcome message of other players and parse and import their tables.
+function RareTracker:AcknowledgeRecordedData(spawn_data)
+    -- Get the time stamp in base 10.
+    local time_stamp = self:ToBase10(spawn_data["time_stamp"])
+
+    -- Only acknowledge the given data matches your registration time.
+    if time_stamp == arrival_register_time then
+        -- Remove the time stamp from the table!
+        spawn_data["time_stamp"] = nil
+        
+        for base64_npc_id, base64_time_passed_since_kill in pairs(spawn_data) do
+            local kill_time = arrival_register_time - self:ToBase10(base64_time_passed_since_kill)
+            local npc_id = self:ToBase10(base64_npc_id)
+            if self.last_recorded_death[npc_id] then
+                self.last_recorded_death[npc_id] = min(self.last_recorded_death[npc_id], kill_time)
+            else
+                self.last_recorded_death[npc_id] = kill_time
+            end
+        end
+    end
+end
+
+-- ####################################################################
+-- ##                   Rare Announcement Functions                  ##
 -- ####################################################################
 
 -- Inform the others that a specific entity has died.
@@ -235,35 +360,41 @@ function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
 end
 
 -- ####################################################################
--- ##                  Communication Helper Functions                ##
+-- ##                   Rare Registration Functions                  ##
 -- ####################################################################
 
--- LibCompress cannot be embedded and needs to be loaded as a separate module.
-local libCompress = LibStub:GetLibrary("LibCompress")
-local libCompressEncoder = libCompress:GetAddonEncodeTable()
-
--- Serialize, compress and encode the given data.
-function RareTracker:Encode(data)
-    local serialization = self:Serialize(data)
-    local compression = libCompress:Compress(serialization)
-    return libCompressEncoder:Encode(compression)
+ -- Acknowledge that the entity has died and set the according flags.
+function RareTracker:AcknowledgeEntityDeath(npc_id, spawn_uid)
+    self:ProcessEntityDeath(npc_id, spawn_uid, false)
 end
 
--- Decode, decompress and deserialize the given data.
-function RareTracker:Decode(data)
-    local decoding = libCompressEncoder:Decode(data)
-    local decompression, error_value = libCompress:Decompress(decoding)
-    if not error_value then
-        local deserialization_success, deserialization = self:Deserialize(decompression)
-        if deserialization_success then
-            return deserialization, nil
-        else
-            return nil, "Deserialization Failed"
-        end
-    else
-        return nil, error_value
-    end
+-- Acknowledge that the entity is alive and set the according flags.
+function RareTracker:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
+    self:ProcessEntityAlive(npc_id, spawn_uid, x, y, false)
 end
+
+-- Acknowledge that the entity is alive and set the according flags.
+function RareTracker:AcknowledgeEntityTarget(npc_id, spawn_uid, percentage, x, y)
+    self:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y, false)
+end
+
+-- Acknowledge the health change of the entity and set the according flags.
+function RareTracker:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage)
+    last_message_sent["CHANNEL"][npc_id] = GetTime()
+    
+    self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
+end
+
+-- Acknowledge the health change of the entity and set the according flags.
+function RareTracker:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
+    last_message_sent["Raid"][npc_id] = GetTime()
+    
+    self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
+end
+
+-- ####################################################################
+-- ##                  Communication Helper Functions                ##
+-- ####################################################################
 
 -- Get the id of the general chat.
 function RareTracker.GetGeneralChatId()
