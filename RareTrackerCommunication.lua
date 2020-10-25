@@ -23,7 +23,7 @@ local version = 100
 
 -- Track when the last rate-limited message was sent over the specified channel. The table returns the value 0 as default.
 local last_message_sent = {}
-setmetatable(last_message_sent, {__index = function () return 0 end})
+setmetatable(last_message_sent, {__index = function() return 0 end})
 
 -- ####################################################################
 -- ##                       Communication Core                       ##
@@ -98,18 +98,18 @@ function RareTracker:AnnounceArrival()
         self:SendAddonMessage(
             "AP",
             arrival_register_time,
-            "RAID",
+            "Raid",
             nil
         )
     end
 end
 
 function RareTracker:AnnouncePresenceWhisper()
-    
+    -- TODO
 end
 
 function RareTracker:AnnouncePresenceGroup()
-    
+    -- TODO
 end
 
 
@@ -147,7 +147,7 @@ function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid)
         self:SendAddonMessage(
             "EDP",
             npc_id.."-"..spawn_uid,
-            "RAID",
+            "Raid",
             nil
         )
     end
@@ -166,7 +166,7 @@ function RareTracker:AnnounceEntityAlive(npc_id, spawn_uid)
         self:SendAddonMessage(
             "EAP",
             npc_id.."-"..spawn_uid,
-            "RAID",
+            "Raid",
             nil
         )
     end
@@ -186,7 +186,7 @@ function RareTracker:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
         self:SendAddonMessage(
             "EAP",
             npc_id.."-"..spawn_uid.."-"..x.."-"..y,
-            "RAID",
+            "Raid",
             nil
         )
     end
@@ -205,7 +205,7 @@ function RareTracker:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
         self:SendAddonMessage(
             "ETP",
             npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
-            "RAID",
+            "Raid",
             nil
         )
     end
@@ -219,7 +219,7 @@ function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
         npc_id.."-"..spawn_uid.."-"..percentage,
         "CHANNEL",
         select(1, GetChannelName(channel_name)),
-        "CHANNEL"
+        5
     )
     
     if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
@@ -227,9 +227,9 @@ function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
         self:SendRateLimitedAddonMessage(
             "EHP",
             npc_id.."-"..spawn_uid.."-"..percentage,
-            "RAID",
+            "Raid",
             nil,
-            "RAID"
+            5
         )
     end
 end
@@ -279,10 +279,10 @@ function RareTracker.GetGeneralChatId()
 end
 
 -- A function that ensures that a message is sent only once every 'refresh_time' seconds.
-function RareTracker:SendRateLimitedAddonMessage(message, target, target_id, refresh_time)
+function RareTracker:SendRateLimitedAddonMessage(_type, message, target, target_id, refresh_time)
     -- We only allow one message to be sent every ~'refresh_time' seconds.
     if GetTime() - last_message_sent[target] > refresh_time then
-        self:SendAddonMessage(message, target, target_id)
+        self:SendAddonMessage(_type, message, target, target_id)
         last_message_sent[target] = GetTime()
     end
 end

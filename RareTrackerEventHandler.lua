@@ -16,7 +16,7 @@ RareTracker.last_zone_id = nil
 RareTracker.shard_id = nil
 
 -- A flag used to detect guardians or pets.
-local pet_mask = bit.bor(
+local companion_type_mask = bit.bor(
     COMBATLOG_OBJECT_TYPE_GUARDIAN, COMBATLOG_OBJECT_TYPE_PET, COMBATLOG_OBJECT_TYPE_OBJECT
 )
 
@@ -152,7 +152,7 @@ function RareTracker:PLAYER_TARGET_CHANGED()
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
         
-        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].rares[npc_id] then
+        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] then
             -- Find the health of the entity.
             local health = UnitHealth("target")
         
@@ -173,31 +173,140 @@ function RareTracker:PLAYER_TARGET_CHANGED()
 end
 
 -- Fired whenever a unit's health is affected. 
-function RareTracker:UNIT_HEALTH(unit)
-    if chat_frame_loaded then
-        
-    end
+function RareTracker:UNIT_HEALTH(_, unit)
+    -- Get information about the target.
+    local guid = UnitGUID("target")
     
+    if chat_frame_loaded and unit == "target" and guid then
+        -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
+        local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", guid)
+        npc_id = tonumber(npc_id)
+    
+        -- It might occur that the NPC id is nil. Do not proceed in such a case.
+        if not npc_id then return end
+        
+        if not self.db.global.banned_NPC_ids[npc_id] then
+            if self:CheckForShardChange(zone_uid) then
+                self:Debug("[OnUnitHealth]", guid)
+            end
+        end
+        
+        --A special check for duplicate NPC ids in different environments (Mecharantula).
+        npc_id = self:CheckForRedirectedRareIds(npc_id)
+        
+        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] then
+            -- Update the current health of the entity.
+            local percentage = self.GetTargetHealthPercentage()
+            
+            -- Does the entity have any health left?
+            if percentage > 0 then
+                -- Report the health of the entity to your peers.
+                self:ProcessEntityHealth(npc_id, spawn_uid, percentage)
+            else
+                -- Mark the entity has dead and report to your peers.
+                self:ProcessEntityDeath(npc_id, spawn_uid)
+            end
+        end
+    end
 end
 
 -- Fires for combat events such as a player casting a spell or an NPC taking damage.
 function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
     if chat_frame_loaded then
+        -- The event does not have a payload (8.0 change). Use CombatLogGetCurrentEventInfo() instead.
+        -- timestamp, subevent, zero, sourceGUID, sourceName, sourceFlags, sourceRaidFlags,
+        -- destGUID, destName, destFlags, destRaidFlags
+        local _, subevent, _, sourceGUID, _, _, _, destGUID, _, destFlags, _ = CombatLogGetCurrentEventInfo()
         
+        -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
+        local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", destGUID)
+        npc_id = tonumber(npc_id)
+        
+        -- It might occur that the NPC id is nil. Do not proceed in such a case.
+        if not npc_id or not destFlags then return end
+        
+        -- Blacklist the entity.
+        if not self.db.global.banned_NPC_ids[npc_id] and bit.band(destFlags, companion_type_mask) > 0 and not self.tracked_npc_ids[npc_id] then
+            self.db.global.banned_NPC_ids[npc_id] = true
+        end
+        
+        -- We can always check for a shard change.
+        -- We only take fights between creatures, since they seem to be the only reliable option.
+        -- We exclude all pets and guardians, since they might have retained their old shard change.
+        if unittype == "Creature" and not self.db.global.banned_NPC_ids[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
+            if self:CheckForShardChange(zone_uid) then
+                RT:Debug("[OnCombatLogEvent]", sourceGUID, destGUID)
+            end
+        end
+        
+        --A special check for duplicate NPC ids in different environments (Mecharantula).
+        npc_id = self:CheckForRedirectedRareIds(npc_id)
+            
+        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
+            if subevent == "UNIT_DIED" then
+                -- Mark the entity has dead and report to your peers.
+                self:ProcessEntityDeath(npc_id, spawn_uid)
+            elseif subevent ~= "PARTY_KILL" then
+                -- Report the entity as alive to your peers, if it is not marked as alive already.
+                if self.is_alive[npc_id] == nil then
+                    -- The combat log range is quite long, so no coordinates can be provided.
+                    self:ProcessEntityAlive(npc_id, spawn_uid, nil, nil)
+                end
+            end
+        end
     end
 end
 
 -- Fired whenever a vignette appears or disappears in the minimap.
-function RareTracker:VIGNETTE_MINIMAP_UPDATED(vignetteGUID, _)
+function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
     if chat_frame_loaded then
+        local vignetteInfo = C_VignetteInfo.GetVignetteInfo(vignetteGUID)
+        local vignetteLocation = C_VignetteInfo.GetVignettePosition(vignetteGUID, C_Map.GetBestMapForUnit("player"))
+
+        if vignetteInfo and vignetteLocation then
+            -- Report the entity.
+            -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
+            local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", vignetteInfo.objectGUID)
+            npc_id = tonumber(npc_id)
         
+            -- It might occur that the NPC id is nil. Do not proceed in such a case.
+            if not npc_id then return end
+            
+            if unittype == "Creature" then
+                if not self.db.global.banned_NPC_ids[npc_id] then
+                    if self:CheckForShardChange(zone_uid) then
+                        RT:Debug("[OnVignette]", vignetteInfo.objectGUID)
+                    end
+                end
+                
+                --A special check for duplicate NPC ids in different environments (Mecharantula).
+                npc_id = self:CheckForRedirectedRareIds(npc_id)
+                    
+                if self.primary_id_to_data[self.last_zone_id].entities[npc_id] and not reported_vignettes[vignetteGUID] then
+                    reported_vignettes[vignetteGUID] = {npc_id, spawn_uid}
+                    local x, y = 100 * vignetteLocation.x, 100 * vignetteLocation.y
+                    self:ProcessEntityAlive(npc_id, spawn_uid, x, y)
+                end
+            end
+        end
     end
 end
 
--- Fires when an NPC yells, such as a raid boss or in Alterac Valley.
-function RareTracker:CHAT_MSG_MONSTER_YELL(...)
+-- Fires when an NPC speaks.
+function RareTracker:OnMonsterChatMessage(_, ...)
     if chat_frame_loaded then
-        
+        local data = self.primary_id_to_data[self.last_zone_id]
+        self:Debug(...)
+
+        -- Attempt to match by name or text, using the function provided by the plugin.
+        local text, name = select(1, ...), select(2, ...)
+        local npc_id = data.FindMatchForName and data:FindMatchForName(name) or data.FindMatchForText and data:FindMatchForText(text)
+        if npc_id then
+            -- We found a match.
+            self.is_alive[npc_id] = GetServerTime()
+            self.current_coordinates[npc_id] = self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates
+            self:PlaySoundNotification(npc_id, npc_id)
+        end
     end
 end
 
@@ -211,7 +320,9 @@ function RareTracker:RegisterTrackingEvents()
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self:RegisterEvent("VIGNETTE_MINIMAP_UPDATED")
-    self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
+    self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "OnMonsterChatMessage")
+    self:RegisterEvent("CHAT_MSG_MONSTER_SAY", "OnMonsterChatMessage")
+    self:RegisterEvent("CHAT_MSG_MONSTER_EMOTE", "OnMonsterChatMessage")
 end
 
 -- Unregister all events that aren't necessary when outside of tracking zones.
@@ -221,6 +332,8 @@ function RareTracker:UnregisterTrackingEvents()
     self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self:UnregisterEvent("VIGNETTE_MINIMAP_UPDATED")
     self:UnregisterEvent("CHAT_MSG_MONSTER_YELL")
+    self:UnregisterEvent("CHAT_MSG_MONSTER_SAY")
+    self:UnregisterEvent("CHAT_MSG_MONSTER_EMOTE")
 end
 
 -- Reset all the currently tracked data.
@@ -256,6 +369,11 @@ function RareTracker:LoadRecordedData()
     end
 end
 
+-- Play a sound notification if applicable
+function RareTracker:PlaySoundNotification(npc_id, spawn_uid)
+    -- TODO
+end
+
 -- ####################################################################
 -- ##                Process Rare Event Helper Functions             ##
 -- ####################################################################
@@ -272,7 +390,7 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid)
         reported_spawn_uids[npc_id] = nil
                 
         -- We want to avoid overwriting existing channel numbers. So delay the channel join.
-        -- TODO self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id) end)
+        self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id) end)
         
         -- Send the death message.
         self:AnnounceEntityDeath(npc_id, spawn_uid)
@@ -280,14 +398,14 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid)
 end
 
 -- Process that an entity has been seen alive.
-function RareTracker:ProcessEntityAlive()
+function RareTracker:ProcessEntityAlive(npc_id, spawn_uid, x, y)
     if not recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as alive.
         self.is_alive[npc_id] = GetServerTime()
     
         -- Send the alive message.
-        if (x == nil or y == nil) and self.rare_coordinates[npc_id] then
-            local location = self.rare_coordinates[npc_id]
+        if (x == nil or y == nil) and self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates then
+            local location = self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates
             x = location.x
             y = location.y
         end
@@ -308,7 +426,7 @@ function RareTracker:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y)
         self.is_alive[npc_id] = GetServerTime()
         self.current_health[npc_id] = percentage
         self.current_coordinates[npc_id] = {["x"] = x, ["y"] = y}
-        -- TODO self:UpdateStatus(npc_id)
+        self:UpdateStatus(npc_id)
     
         -- Send the target message.
         self:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
@@ -319,7 +437,7 @@ end
 function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage)
     self.is_alive[npc_id] = GetServerTime()
     self.current_health[npc_id] = percentage
-    -- TODO self:UpdateStatus(npc_id)
+    self:UpdateStatus(npc_id)
     
     -- Send the health update message.
     self:AnnounceEntityHealth(npc_id, spawn_uid, percentage)

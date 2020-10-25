@@ -14,6 +14,12 @@ RareTracker.zone_id_to_primary_id = {}
 
 -- Create a mapping from primary id to zone data.
 RareTracker.primary_id_to_data = {}
+
+-- A master list of all tracked rares.
+RareTracker.tracked_npc_ids = {}
+
+-- A master list of all tracked rares.
+RareTracker.completion_quest_to_npc_ids = {}
     
 -- The short-hand code of the addon.
 RareTracker.addon_code = "RT"
@@ -70,6 +76,19 @@ function RareTracker:OnInitialize()
         self:AddRaresForZone(rare_data)
         plugin_data[key] = nil
     end
+    
+    -- As a precaution, we remove all actively tracked rares from the blacklist.
+    for npc_id, _ in pairs(self.tracked_npc_ids) do
+        self.db.global.banned_NPC_ids[npc_id] = nil
+    end
+
+    -- Remove any data in the previous records that have expired.
+    for shard_id, _ in pairs(self.db.global.previous_records) do
+        if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp > 900 then
+            self:Debug("Removing cached data for shard "..shard_id)
+            self.db.global.previous_records[shard_id] = nil
+        end
+    end
 end
 
 -- A function that is called whenever the addon is enabled by the user.
@@ -103,6 +122,21 @@ end
 -- ##                      Module Registration                       ##
 -- ####################################################################
 
+-- A metatable that simplifies accessing rare data.
+local rare_data_metatable = {
+    __index = function(t, k) 
+        if k == "name" then 
+            return t[1]
+        elseif k == "quest_id" then 
+            return t[2]
+        elseif k == "coordinates" then 
+            return t[3]
+        else 
+            return nil 
+        end 
+    end
+}
+
 -- Register a list of rare data that will be processed upon successful load.
 function RareTracker:RegisterRaresForZone(rare_data)
     tinsert(plugin_data, rare_data)
@@ -119,6 +153,24 @@ function RareTracker:AddRaresForZone(rare_data)
     
     -- Store the data.
     self.primary_id_to_data[primary_id] = rare_data
+    for key, _ in pairs(rare_data.entities) do
+        setmetatable(rare_data.entities[key], rare_data_metatable)
+    end
+    
+    -- Construct the inverse quest id list.
+    for key, value in pairs(rare_data.entities) do
+        if value.quest_id then
+            if not self.completion_quest_to_npc_ids[value.quest_id] then
+                self.completion_quest_to_npc_ids[value.quest_id] = {}
+            end
+            tinsert(self.completion_quest_to_npc_ids[value.quest_id], key)
+        end
+    end
+    
+    -- Populate the master list of tracked npcs.
+    for npc_id, _ in pairs(rare_data.entities) do
+        self.tracked_npc_ids[npc_id] = true
+    end
     
     -- Create a table for favorite and ignored rares for the zone, if they don't exist yet.
     if not self.db.global.favorite_rares[primary_id] then

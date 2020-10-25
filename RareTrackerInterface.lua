@@ -22,3 +22,11 @@ end
 function RareTracker:UpdateShardNumber()
     
 end
+
+function RareTracker:UpdateStatus(npc_id)
+    
+end
+
+function RareTracker:UpdateDailyKillMark(npc_id)
+    
+end
