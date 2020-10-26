@@ -493,6 +493,7 @@ function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, make_ann
         end
         
         -- TODO: ensure that the rate limiting will still works when multiple people report the rare.
+        -- Currently, it is not done on a rare by rare basis. Correct this.
     end
 end
 

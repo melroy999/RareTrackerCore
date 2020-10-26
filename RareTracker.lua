@@ -124,16 +124,16 @@ end
 
 -- A metatable that simplifies accessing rare data.
 local rare_data_metatable = {
-    __index = function(t, k) 
-        if k == "name" then 
+    __index = function(t, k)
+        if k == "name" then
             return t[1]
-        elseif k == "quest_id" then 
+        elseif k == "quest_id" then
             return t[2]
-        elseif k == "coordinates" then 
+        elseif k == "coordinates" then
             return t[3]
-        else 
-            return nil 
-        end 
+        else
+            return nil
+        end
     end
 }
 

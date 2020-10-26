@@ -24,9 +24,13 @@ local version = 1
 -- The name and realm of the player.
 local player_name = UnitName("player").."-"..GetRealmName()
 
--- Track when the last rate-limited message was sent over the specified channel. The table returns the value 0 as default.
-local last_message_sent = {}
-setmetatable(last_message_sent, {__index = function() return 0 end})
+-- Track when the last health report was for a given npc.
+local last_health_report = {
+    ["CHANNEL"] = {},
+    ["Raid"] = {}
+}
+setmetatable(last_health_report["CHANNEL"], {__index = function() return 0 end})
+setmetatable(last_health_report["Raid"], {__index = function() return 0 end})
 
 -- ####################################################################
 -- ##                       Communication Core                       ##
@@ -34,15 +38,16 @@ setmetatable(last_message_sent, {__index = function() return 0 end})
 
 -- Function that is called when the addon receives a communication.
 function RareTracker:OnCommReceived(_, message, distribution, player)
+    self:Debug(message, distribution, player)
+    
     -- Skip if the message is sent by the player.
-    if player_name == player then return end
+    -- TODO put back
+    -- if player_name == player then return end
     
     local header, serialization = strsplit(":", message)
     local prefix, shard_id, message_version = strsplit("-", header)
     message_version = tonumber(message_version)
     local deserialization_success, payload = self:Deserialize(serialization)
-
-    self:Debug(prefix, shard_id, message_version, serialization, distribution, player)
     
     -- The format of messages might change over time and as such, versioning is needed.
     -- To ensure optimal performance, all users should use the latest version.
@@ -339,23 +344,27 @@ end
 -- Inform the others the health of a specific entity.
 function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
     -- Send the health message, using a rate limited function.
-    self:SendRateLimitedAddonMessage(
-        "EH",
-        npc_id.."-"..spawn_uid.."-"..percentage,
-        "CHANNEL",
-        select(1, GetChannelName(channel_name)),
-        5
-    )
-    
-    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        -- Send the health message, using a rate limited function.
-        self:SendRateLimitedAddonMessage(
-            "EHP",
+    if GetTime() - last_health_report["CHANNEL"][npc_id] > 5 then
+        self:SendAddonMessage(
+            "EH",
             npc_id.."-"..spawn_uid.."-"..percentage,
-            "Raid",
-            nil,
-            5
+            "CHANNEL",
+            select(1, GetChannelName(channel_name))
         )
+        last_health_report["CHANNEL"][npc_id] = GetTime()
+    end
+    
+    if GetTime() - last_health_report["Raid"][npc_id] > 5 then
+        if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+            -- Send the health message, using a rate limited function.
+            self:SendAddonMessage(
+                "EHP",
+                npc_id.."-"..spawn_uid.."-"..percentage,
+                "Raid",
+                nil
+            )
+        end
+        last_health_report["Raid"][npc_id] = GetTime()
     end
 end
 
@@ -380,15 +389,13 @@ end
 
 -- Acknowledge the health change of the entity and set the according flags.
 function RareTracker:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage)
-    last_message_sent["CHANNEL"][npc_id] = GetTime()
-    
+    last_health_report["CHANNEL"][npc_id] = GetTime()
     self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
 end
 
 -- Acknowledge the health change of the entity and set the according flags.
 function RareTracker:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
-    last_message_sent["Raid"][npc_id] = GetTime()
-    
+    last_health_report["Raid"][npc_id] = GetTime()
     self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
 end
 
@@ -407,13 +414,4 @@ function RareTracker.GetGeneralChatId()
     end
     
     return 0
-end
-
--- A function that ensures that a message is sent only once every 'refresh_time' seconds.
-function RareTracker:SendRateLimitedAddonMessage(_type, message, target, target_id, refresh_time)
-    -- We only allow one message to be sent every ~'refresh_time' seconds.
-    if GetTime() - last_message_sent[target] > refresh_time then
-        self:SendAddonMessage(_type, message, target, target_id)
-        last_message_sent[target] = GetTime()
-    end
 end
