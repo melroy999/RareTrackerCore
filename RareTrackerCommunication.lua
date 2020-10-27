@@ -79,7 +79,7 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
             local npc_id, spawn_uid, percentage = strsplit("-", payload)
             npc_id, percentage = tonumber(npc_id), tonumber(percentage)
             self:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage)
-        elseif RT.db.global.communication.raid_communication then
+        elseif self.db.global.communication.raid_communication then
             if prefix == "AP" then
                 local time_stamp = tonumber(payload)
                 self:AcknowledgeGroupArrival(player, time_stamp)
@@ -162,7 +162,7 @@ function RareTracker:AnnounceArrival()
     end
     
     -- Register your arrival within the group.
-    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage(
             "AP",
             arrival_register_time,
@@ -273,7 +273,7 @@ function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid)
         select(1, GetChannelName(channel_name))
     )
 
-    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage(
             "EDP",
             npc_id.."-"..spawn_uid,
@@ -292,7 +292,7 @@ function RareTracker:AnnounceEntityAlive(npc_id, spawn_uid)
         select(1, GetChannelName(channel_name))
     )
 
-    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage(
             "EAP",
             npc_id.."-"..spawn_uid,
@@ -312,7 +312,7 @@ function RareTracker:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
         select(1, GetChannelName(channel_name))
     )
 
-    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage(
             "EAP",
             npc_id.."-"..spawn_uid.."-"..x.."-"..y,
@@ -331,7 +331,7 @@ function RareTracker:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
         select(1, GetChannelName(channel_name))
     )
     
-    if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage(
             "ETP",
             npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
@@ -355,7 +355,7 @@ function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
     end
     
     if GetTime() - last_health_report["Raid"][npc_id] > 5 then
-        if RT.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+        if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
             -- Send the health message, using a rate limited function.
             self:SendAddonMessage(
                 "EHP",
@@ -397,6 +397,44 @@ end
 function RareTracker:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
     last_health_report["Raid"][npc_id] = GetTime()
     self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
+end
+
+-- ####################################################################
+-- ##                           Chat Reports                         ##
+-- ####################################################################
+
+-- Report the status of the given rare in the desired channel.
+function RareTracker:ReportRareInChat(target, name, health, last_death, loc)
+    -- Construct the message.
+    local message = nil
+    if self.current_health[npc_id] then
+        if loc then
+            message = string.format(L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"], self.addon_code, name, health, loc.x, loc.y)
+        else
+            message = string.format(L["<%s> %s (%s%%)"], self.addon_code, name, health)
+        end
+    elseif self.last_recorded_death[npc_id] ~= nil then
+        if GetServerTime() - last_death < 60 then
+            message = string.format(L["<%s> %s has died"], self.addon_code, name)
+        else
+            message = string.format(L["<%s> %s was last seen ~%s minutes ago"], self.addon_code, name, math.floor((GetServerTime() - last_death) / 60))
+        end
+    elseif self.is_alive[npc_id] then
+        if loc then
+            message = string.format(L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"], self.addon_code, name, loc.x, loc.y)
+        else
+            message = string.format(L["<%s> %s seen alive (combat log)"], self.addon_code, name)
+        end
+    end
+    
+    -- Send the message.
+    if message then
+        if target == "CHANNEL" then
+            SendChatMessage(message, target, nil, self.GetGeneralChatId())
+        else
+            SendChatMessage(message, target, nil, nil)
+        end
+    end
 end
 
 -- ####################################################################

@@ -6,7 +6,6 @@ local table = table
 
 -- The characters to be used in the base64 string.
 local digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-digits = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 local base = #digits
 
 -- A cheat sheet used to easily convert back to decimal.

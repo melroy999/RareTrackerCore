@@ -238,7 +238,7 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
         -- We exclude all pets and guardians, since they might have retained their old shard change.
         if unittype == "Creature" and not self.db.global.banned_NPC_ids[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if self:CheckForShardChange(zone_uid) then
-                RT:Debug("[OnCombatLogEvent]", sourceGUID, destGUID)
+                self:Debug("[OnCombatLogEvent]", sourceGUID, destGUID)
             end
         end
         
@@ -278,7 +278,7 @@ function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
             if unittype == "Creature" then
                 if not self.db.global.banned_NPC_ids[npc_id] then
                     if self:CheckForShardChange(zone_uid) then
-                        RT:Debug("[OnVignette]", vignetteInfo.objectGUID)
+                        self:Debug("[OnVignette]", vignetteInfo.objectGUID)
                     end
                 end
                 
@@ -374,13 +374,13 @@ end
 
 -- Play a sound notification if applicable
 function RareTracker:PlaySoundNotification(npc_id, spawn_uid)
-    if self.db.global.favorite_rares[self.last_zone_id][npc_id] and not self.reported_spawn_uids[spawn_uid] and not self.reported_spawn_uids[npc_id] then
+    if self.db.global.favorite_rares[npc_id] and not self.reported_spawn_uids[spawn_uid] and not self.reported_spawn_uids[npc_id] then
         -- Play a sound file.
         local completion_quest_id = self.primary_id_to_data[self.last_zone_id].entities[npc_id].quest_id
         self.reported_spawn_uids[spawn_uid] = true
         
         if not IsQuestFlaggedCompleted(completion_quest_id) then
-            PlaySoundFile(RT.db.global.favorite_alert.favorite_sound_alert)
+            PlaySoundFile(self.db.global.favorite_alert.favorite_sound_alert)
         end
     end
 end
@@ -404,7 +404,10 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         self:UpdateStatus(npc_id)
                 
         -- We need to delay the update daily kill mark check, since the servers don't update it instantly.
-        self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id) end)
+        local primary_id = self.last_zone_id
+        if primary_id then
+            self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id, primary_id) end)
+        end
         
         -- Remove the waypoint if applicable.
         if self.waypoints[npc_id] and TomTom then
@@ -496,15 +499,6 @@ function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, make_ann
         -- Currently, it is not done on a rare by rare basis. Correct this.
     end
 end
-
--- ####################################################################
--- ##                   Event Handling Initialization                ##
--- ####################################################################
-    
--- Register all the events that have to be tracked continuously.
-RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
-RareTracker:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
-RareTracker:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
 
 -- ####################################################################
 -- ##                       Channel Wait Frame                       ##

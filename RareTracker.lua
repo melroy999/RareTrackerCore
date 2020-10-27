@@ -22,7 +22,7 @@ RareTracker.tracked_npc_ids = {}
 RareTracker.completion_quest_to_npc_ids = {}
     
 -- The short-hand code of the addon.
-RareTracker.addon_code = "RT"
+RareTracker.addon_code = "RT2"
 
 -- Keep a list of modules that have been registered, such that we can add them when loaded.
 local plugin_data = {}
@@ -43,8 +43,8 @@ local defaults = {
             hide = false,
         },
         window_scale = 1.0,
-        favorite_rares = {},
         previous_records = {},
+        favorite_rares = {},
         ignore_rares = {},
         banned_NPC_ids = {},
         version = 0,
@@ -89,6 +89,14 @@ function RareTracker:OnInitialize()
             self.db.global.previous_records[shard_id] = nil
         end
     end
+    
+    -- Initialize the interface.
+    self:InitializeInterface()
+    
+    -- Register all the events that have to be tracked continuously.
+    RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
+    RareTracker:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
+    RareTracker:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
 end
 
 -- A function that is called whenever the addon is enabled by the user.
@@ -170,14 +178,6 @@ function RareTracker:AddRaresForZone(rare_data)
     -- Populate the master list of tracked npcs.
     for npc_id, _ in pairs(rare_data.entities) do
         self.tracked_npc_ids[npc_id] = true
-    end
-    
-    -- Create a table for favorite and ignored rares for the zone, if they don't exist yet.
-    if not self.db.global.favorite_rares[primary_id] then
-        self.db.global.favorite_rares[primary_id] = {}
-    end
-    if not self.db.global.ignore_rares[primary_id] then
-        self.db.global.ignore_rares[primary_id] = {}
     end
 end
 
