@@ -674,7 +674,6 @@ function RT.AddDefaultEntityFrameFunctions(module)
 
             self:SetMovable(true)
             self:EnableMouse(true)
-            self:SetUserPlaced(true)
             self:RegisterForDrag("LeftButton")
             self:SetScript("OnDragStart", self.StartMoving)
             self:SetScript("OnDragStop", self.StopMovingOrSizing)
