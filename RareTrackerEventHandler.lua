@@ -363,11 +363,12 @@ end
 
 -- Attempt to load previous data from our cache.
 function RareTracker:LoadRecordedData()
-    if self.db.global.previous_records[shard_id] then
+    if self.db.global.previous_records[self.shard_id] then
         if GetServerTime() - self.db.global.previous_records[self.shard_id].time_stamp < 900 then
-            print("Restoring data from previous session in shard "..self.shard_id)
+            self:Debug("Restoring data from previous session in shard "..self.shard_id)
             self.last_recorded_death = self.db.global.previous_records[self.shard_id].time_table
         else
+            self:Debug("Resetting stored data for "..self.shard_id)
             self.db.global.previous_records[self.shard_id] = nil
         end
     end

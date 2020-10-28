@@ -25,6 +25,9 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 
 -- Prepare the window's data and show it on the screen.
 function RareTracker:OpenWindow()
+    -- Update all the kill marks.
+    self:UpdateAllDailyKillMarks()
+    
     -- Show the window if it is not hidden.
     if not self.db.global.window.hide then
         self.gui:Show()
@@ -93,7 +96,7 @@ end
 -- Update the daily kill marks of all the currently tracked entities.
 function RareTracker:UpdateAllDailyKillMarks()
     local primary_id = self.zone_id
-    for _, npc_id in pairs(self.primary_id_to_data[primary_id].entities) do
+    for npc_id, _ in pairs(self.primary_id_to_data[primary_id].entities) do
         self:UpdateDailyKillMark(npc_id, primary_id)
     end
 end
@@ -109,7 +112,6 @@ function RareTracker:UpdateDisplayList()
     -- If no data is present for the given zone, then there are no targets.
     wipe(target_npc_ids)
     local primary_id = self.zone_id
-    print(primary_id)
     if primary_id and self.primary_id_to_data[primary_id] then
         -- Gather the candidate npc ids, using the plugin provider when defined.
         if self.primary_id_to_data[primary_id].SelectTargetEntities then

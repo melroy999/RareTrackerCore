@@ -82,15 +82,15 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
         elseif self.db.global.communication.raid_communication then
             if prefix == "AP" then
                 local time_stamp = tonumber(payload)
-                self:AcknowledgeGroupArrival(player, time_stamp)
+                self:AcknowledgeGroupArrival(time_stamp)
             elseif prefix == "PP" then
-                self:AcknowledgePresence(payload)
+                self:AcknowledgeRecordedData(payload)
             elseif prefix == "EDP" then
                 local npc_id, spawn_uid = strsplit("-", payload)
                 npc_id = tonumber(npc_id)
                 self:AcknowledgeEntityDeath(npc_id, spawn_uid)
             elseif prefix == "EAP" then
-                local npcs_id, spawn_uid, x, y = strsplit("-", payload)
+                local npc_id, spawn_uid, x, y = strsplit("-", payload)
                 npc_id, x, y = tonumber(npc_id), tonumber(x), tonumber(y)
                 self:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
             elseif prefix == "ETP" then
