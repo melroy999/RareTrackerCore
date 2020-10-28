@@ -145,7 +145,7 @@ function RT.AddDefaultHelperCommunicationFunctions(module)
                 if kill_time ~= 0 then
                     if self.last_recorded_death[npc_id] then
                         -- If we already have an entry, take the minimal.
-                        if time_stamp - kill_time < self.last_recorded_death[npc_id] then
+                        if time_stamp - kill_time > self.last_recorded_death[npc_id] then
                             self.last_recorded_death[npc_id] = time_stamp - kill_time
                         end
                     else
