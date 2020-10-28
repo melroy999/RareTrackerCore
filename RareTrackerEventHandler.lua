@@ -10,7 +10,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 -- ####################################################################
 
 -- The last zone id that was encountered.
-RareTracker.last_zone_id = nil
+RareTracker.zone_id = nil
 
 -- The current shard id.
 RareTracker.shard_id = nil
@@ -56,26 +56,27 @@ function RareTracker:OnZoneTransition()
     -- The zone the player is in.
     local zone_id = C_Map.GetBestMapForUnit("player")
     
+    -- Update the zone id and keep the last id.
+    local last_zone_id = self.zone_id
+    self.zone_id = self.zone_id_to_primary_id[zone_id]
+    
     -- Check if the zone id changed. If so, update the list of rares to display when appropriate.
-    if self.zone_id_to_primary_id[zone_id] and self.zone_id_to_primary_id[zone_id] ~= self.zone_id_to_primary_id[self.last_zone_id] then
-        self:ChangeZone(zone_id)
+    if self.zone_id_to_primary_id[zone_id] and self.zone_id_to_primary_id[zone_id] ~= self.zone_id_to_primary_id[last_zone_id] then
+        self:ChangeZone()
     end
     
     -- Show/hide the interface when appropriate.
-    if self.zone_id_to_primary_id[zone_id] and not self.zone_id_to_primary_id[self.last_zone_id] then
+    if self.zone_id_to_primary_id[zone_id] and not self.zone_id_to_primary_id[last_zone_id] then
         self:OpenWindow()
         self:RegisterTrackingEvents()
-    elseif not self.zone_id_to_primary_id[zone_id] and self.zone_id_to_primary_id[self.last_zone_id] then
+    elseif not self.zone_id_to_primary_id[zone_id] and self.zone_id_to_primary_id[last_zone_id] then
         self:CloseWindow()
         self:UnregisterTrackingEvents()
     end
-
-    -- Update the zone id.
-    self.last_zone_id = self.zone_id_to_primary_id[zone_id]
 end
 
 -- Fetch the new list of rares and ensure that these rares are properly displayed.
-function RareTracker:ChangeZone(zone_id)
+function RareTracker:ChangeZone()
     -- Leave the channel associated with the current shard id and save the data.
     self:LeaveAllShardChannels()
     self:SaveRecordedData()
@@ -86,10 +87,10 @@ function RareTracker:ChangeZone(zone_id)
     -- Reset the shard id
     self.shard_id = nil
     
-    -- Update the GUI such that it contains the correct list of rares.
-    -- TODO
+    -- Ensure that the correct data is shown in the window.
+    self:UpdateDisplayList()
     
-    self:Debug("Changing zone to", zone_id)
+    self:Debug("Changing zone to", self.zone_id)
 end
 
 -- Transfer to a new shard, reset current data and join the appropriate channel.
@@ -125,7 +126,7 @@ end
 
 -- Check whether the given npc id needs to be redirected under the current circumstances.
 function RareTracker:CheckForRedirectedRareIds(npc_id)
-    local redirection = self.primary_id_to_data[self.last_zone_id].redirection
+    local redirection = self.primary_id_to_data[self.zone_id].redirection
     if redirection then
         return redirection(npc_id)
     end
@@ -155,7 +156,7 @@ function RareTracker:PLAYER_TARGET_CHANGED()
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
         
-        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] then
+        if unittype == "Creature" and self.primary_id_to_data[self.zone_id].entities[npc_id] then
             -- Find the health of the entity.
             local health = UnitHealth("target")
         
@@ -197,7 +198,7 @@ function RareTracker:UNIT_HEALTH(_, unit)
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
         
-        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] then
+        if unittype == "Creature" and self.primary_id_to_data[self.zone_id].entities[npc_id] then
             -- Update the current health of the entity.
             local percentage = self.GetTargetHealthPercentage()
             
@@ -245,7 +246,7 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
             
-        if unittype == "Creature" and self.primary_id_to_data[self.last_zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
+        if unittype == "Creature" and self.primary_id_to_data[self.zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if subevent == "UNIT_DIED" then
                 -- Mark the entity has dead and report to your peers.
                 self:ProcessEntityDeath(npc_id, spawn_uid, true)
@@ -285,7 +286,7 @@ function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
                 --A special check for duplicate NPC ids in different environments (Mecharantula).
                 npc_id = self:CheckForRedirectedRareIds(npc_id)
                     
-                if self.primary_id_to_data[self.last_zone_id].entities[npc_id] and not reported_vignettes[vignetteGUID] then
+                if self.primary_id_to_data[self.zone_id].entities[npc_id] and not reported_vignettes[vignetteGUID] then
                     reported_vignettes[vignetteGUID] = {npc_id, spawn_uid}
                     local x, y = 100 * vignetteLocation.x, 100 * vignetteLocation.y
                     self:ProcessEntityAlive(npc_id, spawn_uid, x, y, true)
@@ -298,7 +299,7 @@ end
 -- Fires when an NPC speaks.
 function RareTracker:OnMonsterChatMessage(_, ...)
     if chat_frame_loaded then
-        local data = self.primary_id_to_data[self.last_zone_id]
+        local data = self.primary_id_to_data[self.zone_id]
         self:Debug(...)
 
         -- Attempt to match by name or text, using the function provided by the plugin.
@@ -307,7 +308,7 @@ function RareTracker:OnMonsterChatMessage(_, ...)
         if npc_id then
             -- We found a match.
             self.is_alive[npc_id] = GetServerTime()
-            self.current_coordinates[npc_id] = self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates
+            self.current_coordinates[npc_id] = self.primary_id_to_data[self.zone_id].entities[npc_id].coordinates
             self:PlaySoundNotification(npc_id, npc_id)
         end
     end
@@ -376,7 +377,7 @@ end
 function RareTracker:PlaySoundNotification(npc_id, spawn_uid)
     if self.db.global.favorite_rares[npc_id] and not self.reported_spawn_uids[spawn_uid] and not self.reported_spawn_uids[npc_id] then
         -- Play a sound file.
-        local completion_quest_id = self.primary_id_to_data[self.last_zone_id].entities[npc_id].quest_id
+        local completion_quest_id = self.primary_id_to_data[self.zone_id].entities[npc_id].quest_id
         self.reported_spawn_uids[spawn_uid] = true
         
         if not IsQuestFlaggedCompleted(completion_quest_id) then
@@ -404,7 +405,7 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         self:UpdateStatus(npc_id)
                 
         -- We need to delay the update daily kill mark check, since the servers don't update it instantly.
-        local primary_id = self.last_zone_id
+        local primary_id = self.zone_id
         if primary_id then
             self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id, primary_id) end)
         end
@@ -432,8 +433,8 @@ function RareTracker:ProcessEntityAlive(npc_id, spawn_uid, x, y, make_announceme
         self:UpdateStatus(npc_id)
 
         -- Find coordinates.
-        if (x == nil or y == nil) and self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates then
-            local location = self.primary_id_to_data[self.last_zone_id].entities[npc_id].coordinates
+        if (x == nil or y == nil) and self.primary_id_to_data[self.zone_id].entities[npc_id].coordinates then
+            local location = self.primary_id_to_data[self.zone_id].entities[npc_id].coordinates
             x = location.x
             y = location.y
         end
@@ -494,9 +495,6 @@ function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, make_ann
         if make_announcement then
             self:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
         end
-        
-        -- TODO: ensure that the rate limiting will still works when multiple people report the rare.
-        -- Currently, it is not done on a rare by rare basis. Correct this.
     end
 end
 

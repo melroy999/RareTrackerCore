@@ -9,6 +9,9 @@ local shard_id_frame_height = 16
 local background_opacity = 0.4
 local front_opacity = 0.6
 
+-- The list of currently tracked npcs. Used for cleanup.
+local target_npc_ids = {}
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -22,13 +25,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 
 -- Prepare the window's data and show it on the screen.
 function RareTracker:OpenWindow()
-    self:Debug("Opening Window")
-    
-    -- Update the data to coincide with the currenly tracked content.
-    self:UpdateShardNumber()
-    
-    -- TODO
-    
     -- Show the window if it is not hidden.
     if not self.db.global.window.hide then
         self.gui:Show()
@@ -37,8 +33,6 @@ end
 
 -- Close the window and do cleanup.
 function RareTracker:CloseWindow()
-    self:Debug("Closing Window")
-    
     -- Simply hide the interface.
     self.gui:Hide()
 end
@@ -98,9 +92,75 @@ end
 
 -- Update the daily kill marks of all the currently tracked entities.
 function RareTracker:UpdateAllDailyKillMarks()
-    local primary_id = self.last_zone_id
+    local primary_id = self.zone_id
     for _, npc_id in pairs(self.primary_id_to_data[primary_id].entities) do
         self:UpdateDailyKillMark(npc_id, primary_id)
+    end
+end
+
+-- Update the data that is displayed to apply to the current zone and other parameters.
+function RareTracker:UpdateDisplayList()
+    -- Hide all frames that are currently marked as visible.
+    local f = self.gui.entities_frame
+    for npc_id, _ in pairs(target_npc_ids) do
+        f.entities[npc_id]:Hide()
+    end
+    
+    -- If no data is present for the given zone, then there are no targets.
+    wipe(target_npc_ids)
+    local primary_id = self.zone_id
+    print(primary_id)
+    if primary_id and self.primary_id_to_data[primary_id] then
+        -- Gather the candidate npc ids, using the plugin provider when defined.
+        if self.primary_id_to_data[primary_id].SelectTargetEntities then
+            self.primary_id_to_data[primary_id].SelectTargetEntities(self, target_npc_ids)
+        else
+            for npc_id, _ in pairs(self.primary_id_to_data[primary_id].entities) do
+                target_npc_ids[npc_id] = true
+            end
+        end
+    end
+
+    -- Filter out all ignored entities and count the number of entries we will have in total.
+    -- Give all of the table entries their new positions and show them when appropriate.
+    local n = 0
+    for npc_id, _ in pairs(target_npc_ids) do
+        if self.db.global.ignored_rares[npc_id] then
+            target_npc_ids[npc_id] = nil
+        else
+            f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
+            f.entities[npc_id]:Show()
+            n = n + 1
+        end
+    end
+    
+    -- Resize the appropriate frames.
+    self:UpdateEntityFrameDimensions(n, f)
+end
+
+-- Resize the entities portion of the tracking window.
+function RareTracker:UpdateEntityFrameDimensions(n, f)
+    self.gui:SetSize(
+        entity_name_width + entity_status_width + 2 * favorite_rares_width + 5 * frame_padding,
+        shard_id_frame_height + 3 * frame_padding + n * 12 + 8
+    )
+    
+    f:SetSize(
+        entity_name_width + entity_status_width + 2 * favorite_rares_width + 3 * frame_padding,
+        n * 12 + 8
+    )
+    f.entity_name_backdrop:SetSize(entity_name_width, f:GetHeight())
+    f.entity_status_backdrop:SetSize(entity_status_width, f:GetHeight())
+end
+
+-- Ensure that all the favorite marks of the entities are set correctly.
+function RareTracker:CorrectFavoriteMarks()
+    for npc_id, _ in pairs(self.tracked_npc_ids) do
+        if self.db.global.favorite_rares[npc_id] then
+            self.gui.entities_frame.entities[npc_id].favorite.texture:SetColorTexture(0, 1, 0, 1)
+        else
+            self.gui.entities_frame.entities[npc_id].favorite.texture:SetColorTexture(0, 0, 0, front_opacity)
+        end
     end
 end
 
@@ -224,7 +284,7 @@ function RareTracker:InitializeRareTableFrame(parent)
     end
     
     -- Arrange the table such that it fits the user's wishes. Resize the frames appropriately.
-    -- TODO self:ReorganizeRareTableFrame(f)
+    -- TODO
     
     parent.entities_frame = f
 end
@@ -357,6 +417,5 @@ function RareTracker:InitializeInterface()
     
     -- The default state of the window is hidden.
     f:Hide()
-    
     self.gui = f
 end

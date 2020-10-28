@@ -45,7 +45,7 @@ local defaults = {
         window_scale = 1.0,
         previous_records = {},
         favorite_rares = {},
-        ignore_rares = {},
+        ignored_rares = {},
         banned_NPC_ids = {},
         version = 0,
     },
@@ -92,6 +92,7 @@ function RareTracker:OnInitialize()
     
     -- Initialize the interface.
     self:InitializeInterface()
+    self:CorrectFavoriteMarks()
     
     -- Register all the events that have to be tracked continuously.
     RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
