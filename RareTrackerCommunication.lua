@@ -38,8 +38,6 @@ setmetatable(last_health_report["Raid"], {__index = function() return 0 end})
 
 -- Function that is called when the addon receives a communication.
 function RareTracker:OnCommReceived(_, message, distribution, player)
-    self:Debug(message, distribution, player)
-    
     -- Skip if the message is sent by the player.
     if player_name == player then return end
     
@@ -47,6 +45,8 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
     local prefix, shard_id, message_version = strsplit("-", header)
     message_version = tonumber(message_version)
     local deserialization_success, payload = self:Deserialize(serialization)
+    
+    self:Debug(prefix, shard_id, message_version, payload, distribution, player)
     
     -- The format of messages might change over time and as such, versioning is needed.
     -- To ensure optimal performance, all users should use the latest version.
@@ -251,7 +251,7 @@ function RareTracker:AcknowledgeRecordedData(spawn_data)
             local kill_time = arrival_register_time - self:ToBase10(base64_time_passed_since_kill)
             local npc_id = self:ToBase10(base64_npc_id)
             if self.last_recorded_death[npc_id] then
-                self.last_recorded_death[npc_id] = min(self.last_recorded_death[npc_id], kill_time)
+                self.last_recorded_death[npc_id] = max(self.last_recorded_death[npc_id], kill_time)
             else
                 self.last_recorded_death[npc_id] = kill_time
             end
@@ -403,7 +403,7 @@ end
 -- ####################################################################
 
 -- Report the status of the given rare in the desired channel.
-function RareTracker:ReportRareInChat(target, name, health, last_death, loc)
+function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, loc)
     -- Construct the message.
     local message = nil
     if self.current_health[npc_id] then

@@ -53,3 +53,16 @@ Plugins\Nazjatar\Locales\ptPT.lua
 Plugins\Nazjatar\Locales\ruRU.lua
 Plugins\Nazjatar\Locales\zhCN.lua
 Plugins\Nazjatar\Nazjatar.lua
+
+Plugins\Mechagon\Locales\enUS.lua
+Plugins\Mechagon\Locales\deDE.lua
+Plugins\Mechagon\Locales\esES.lua
+Plugins\Mechagon\Locales\esMX.lua
+Plugins\Mechagon\Locales\frFR.lua
+Plugins\Mechagon\Locales\itIT.lua
+Plugins\Mechagon\Locales\koKR.lua
+Plugins\Mechagon\Locales\ptBR.lua
+Plugins\Mechagon\Locales\ptPT.lua
+Plugins\Mechagon\Locales\ruRU.lua
+Plugins\Mechagon\Locales\zhCN.lua
+Plugins\Mechagon\Mechagon.lua

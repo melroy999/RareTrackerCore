@@ -45,7 +45,7 @@ RareTracker.waypoints = {}
 local reported_vignettes = {}
 
 -- Record all spawn uids that are detected, such that we don't report the same spawn multiple times.
-local reported_spawn_uids = {}
+RareTracker.reported_spawn_uids = {}
 
 -- ####################################################################
 -- ##                           Event Handlers                       ##
@@ -85,7 +85,7 @@ function RareTracker:ChangeZone()
     self:ResetTrackedData()
     
     -- Reset the shard id
-    self.shard_id = nil
+    self:ChangeShard(nil)
     
     -- Ensure that the correct data is shown in the window.
     self:UpdateDisplayList()
@@ -108,9 +108,11 @@ function RareTracker:ChangeShard(zone_uid)
     -- Update the shard number in the display.
     self:UpdateShardNumber()
     
-    -- Change the shard id to the new shard and add the channel.
-    self:LoadRecordedData()
-    self:AnnounceArrival()
+    if self.shard_id then
+        -- Change the shard id to the new shard and add the channel.
+        self:LoadRecordedData()
+        self:AnnounceArrival()
+    end
 end
 
 -- Check whether the user has changed shards and proceed accordingly. 
@@ -126,9 +128,9 @@ end
 
 -- Check whether the given npc id needs to be redirected under the current circumstances.
 function RareTracker:CheckForRedirectedRareIds(npc_id)
-    local redirection = self.primary_id_to_data[self.zone_id].redirection
-    if redirection then
-        return redirection(npc_id)
+    local NPCIdRedirection = self.primary_id_to_data[self.zone_id].NPCIdRedirection
+    if NPCIdRedirection then
+        return NPCIdRedirection(npc_id)
     end
     return npc_id
 end
@@ -300,11 +302,10 @@ end
 function RareTracker:OnMonsterChatMessage(_, ...)
     if chat_frame_loaded then
         local data = self.primary_id_to_data[self.zone_id]
-        self:Debug(...)
 
         -- Attempt to match by name or text, using the function provided by the plugin.
         local text, name = select(1, ...), select(2, ...)
-        local npc_id = data.FindMatchForName and data:FindMatchForName(name) or data.FindMatchForText and data:FindMatchForText(text)
+        local npc_id = data.FindMatchForName and data.FindMatchForName(self, name) or data.FindMatchForText and data.FindMatchForText(self, text)
         if npc_id then
             -- We found a match.
             self.is_alive[npc_id] = GetServerTime()
@@ -347,7 +348,7 @@ function RareTracker:ResetTrackedData()
     self.last_recorded_death = {}
     self.current_coordinates = {}
     recorded_entity_death_ids = {}
-    reported_spawn_uids = {}
+    self.reported_spawn_uids = {}
     reported_vignettes = {}
 end
 
@@ -400,7 +401,8 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         self.current_health[npc_id] = nil
         self.current_coordinates[npc_id] = nil
         recorded_entity_death_ids[spawn_uid..npc_id] = true
-        reported_spawn_uids[npc_id] = nil
+        self.reported_spawn_uids[spawn_uid] = nil
+        self.reported_spawn_uids[npc_id] = nil
         
         -- Update the status of the rare in the display.
         self:UpdateStatus(npc_id)
@@ -506,7 +508,7 @@ end
 -- Certain updates need to be made every hour because of the lack of daily reset/new world quest events.
 function RareTracker:AddDailyResetHandler()
     -- There is no event for the daily reset, so do a precautionary check every hour.
-    local daily_reset_handling_frame = CreateFrame("Frame", string.format("%s.daily_reset_handling_frame", self.addon_code), UIParent)
+    local f = CreateFrame("Frame", string.format("%s.daily_reset_handling_frame", self.addon_code), self.gui)
 
     -- Which timestamp was the last hour?
     local time_table = date("*t", GetServerTime())
@@ -515,10 +517,10 @@ function RareTracker:AddDailyResetHandler()
 
     -- Check when the next hourly reset is going to be, by adding 3600 to the previous hour timestamp.
     -- Add a 60 second offset, since the kill mark update might be delayed.
-    daily_reset_handling_frame.target_time = time(time_table) + 3600 + 60
+    f.target_time = time(time_table) + 3600 + 60
 
     -- Add an OnUpdate checker.
-    daily_reset_handling_frame:SetScript("OnUpdate",
+    f:SetScript("OnUpdate",
         function(f)
             if GetServerTime() > f.target_time then
                 f.target_time = f.target_time + 3600
@@ -530,7 +532,8 @@ function RareTracker:AddDailyResetHandler()
             end
         end
     )
-    daily_reset_handling_frame:Show()
+    f:Show()
+    self.gui.daily_reset_handling_frame = f
 end
 
 -- ####################################################################
@@ -540,7 +543,7 @@ end
 -- One of the issues encountered is that the chat might be joined before the default channels.
 -- In such a situation, the order of the channels changes, which is undesirable.
 -- Thus, we block certain events until these chats have been loaded.
-local message_delay_frame = CreateFrame("Frame", "RareTracker.message_delay_frame", UIParent)
+local message_delay_frame = CreateFrame("Frame", string.format("%s.message_delay_frame", RareTracker.addon_code), UIParent)
 message_delay_frame.start_time = GetServerTime()
 message_delay_frame:SetScript("OnUpdate",
 	function(self)

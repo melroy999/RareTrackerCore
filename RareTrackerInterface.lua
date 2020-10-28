@@ -96,8 +96,10 @@ end
 -- Update the daily kill marks of all the currently tracked entities.
 function RareTracker:UpdateAllDailyKillMarks()
     local primary_id = self.zone_id
-    for npc_id, _ in pairs(self.primary_id_to_data[primary_id].entities) do
-        self:UpdateDailyKillMark(npc_id, primary_id)
+    if primary_id then
+        for npc_id, _ in pairs(self.primary_id_to_data[primary_id].entities) do
+            self:UpdateDailyKillMark(npc_id, primary_id)
+        end
     end
 end
 
@@ -126,13 +128,15 @@ function RareTracker:UpdateDisplayList()
     -- Filter out all ignored entities and count the number of entries we will have in total.
     -- Give all of the table entries their new positions and show them when appropriate.
     local n = 0
-    for npc_id, _ in pairs(target_npc_ids) do
-        if self.db.global.ignored_rares[npc_id] then
-            target_npc_ids[npc_id] = nil
-        else
-            f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
-            f.entities[npc_id]:Show()
-            n = n + 1
+    for _, npc_id in pairs(self.primary_id_to_data[primary_id].ordering) do
+        if target_npc_ids[npc_id] then
+            if self.db.global.ignored_rares[npc_id] then
+                target_npc_ids[npc_id] = nil
+            else
+                f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
+                f.entities[npc_id]:Show()
+                n = n + 1
+            end
         end
     end
     
@@ -234,7 +238,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     
     f.announce:RegisterForClicks("LeftButtonDown", "RightButtonDown")
     f.announce:SetScript("OnClick", function(_, button)
-        local name = self.rare_names[npc_id]
+        local name = rare_data.name
         local health = self.current_health[npc_id]
         local last_death = self.last_recorded_death[npc_id]
         local loc = self.current_coordinates[npc_id]
@@ -253,7 +257,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
             end
             
             -- Send the message.
-            self:ReportRareInChat(target, name, health, last_death, loc)
+            self:ReportRareInChat(npc_id, target, name, health, last_death, loc)
         else
             -- Does the user have tom tom? if so, add a waypoint if it exists.
             if TomTom ~= nil and loc and not self.waypoints[npc_id] then
@@ -264,6 +268,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
 
     -- Add the entities name.
     f.name = f:CreateFontString(nil, nil, "GameFontNormal")
+    f.name:SetSize(entity_name_width, 12)
     f.name:SetPoint("TOPLEFT", 2 * frame_padding + 2 * favorite_rares_width + 10, 0)
     f.name:SetJustifyH("LEFT")
     f.name:SetJustifyV("TOP")
