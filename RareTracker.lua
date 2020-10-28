@@ -93,6 +93,7 @@ function RareTracker:OnInitialize()
     -- Initialize the interface.
     self:InitializeInterface()
     self:CorrectFavoriteMarks()
+    self:AddDailyResetHandler()
     
     -- Register all the events that have to be tracked continuously.
     RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")

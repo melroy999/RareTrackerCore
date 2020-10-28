@@ -166,6 +166,32 @@ function RareTracker:CorrectFavoriteMarks()
     end
 end
 
+-- Update the status of all npcs that are currently being tracked.
+function RareTracker:UpdateStatusTrackedEntities()
+    for npc_id, _ in pairs(target_npc_ids) do
+        -- It might occur that the rare is marked as alive, but no health is known.
+        -- If two minutes pass without a health value, the alive tag will be reset.
+        if self.is_alive[npc_id] and GetServerTime() - self.is_alive[npc_id] > 120 then
+            self.is_alive[npc_id] = nil
+            self.current_health[npc_id] = nil
+            self.reported_spawn_uids[npc_id] = nil
+        end
+        
+        self:UpdateStatus(npc_id)
+    end
+end
+
+-- Switch between the report and waypoint icons.
+function RareTracker.CycleReportWaypointIcon(f)
+    f.icon_state = not f.icon_state
+                
+    if f.icon_state then
+        f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Broadcast.tga")
+    else
+        f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Waypoint.tga")
+    end
+end
+
 -- ####################################################################
 -- ##                          Initialization                        ##
 -- ####################################################################
@@ -285,6 +311,15 @@ function RareTracker:InitializeRareTableFrame(parent)
         end
     end
     
+    -- Ensure that the data in the window updates periodically.
+    f.last_display_update = GetTime()
+    f:SetScript("OnUpdate", function() 
+        if f.last_display_update + 1 < GetTime() then
+            f.last_display_update = GetTime()
+            self:UpdateStatusTrackedEntities()
+        end
+    end)
+    
     -- Arrange the table such that it fits the user's wishes. Resize the frames appropriately.
     -- TODO
     
@@ -336,7 +371,15 @@ function RareTracker:InitializeAnnounceIconFrame(parent)
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
     
+    -- Make the icon swap periodically by adding an update handler.
     f.icon_state = false
+    f.last_icon_change = GetTime()
+    f:SetScript("OnUpdate", function() 
+        if f.last_icon_change + 2 < GetTime() then
+            f.last_icon_change = GetTime()
+            self.CycleReportWaypointIcon(f)
+        end
+    end)
     
     -- TODO implement tooltip.
     

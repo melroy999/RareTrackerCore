@@ -41,8 +41,7 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
     self:Debug(message, distribution, player)
     
     -- Skip if the message is sent by the player.
-    -- TODO put back
-    -- if player_name == player then return end
+    if player_name == player then return end
     
     local header, serialization = strsplit(":", message)
     local prefix, shard_id, message_version = strsplit("-", header)

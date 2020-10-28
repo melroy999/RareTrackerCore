@@ -500,6 +500,40 @@ function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, make_ann
 end
 
 -- ####################################################################
+-- ##                      Daily Reset Handling                      ##
+-- ####################################################################
+
+-- Certain updates need to be made every hour because of the lack of daily reset/new world quest events.
+function RareTracker:AddDailyResetHandler()
+    -- There is no event for the daily reset, so do a precautionary check every hour.
+    local daily_reset_handling_frame = CreateFrame("Frame", string.format("%s.daily_reset_handling_frame", self.addon_code), UIParent)
+
+    -- Which timestamp was the last hour?
+    local time_table = date("*t", GetServerTime())
+    time_table.sec = 0
+    time_table.min = 0
+
+    -- Check when the next hourly reset is going to be, by adding 3600 to the previous hour timestamp.
+    -- Add a 60 second offset, since the kill mark update might be delayed.
+    daily_reset_handling_frame.target_time = time(time_table) + 3600 + 60
+
+    -- Add an OnUpdate checker.
+    daily_reset_handling_frame:SetScript("OnUpdate",
+        function(f)
+            if GetServerTime() > f.target_time then
+                f.target_time = f.target_time + 3600
+                
+                if self.gui.entities_frame ~= nil then
+                    self:UpdateAllDailyKillMarks()
+                    self:Debug(string.format(L["<%s> Updating daily kill marks."], self.addon_code))
+                end
+            end
+        end
+    )
+    daily_reset_handling_frame:Show()
+end
+
+-- ####################################################################
 -- ##                       Channel Wait Frame                       ##
 -- ####################################################################
 
