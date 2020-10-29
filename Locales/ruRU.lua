@@ -20,12 +20,12 @@ L["Left-click: hide/show RT"] = "Левый клик: скрыть/показа�
 L["Right-click: show options"] = "Правый клик: показать настройки"
 
 -- Chat messages.
-L["<%s> %s has died"] = "<%s> %s был убит"
-L["<%s> %s (%s%%)"] = "<%s> %s (%s%%)"
-L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<%s> %s (%s%%), координаты ~(%.2f, %.2f)"
-L["<%s> %s was last seen ~%s minutes ago"] = "<%s> %s, был убит ~%s мин. назад"
-L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<%s> %s в последний раз был замечен ~(%.2f, %.2f)"
-L["<%s> %s seen alive (combat log)"] = "<%s> %s был замечен (на основании данных лога)"
+L["<RT> %s has died"] = "<RT> %s был убит"
+L["<RT> %s (%s%%)"] = "<RT> %s (%s%%)"
+L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<RT> %s (%s%%), координаты ~(%.2f, %.2f)"
+L["<RT> %s was last seen ~%s minutes ago"] = "<RT> %s, был убит ~%s мин. назад"
+L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<RT> %s в последний раз был замечен ~(%.2f, %.2f)"
+L["<RT> %s seen alive (combat log)"] = "<RT> %s был замечен (на основании данных лога)"
 
 -- Rare frame instructions.
 L["Click on the squares to add rares to your favorites."] = "Кликните по квадратам, что бы добавить в список избранных."
@@ -42,17 +42,17 @@ L["Shard ID: %s"] = "ID сервера/слоя: %s"
 L["Unknown"] = "Неизвестно"
 
 -- Status messages.
-L["<%s> Resetting current rare timers and requesting up-to-date data."] = "<%s> Сброс текущих таймеров рарников и запрос актуальных данных."
-L["<%s> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<%s> Выберите НПЦ, что бы аддон смог определить ID сервера/слоя."
-L["<%s> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<%s> Процедура сброса все еще восстанавливается. Имейте в виду, сброс НЕ нужен для получения новых таймеров. Если все же, Вам необходимо сбросить данные, то перезагрузите интерфейс используя /reload и нажмите кнопку сброса повторно."
-L["<%s> Failed to register AddonPrefix '%s'. %s will not function properly."] = "<%s> Не удалось загрузить '%s'. %s не будет функционировать корректно."
-L["<%s> Moving to shard "] = "<%s> Перемещаемся на сервер/слой "
-L["<%s> Removing cached data for shard "] = "<%s> Удаляем кэш сервера/слоя "
-L["<%s> Restoring data from previous session in shard "] = "<%s> Восстанавливаем данные прошлых сессий сервера/слоя "
-L["<%s> Requesting rare kill data for shard "] = "<%s> Запрашиваем данные убийств рарников для сервера/слоя "
-L["<%s> Resetting ordering"] = "<%s> Сбрасываем очередность"
-L["<%s> Updating daily kill marks."] = "<%s> Обновляем ежедневные цели."
-L["<%s> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = "<%s> Ваша версия %s устарела. Обновите до актуальной версии при ближайшей возмозможности."
+L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> Сброс текущих таймеров рарников и запрос актуальных данных."
+L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> Выберите НПЦ, что бы аддон смог определить ID сервера/слоя."
+L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> Процедура сброса все еще восстанавливается. Имейте в виду, сброс НЕ нужен для получения новых таймеров. Если все же, Вам необходимо сбросить данные, то перезагрузите интерфейс используя /reload и нажмите кнопку сброса повторно."
+L["<RT> Failed to register AddonPrefix '%s'. %s will not function properly."] = "<RT> Не удалось загрузить '%s'. %s не будет функционировать корректно."
+L["<RT> Moving to shard "] = "<RT> Перемещаемся на сервер/слой "
+L["<RT> Removing cached data for shard "] = "<RT> Удаляем кэш сервера/слоя "
+L["<RT> Restoring data from previous session in shard "] = "<RT> Восстанавливаем данные прошлых сессий сервера/слоя "
+L["<RT> Requesting rare kill data for shard "] = "<RT> Запрашиваем данные убийств рарников для сервера/слоя "
+L["<RT> Resetting ordering"] = "<RT> Сбрасываем очередность"
+L["<RT> Updating daily kill marks."] = "<RT> Обновляем ежедневные цели."
+L["<RT> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RT> Ваша версия %s устарела. Обновите до актуальной версии при ближайшей возмозможности."
 
 -- Option menu strings.
 L["Favorite sound alert"] = "Звуковой сигнал для избранных"
