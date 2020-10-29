@@ -91,3 +91,16 @@ Plugins\Vale\Locales\ptPT.lua
 Plugins\Vale\Locales\ruRU.lua
 Plugins\Vale\Locales\zhCN.lua
 Plugins\Vale\Vale.lua
+
+Plugins\WorldBosses\Locales\enUS.lua
+Plugins\WorldBosses\Locales\deDE.lua
+Plugins\WorldBosses\Locales\esES.lua
+Plugins\WorldBosses\Locales\esMX.lua
+Plugins\WorldBosses\Locales\frFR.lua
+Plugins\WorldBosses\Locales\itIT.lua
+Plugins\WorldBosses\Locales\koKR.lua
+Plugins\WorldBosses\Locales\ptBR.lua
+Plugins\WorldBosses\Locales\ptPT.lua
+Plugins\WorldBosses\Locales\ruRU.lua
+Plugins\WorldBosses\Locales\zhCN.lua
+Plugins\WorldBosses\WorldBosses.lua

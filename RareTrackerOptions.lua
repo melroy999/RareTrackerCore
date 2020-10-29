@@ -78,7 +78,7 @@ function RareTracker:InitializeRareTrackerLDB()
                         self.db.global.window.hide = false
                     end
                 else
-                    print("<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules.")
+                    print(L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."])
                 end
             else
                 InterfaceOptionsFrame_Show()

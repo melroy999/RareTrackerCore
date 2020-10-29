@@ -153,7 +153,7 @@ function RareTracker:OnChatCommand(input)
                 self.gui:Show()
                 self.db.global.window.hide = false
             else
-                print("<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules.")
+                print(L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."])
             end
         elseif cmd == "hide" then
             if zone_id and self.zone_id_to_primary_id[zone_id] then

@@ -70,6 +70,12 @@ local recorded_entity_death_ids = {}
 -- Record all vignettes that are detected, such that we don't report the same spawn multiple times.
 local reported_vignettes = {}
 
+-- For some reason... the Sha of Anger is a... vehicle?
+local valid_unit_types = {
+    ["Creature"] = true,
+    ["Vehicle"] = true
+}
+
 -- ####################################################################
 -- ##                           Event Handlers                       ##
 -- ####################################################################
@@ -181,7 +187,7 @@ function RareTracker:PLAYER_TARGET_CHANGED()
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
         
-        if unittype == "Creature" and self.primary_id_to_data[self.zone_id].entities[npc_id] then
+        if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] then
             -- Find the health of the entity.
             local health = UnitHealth("target")
         
@@ -223,7 +229,7 @@ function RareTracker:UNIT_HEALTH(_, unit)
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
         
-        if unittype == "Creature" and self.primary_id_to_data[self.zone_id].entities[npc_id] then
+        if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] then
             -- Update the current health of the entity.
             local percentage = self.GetTargetHealthPercentage()
             
@@ -262,7 +268,7 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
         -- We can always check for a shard change.
         -- We only take fights between creatures, since they seem to be the only reliable option.
         -- We exclude all pets and guardians, since they might have retained their old shard change.
-        if unittype == "Creature" and not self.db.global.banned_NPC_ids[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
+        if valid_unit_types[unittype] and not self.db.global.banned_NPC_ids[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if self:CheckForShardChange(zone_uid) then
                 self:Debug("[OnCombatLogEvent]", sourceGUID, destGUID)
             end
@@ -271,7 +277,7 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
         --A special check for duplicate NPC ids in different environments (Mecharantula).
         npc_id = self:CheckForRedirectedRareIds(npc_id)
             
-        if unittype == "Creature" and self.primary_id_to_data[self.zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
+        if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if subevent == "UNIT_DIED" then
                 -- Mark the entity has dead and report to your peers.
                 self:ProcessEntityDeath(npc_id, spawn_uid, true)
@@ -301,7 +307,7 @@ function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
             -- It might occur that the NPC id is nil. Do not proceed in such a case.
             if not npc_id then return end
             
-            if unittype == "Creature" then
+            if valid_unit_types[unittype] then
                 if not self.db.global.banned_NPC_ids[npc_id] then
                     if self:CheckForShardChange(zone_uid) then
                         self:Debug("[OnVignette]", vignetteInfo.objectGUID)
