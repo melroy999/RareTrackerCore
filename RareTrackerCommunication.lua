@@ -27,10 +27,10 @@ local player_name = UnitName("player").."-"..GetRealmName()
 -- Track when the last health report was for a given npc.
 local last_health_report = {
     ["CHANNEL"] = {},
-    ["Raid"] = {}
+    ["RAID"] = {}
 }
 setmetatable(last_health_report["CHANNEL"], {__index = function() return 0 end})
-setmetatable(last_health_report["Raid"], {__index = function() return 0 end})
+setmetatable(last_health_report["RAID"], {__index = function() return 0 end})
 
 -- ####################################################################
 -- ##                       Communication Core                       ##
@@ -51,7 +51,7 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
     -- The format of messages might change over time and as such, versioning is needed.
     -- To ensure optimal performance, all users should use the latest version.
     if not self.reported_version_mismatch and version < message_version and message_version ~= 9001 then
-        print("<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience.")
+        print(L"<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience.")
         self.reported_version_mismatch = true
     end
     
@@ -111,8 +111,8 @@ function RareTracker:SendAddonMessage(prefix, message, target, target_id)
     message = self:Serialize(message)
 
     -- ChatThrottleLib does not take kindly to using the wrong target. Demote to party if needed.
-    if target == "Raid" and UnitInParty("player") then
-        target = "Party"
+    if target == "RAID" and UnitInParty("player") then
+        target = "PARTY"
     end
     
     self:SendCommMessage(communication_prefix, prefix.."-"..self.shard_id.."-"..version..":"..message, target, target_id)
@@ -142,32 +142,17 @@ function RareTracker:AnnounceArrival()
         -- We want to avoid overwriting existing channel numbers. So delay the channel join.
         self.DelayedExecution(1, function()
                 self:Debug("Requesting rare kill data for shard "..self.shard_id)
-                self:SendAddonMessage(
-                    "A", 
-                    arrival_register_time,
-                    "CHANNEL",
-                    select(1, GetChannelName(channel_name))
-                )
+                self:SendAddonMessage("A", arrival_register_time, "CHANNEL", select(1, GetChannelName(channel_name)))
             end
         )
     else
         self:Debug("Requesting rare kill data for shard "..self.shard_id)
-        self:SendAddonMessage(
-            "A",
-            arrival_register_time,
-            "CHANNEL",
-            select(1, GetChannelName(channel_name))
-        )
+        self:SendAddonMessage("A", arrival_register_time, "CHANNEL", select(1, GetChannelName(channel_name)))
     end
     
     -- Register your arrival within the group.
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage(
-            "AP",
-            arrival_register_time,
-            "Raid",
-            nil
-        )
+        self:SendAddonMessage("AP", arrival_register_time, "RAID", nil)
     end
 end
 
@@ -197,7 +182,7 @@ function RareTracker:PresentRecordedDataInGroup(time_stamp)
         -- Add the time stamp to the table, such that the receiver can verify.
         time_table["time_stamp"] = self:ToBase64(time_stamp)
         
-        self:SendAddonMessage("PP", time_table, "Raid", nil)
+        self:SendAddonMessage("PP", time_table, "RAID", nil)
     end
 end
 
@@ -266,78 +251,38 @@ end
 
 -- Inform the others that a specific entity has died.
 function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid)
-    self:SendAddonMessage(
-        "ED",
-        npc_id.."-"..spawn_uid,
-        "CHANNEL",
-        select(1, GetChannelName(channel_name))
-    )
+    self:SendAddonMessage("ED", npc_id.."-"..spawn_uid, "CHANNEL", select(1, GetChannelName(channel_name)))
 
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage(
-            "EDP",
-            npc_id.."-"..spawn_uid,
-            "Raid",
-            nil
-        )
+        self:SendAddonMessage("EDP", npc_id.."-"..spawn_uid, "RAID", nil)
     end
 end
 
 -- Inform the others that you have spotted an alive entity.
 function RareTracker:AnnounceEntityAlive(npc_id, spawn_uid)
-    self:SendAddonMessage(
-        "EA",
-        npc_id.."-"..spawn_uid,
-        "CHANNEL",
-        select(1, GetChannelName(channel_name))
-    )
+    self:SendAddonMessage("EA", npc_id.."-"..spawn_uid, "CHANNEL", select(1, GetChannelName(channel_name)))
 
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage(
-            "EAP",
-            npc_id.."-"..spawn_uid,
-            "Raid",
-            nil
-        )
+        self:SendAddonMessage("EAP", npc_id.."-"..spawn_uid, "RAID", nil)
     end
     
 end
 
 -- Inform the others that you have spotted an alive entity and include the coordinates.
 function RareTracker:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
-    self:SendAddonMessage(
-        "EA",
-        npc_id.."-"..spawn_uid.."-"..x.."-"..y,
-        "CHANNEL",
-        select(1, GetChannelName(channel_name))
-    )
+    self:SendAddonMessage("EA", npc_id.."-"..spawn_uid.."-"..x.."-"..y, "CHANNEL", select(1, GetChannelName(channel_name)))
 
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage(
-            "EAP",
-            npc_id.."-"..spawn_uid.."-"..x.."-"..y,
-            "Raid",
-            nil
-        )
+        self:SendAddonMessage("EAP", npc_id.."-"..spawn_uid.."-"..x.."-"..y, "RAID", nil)
     end
 end
 
 -- Inform the others that you have spotted an alive entity.
 function RareTracker:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
-    self:SendAddonMessage(
-        "ET",
-        npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
-        "CHANNEL",
-        select(1, GetChannelName(channel_name))
-    )
+    self:SendAddonMessage("ET", npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y, "CHANNEL", select(1, GetChannelName(channel_name)))
     
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage(
-            "ETP",
-            npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y,
-            "Raid",
-            nil
-        )
+        self:SendAddonMessage("ETP", npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y, "RAID", nil)
     end
 end
 
@@ -345,26 +290,16 @@ end
 function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
     -- Send the health message, using a rate limited function.
     if GetTime() - last_health_report["CHANNEL"][npc_id] > 5 then
-        self:SendAddonMessage(
-            "EH",
-            npc_id.."-"..spawn_uid.."-"..percentage,
-            "CHANNEL",
-            select(1, GetChannelName(channel_name))
-        )
+        self:SendAddonMessage("EH", npc_id.."-"..spawn_uid.."-"..percentage, "CHANNEL", select(1, GetChannelName(channel_name)))
         last_health_report["CHANNEL"][npc_id] = GetTime()
     end
     
-    if GetTime() - last_health_report["Raid"][npc_id] > 5 then
+    if GetTime() - last_health_report["RAID"][npc_id] > 5 then
         if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
             -- Send the health message, using a rate limited function.
-            self:SendAddonMessage(
-                "EHP",
-                npc_id.."-"..spawn_uid.."-"..percentage,
-                "Raid",
-                nil
-            )
+            self:SendAddonMessage("EHP", npc_id.."-"..spawn_uid.."-"..percentage, "RAID", nil)
         end
-        last_health_report["Raid"][npc_id] = GetTime()
+        last_health_report["RAID"][npc_id] = GetTime()
     end
 end
 
@@ -395,7 +330,7 @@ end
 
 -- Acknowledge the health change of the entity and set the according flags.
 function RareTracker:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
-    last_health_report["Raid"][npc_id] = GetTime()
+    last_health_report["RAID"][npc_id] = GetTime()
     self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
 end
 
