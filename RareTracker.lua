@@ -20,6 +20,13 @@ local UIParent = UIParent
 RareTracker = LibStub("AceAddon-3.0"):NewAddon("RareTracker", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceSerializer-3.0")
 
 -- ####################################################################
+-- ##                      Localization Support                      ##
+-- ####################################################################
+
+-- Get an object we can use for the localization of the addon.
+local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
+
+-- ####################################################################
 -- ##                           Variables                            ##
 -- ####################################################################
 
@@ -37,9 +44,6 @@ RareTracker.completion_quest_to_npc_ids = {}
     
 -- The short-hand code of the addon.
 RareTracker.addon_code = "RT"
-
--- Keep a list of modules that have been registered, such that we can add them when loaded.
-local plugin_data = {}
 
 -- Define the default settings.
 local defaults = {
@@ -71,102 +75,11 @@ local defaults = {
 }
 
 -- ####################################################################
--- ##                     Standard Ace3 Methods                      ##
--- ####################################################################
-
--- A function that is called when the addon is first loaded.
-function RareTracker:OnInitialize()
-    -- Register the addon's prefix and the associated communication function.
-    RareTracker:RegisterComm("RareTracker")
-    
-    -- Add all the requested zones and rares.
-    for primary_id, rare_data in pairs(plugin_data) do
-        self:AddRaresForZone(rare_data)
-        plugin_data[primary_id] = nil
-    end
-    
-    -- Load the database.
-    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB2", defaults, true)
-    self:InitializeRareTrackerLDB()
-    self:InitializeOptionsMenu()
-
-    -- Register the callback to the logout function.
-    self.db.RegisterCallback(self, "OnDatabaseShutdown", "OnDatabaseShutdown")
-    
-    -- As a precaution, we remove all actively tracked rares from the blacklist.
-    for npc_id, _ in pairs(self.tracked_npc_ids) do
-        self.db.global.banned_NPC_ids[npc_id] = nil
-    end
-
-    -- Remove any data in the previous records that have expired.
-    for shard_id, _ in pairs(self.db.global.previous_records) do
-        if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp > 900 then
-            self:Debug("Removing cached data for shard "..shard_id)
-            self.db.global.previous_records[shard_id] = nil
-        end
-    end
-    
-    -- Initialize the interface.
-    self:InitializeInterface()
-    self:CorrectFavoriteMarks()
-    self:AddDailyResetHandler()
-    
-    -- Register all the events that have to be tracked continuously.
-    RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
-    RareTracker:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
-    RareTracker:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
-    
-    -- Register the resired chat commands.
-    RareTracker:RegisterChatCommand("rt2", "OnChatCommand")
-    RareTracker:RegisterChatCommand("raretracker2", "OnChatCommand")
-end
-
--- A function that is called whenever the addon is enabled by the user.
--- function RareTracker:OnEnable()
---
--- end
-
--- A function that is called whenever the addon is disabled by the user.
--- function RareTracker:OnDisable()
---
--- end
-
--- Called when the player logs out, such that we can save the current time table for later use.
-function RareTracker:OnDatabaseShutdown()
-    self:SaveRecordedData()
-end
-
--- ####################################################################
--- ##                            Commands                            ##
--- ####################################################################
-
-function RareTracker:OnChatCommand(input)
-    input = input:trim()
-    if not input or input == "" then
-        InterfaceOptionsFrame_Show()
-        InterfaceOptionsFrame_OpenToCategory(self.options_frame)
-    else
-        local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
-        local zone_id = C_Map.GetBestMapForUnit("player")
-        if cmd == "show" then
-            if zone_id and self.zone_id_to_primary_id[zone_id] then
-                self.gui:Show()
-                self.db.global.window.hide = false
-            else
-                print(L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."])
-            end
-        elseif cmd == "hide" then
-            if zone_id and self.zone_id_to_primary_id[zone_id] then
-                self.gui:Hide()
-            end
-            self.db.global.window.hide = true
-        end
-    end
-end
-
--- ####################################################################
 -- ##                      Module Registration                       ##
 -- ####################################################################
+
+-- Keep a list of modules that have been registered, such that we can add them when loaded.
+local plugin_data = {}
 
 -- A metatable that simplifies accessing rare data.
 local rare_data_metatable = {
@@ -183,13 +96,29 @@ local rare_data_metatable = {
     end
 }
 
+-- First, gather a list of addons that are loaded, and find the number of rare tracker addons.
+-- A list of all plugin names, such that we can wait for the rare data to be added.
+local rare_tracker_plugins = {}
+for i = 1, GetNumAddOns() do
+    local name, _, _, enabled, _, _, _ = GetAddOnInfo(i)
+    if enabled and name:find("RareTracker") and name ~= "RareTracker" then
+        rare_tracker_plugins[name] = true
+    end
+end
+
 -- Register a list of rare data that will be processed upon successful load.
-function RareTracker.RegisterRaresForZone(rare_data)
+function RareTracker.RegisterRaresForModule(rare_data)
     tinsert(plugin_data, rare_data)
 end
 
+-- A function that tracks whether all modules have been loaded, before calling the on initialize.
+function RareTracker:MarkModuleRegistrationFinished(module_name)
+    rare_tracker_plugins[module_name] = nil
+    self:OnInitialize()
+end
+
 -- Register a list of rare entities for a given zone id/zone ids.
-function RareTracker:AddRaresForZone(rare_data)
+function RareTracker:AddRaresForModule(rare_data)
     local primary_id = rare_data.target_zones[1]
     
     -- Only define the data for the zone once by making a pointer to the primary id.
@@ -223,11 +152,98 @@ function RareTracker:AddRaresForZone(rare_data)
     for npc_id, _ in pairs(rare_data.entities) do
         table.insert(ordering, npc_id)
     end
-
     table.sort(ordering, function(a, b)
         return rare_data.entities[a].name < rare_data.entities[b].name
     end)
     self.primary_id_to_data[primary_id].ordering = ordering
+end
+
+-- ####################################################################
+-- ##                     Standard Ace3 Methods                      ##
+-- ####################################################################
+
+-- A function that is called when the addon is first loaded.
+-- Note: we have to delay the initialization until all the rare data has been gathered.
+function RareTracker:OnInitialize()
+    if not next(rare_tracker_plugins) then
+        -- Register the addon's prefix and the associated communication function.
+        self:RegisterComm("RareTracker")
+        
+        -- Add all the requested zones and rares.
+        for primary_id, rare_data in pairs(plugin_data) do
+            self:AddRaresForModule(rare_data)
+            plugin_data[primary_id] = nil
+        end
+        
+        -- Load the database.
+        self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", defaults, true)
+        self:InitializeRareTrackerLDB()
+        self:InitializeOptionsMenu()
+
+        -- Register the callback to the logout function.
+        self.db.RegisterCallback(self, "OnDatabaseShutdown", "OnDatabaseShutdown")
+        
+        -- As a precaution, we remove all actively tracked rares from the blacklist.
+        for npc_id, _ in pairs(self.tracked_npc_ids) do
+            self.db.global.banned_NPC_ids[npc_id] = nil
+        end
+
+        -- Remove any data in the previous records that have expired.
+        for shard_id, _ in pairs(self.db.global.previous_records) do
+            if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp > 900 then
+                self:Debug("Removing cached data for shard "..shard_id)
+                self.db.global.previous_records[shard_id] = nil
+            end
+        end
+        
+        -- Initialize the interface.
+        self:InitializeInterface()
+        self:CorrectFavoriteMarks()
+        self:AddDailyResetHandler()
+        
+        -- Register all the events that have to be tracked continuously.
+        self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
+        self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
+        self:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
+        
+        -- Register the resired chat commands.
+        self:RegisterChatCommand("rt", "OnChatCommand")
+        self:RegisterChatCommand("raretracker", "OnChatCommand")
+    end
+end
+
+-- Called when the player logs out, such that we can save the current time table for later use.
+function RareTracker:OnDatabaseShutdown()
+    self:SaveRecordedData()
+end
+
+-- ####################################################################
+-- ##                            Commands                            ##
+-- ####################################################################
+
+-- A function that is called when calling a chat command.
+function RareTracker:OnChatCommand(input)
+    input = input:trim()
+    if not input or input == "" then
+        InterfaceOptionsFrame_Show()
+        InterfaceOptionsFrame_OpenToCategory(self.options_frame)
+    else
+        local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
+        local zone_id = C_Map.GetBestMapForUnit("player")
+        if cmd == "show" then
+            if zone_id and self.zone_id_to_primary_id[zone_id] then
+                self.gui:Show()
+                self.db.global.window.hide = false
+            else
+                print(L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."])
+            end
+        elseif cmd == "hide" then
+            if zone_id and self.zone_id_to_primary_id[zone_id] then
+                self.gui:Hide()
+            end
+            self.db.global.window.hide = true
+        end
+    end
 end
 
 -- ####################################################################

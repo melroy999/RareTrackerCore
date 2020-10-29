@@ -3,7 +3,7 @@
 ## Notes: The core module of the RareTracker addons.
 ## Author: Melroy
 ## Version: 2.0.0
-## SavedVariables: RareTrackerDB2
+## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 
 libs\LibDBIcon-1.0\LibStub\LibStub.lua
@@ -39,68 +39,3 @@ RareTrackerInterface.lua
 RareTrackerEventHandler.lua
 RareTrackerCommunication.lua
 RareTrackerOptions.lua
-
-Plugins\Nazjatar\Locales\enUS.lua
-Plugins\Nazjatar\Locales\deDE.lua
-Plugins\Nazjatar\Locales\esES.lua
-Plugins\Nazjatar\Locales\esMX.lua
-Plugins\Nazjatar\Locales\frFR.lua
-Plugins\Nazjatar\Locales\itIT.lua
-Plugins\Nazjatar\Locales\koKR.lua
-Plugins\Nazjatar\Locales\ptBR.lua
-Plugins\Nazjatar\Locales\ptPT.lua
-Plugins\Nazjatar\Locales\ruRU.lua
-Plugins\Nazjatar\Locales\zhCN.lua
-Plugins\Nazjatar\Nazjatar.lua
-
-Plugins\Mechagon\Locales\enUS.lua
-Plugins\Mechagon\Locales\deDE.lua
-Plugins\Mechagon\Locales\esES.lua
-Plugins\Mechagon\Locales\esMX.lua
-Plugins\Mechagon\Locales\frFR.lua
-Plugins\Mechagon\Locales\itIT.lua
-Plugins\Mechagon\Locales\koKR.lua
-Plugins\Mechagon\Locales\ptBR.lua
-Plugins\Mechagon\Locales\ptPT.lua
-Plugins\Mechagon\Locales\ruRU.lua
-Plugins\Mechagon\Locales\zhCN.lua
-Plugins\Mechagon\Mechagon.lua
-
-Plugins\Uldum\Locales\enUS.lua
-Plugins\Uldum\Locales\deDE.lua
-Plugins\Uldum\Locales\esES.lua
-Plugins\Uldum\Locales\esMX.lua
-Plugins\Uldum\Locales\frFR.lua
-Plugins\Uldum\Locales\itIT.lua
-Plugins\Uldum\Locales\koKR.lua
-Plugins\Uldum\Locales\ptBR.lua
-Plugins\Uldum\Locales\ptPT.lua
-Plugins\Uldum\Locales\ruRU.lua
-Plugins\Uldum\Locales\zhCN.lua
-Plugins\Uldum\Uldum.lua
-
-Plugins\Vale\Locales\enUS.lua
-Plugins\Vale\Locales\deDE.lua
-Plugins\Vale\Locales\esES.lua
-Plugins\Vale\Locales\esMX.lua
-Plugins\Vale\Locales\frFR.lua
-Plugins\Vale\Locales\itIT.lua
-Plugins\Vale\Locales\koKR.lua
-Plugins\Vale\Locales\ptBR.lua
-Plugins\Vale\Locales\ptPT.lua
-Plugins\Vale\Locales\ruRU.lua
-Plugins\Vale\Locales\zhCN.lua
-Plugins\Vale\Vale.lua
-
-Plugins\WorldBosses\Locales\enUS.lua
-Plugins\WorldBosses\Locales\deDE.lua
-Plugins\WorldBosses\Locales\esES.lua
-Plugins\WorldBosses\Locales\esMX.lua
-Plugins\WorldBosses\Locales\frFR.lua
-Plugins\WorldBosses\Locales\itIT.lua
-Plugins\WorldBosses\Locales\koKR.lua
-Plugins\WorldBosses\Locales\ptBR.lua
-Plugins\WorldBosses\Locales\ptPT.lua
-Plugins\WorldBosses\Locales\ruRU.lua
-Plugins\WorldBosses\Locales\zhCN.lua
-Plugins\WorldBosses\WorldBosses.lua
