@@ -22,7 +22,7 @@ RareTracker.tracked_npc_ids = {}
 RareTracker.completion_quest_to_npc_ids = {}
     
 -- The short-hand code of the addon.
-RareTracker.addon_code = "RT.test"
+RareTracker.addon_code = "RTtest"
 
 -- Keep a list of modules that have been registered, such that we can add them when loaded.
 local plugin_data = {}

@@ -21,9 +21,6 @@ local channel_name = nil
 -- The communication channel version.
 local version = 1
 
--- The name and realm of the player.
-local player_name = UnitName("player").."-"..GetRealmName()
-
 -- Track when the last health report was for a given npc.
 local last_health_report = {
     ["CHANNEL"] = {},
@@ -39,14 +36,14 @@ setmetatable(last_health_report["RAID"], {__index = function() return 0 end})
 -- Function that is called when the addon receives a communication.
 function RareTracker:OnCommReceived(_, message, distribution, player)
     -- Skip if the message is sent by the player.
-    if player_name == player then return end
+    -- if player == UnitName("player") then return end
     
     local header, serialization = strsplit(":", message)
     local prefix, shard_id, message_version = strsplit("-", header)
     message_version = tonumber(message_version)
     local deserialization_success, payload = self:Deserialize(serialization)
     
-    self:Debug(prefix, shard_id, message_version, payload, distribution, player)
+    self:Debug("Receiving:", prefix, shard_id, message_version, payload, distribution, player)
     
     -- The format of messages might change over time and as such, versioning is needed.
     -- To ensure optimal performance, all users should use the latest version.
@@ -108,14 +105,16 @@ end
 -- Send a message with the given type and message.
 function RareTracker:SendAddonMessage(prefix, message, target, target_id)
     -- Serialize the message.
-    message = self:Serialize(message)
+    payload = self:Serialize(message)
 
     -- ChatThrottleLib does not take kindly to using the wrong target. Demote to party if needed.
     if target == "RAID" and UnitInParty("player") then
         target = "PARTY"
     end
     
-    self:SendCommMessage(communication_prefix, prefix.."-"..self.shard_id.."-"..version..":"..message, target, target_id)
+    self:Debug("Sending:", prefix, self.shard_id, version, message, target, target_id)
+    
+    self:SendCommMessage(communication_prefix, prefix.."-"..self.shard_id.."-"..version..":"..payload, target, target_id)
 end
 
 -- ####################################################################
@@ -133,8 +132,7 @@ function RareTracker:AnnounceArrival()
 
     -- Announce to the others that you have arrived.
     arrival_register_time = GetServerTime()
-    -- TODO self.rare_table_updated = false
-        
+
     if not is_in_channel then
         -- Join the appropriate channel.
         JoinTemporaryChannel(channel_name)
