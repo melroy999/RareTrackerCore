@@ -7,7 +7,7 @@ local shard_id_frame_height = 16
 
 -- Values for the opacity of the background and foreground.
 local background_opacity = 0.4
-local front_opacity = 0.6
+local foreground_opacity = 0.6
 
 -- The list of currently tracked npcs. Used for cleanup.
 local target_npc_ids = {}
@@ -69,11 +69,11 @@ function RareTracker:UpdateStatus(npc_id)
         local last_death = self.last_recorded_death[npc_id]
         f.status:SetText(math.floor((GetServerTime() - last_death) / 60).."m")
         f.status:SetFontObject("GameFontNormal")
-        f.announce.texture:SetColorTexture(0, 0, 1, front_opacity)
+        f.announce.texture:SetColorTexture(0, 0, 1, foreground_opacity)
     else
         f.status:SetText("--")
         f.status:SetFontObject("GameFontNormal")
-        f.announce.texture:SetColorTexture(0, 0, 0, front_opacity)
+        f.announce.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     end
 end
 
@@ -165,7 +165,7 @@ function RareTracker:CorrectFavoriteMarks()
         if self.db.global.favorite_rares[npc_id] then
             self.gui.entities_frame.entities[npc_id].favorite.texture:SetColorTexture(0, 1, 0, 1)
         else
-            self.gui.entities_frame.entities[npc_id].favorite.texture:SetColorTexture(0, 0, 0, front_opacity)
+            self.gui.entities_frame.entities[npc_id].favorite.texture:SetColorTexture(0, 0, 0, foreground_opacity)
         end
     end
 end
@@ -211,14 +211,14 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     f.favorite:SetPoint("TOPLEFT", 1, 0)
     
     f.favorite.texture = f.favorite:CreateTexture(nil, "BACKGROUND")
-    f.favorite.texture:SetColorTexture(0, 0, 0, front_opacity)
+    f.favorite.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     f.favorite.texture:SetAllPoints(f.favorite)
     
      -- Add an action listener.
     f.favorite:SetScript("OnClick", function()
         if self.db.global.favorite_rares[npc_id] then
             self.db.global.favorite_rares[npc_id] = nil
-            f.favorite.texture:SetColorTexture(0, 0, 0, front_opacity)
+            f.favorite.texture:SetColorTexture(0, 0, 0, foreground_opacity)
         else
             self.db.global.favorite_rares[npc_id] = true
             f.favorite.texture:SetColorTexture(0, 1, 0, 1)
@@ -233,7 +233,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     f.announce:SetPoint("TOPLEFT", frame_padding + favorite_rares_width + 1, 0)
     
     f.announce.texture = f.announce:CreateTexture(nil, "BACKGROUND")
-    f.announce.texture:SetColorTexture(0, 0, 0, front_opacity)
+    f.announce.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     f.announce.texture:SetAllPoints(f.announce)
     
     f.announce:RegisterForClicks("LeftButtonDown", "RightButtonDown")
@@ -295,14 +295,14 @@ function RareTracker:InitializeRareTableFrame(parent)
     f.entity_name_backdrop:SetPoint("TOPLEFT", f, 2 * frame_padding + 2 * favorite_rares_width, 0)
     
     f.entity_name_backdrop.texture = f.entity_name_backdrop:CreateTexture(nil, "BACKGROUND")
-    f.entity_name_backdrop.texture:SetColorTexture(0, 0, 0, front_opacity)
+    f.entity_name_backdrop.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     f.entity_name_backdrop.texture:SetAllPoints(f.entity_name_backdrop)
     
     f.entity_status_backdrop = CreateFrame("Frame", string.format("%s.entities_frame.entity_status_backdrop", self.addon_code), f)
     f.entity_status_backdrop:SetPoint("TOPRIGHT", f, 0, 0)
     
     f.entity_status_backdrop.texture = f.entity_status_backdrop:CreateTexture(nil, "BACKGROUND")
-    f.entity_status_backdrop.texture:SetColorTexture(0, 0, 0, front_opacity)
+    f.entity_status_backdrop.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     f.entity_status_backdrop.texture:SetAllPoints(f.entity_status_backdrop)
     
     -- Next, create frames for all rares in the table.
@@ -340,7 +340,7 @@ function RareTracker:InitializeShardNumberFrame(parent)
     f:SetPoint("TOPLEFT", parent, frame_padding, -frame_padding)
   
     f.texture = f:CreateTexture(nil, "BACKGROUND")
-    f.texture:SetColorTexture(0, 0, 0, front_opacity)
+    f.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     f.texture:SetAllPoints(f)
     
     f.status_text = f:CreateFontString(nil, nil, "GameFontNormal")
@@ -463,7 +463,7 @@ function RareTracker:InitializeInterface()
     f:SetScript("OnDragStop", f.StopMovingOrSizing)
     
     -- Enforce the user-defined scale of the window.
-    f:SetScale(self.db.global.window_scale)
+    f:SetScale(self.db.global.window.scale)
     
     -- The default state of the window is hidden.
     f:Hide()

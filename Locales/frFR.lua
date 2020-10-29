@@ -2,6 +2,19 @@
 local L = LibStub("AceLocale-3.0"):NewLocale("RareTracker", "frFR")
 if not L then return end
 
+-- Option menu strings.
+L["Rare window scale"] = "Échelle de la fenêtre de rare"
+-- L["Set the scale of the rare window."] = ""
+L["Disable All"] = "Désactiver tous"
+-- L["Disable all non-favorite rares in the list."] = ""
+L["Enable All"] = "Activer tous"
+-- L["Enable all rares in the list."] = ""
+L["Reset Favorites"] = "Ré-initialiser les favoris"
+-- L["Reset the list of favorite rares."] = ""
+-- L["General Options"] = ""
+-- L["Rare List Options"] = ""
+-- L["Active Rares"] = ""
+
 -- Addon icon instructions.
 L["Left-click: hide/show RT"] = "Clique-gauche : montrer ou masquer RT"
 L["Right-click: show options"] = "Clique-droit : afficher les options."

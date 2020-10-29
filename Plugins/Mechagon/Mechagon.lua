@@ -30,6 +30,7 @@ local rare_data = {
     -- Define the zone(s) in which the rares are present.
     ["target_zones"] = {1462, 1522},
     ["zone_name"] = "Mechagon",
+    ["plugin_name"] = "Mechagon",
     ["entities"] = { 
         --npc_id = {name, quest_id, coordinates}
         [151934] = {L[151934], 55512, {["x"] = 52.86, ["y"] = 40.94}}, -- "Arachnoid Harvester"

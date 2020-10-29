@@ -41,8 +41,8 @@ local defaults = {
         },
         window = {
             hide = false,
+            scale = 1.0
         },
-        window_scale = 1.0,
         previous_records = {},
         favorite_rares = {},
         ignored_rares = {},
@@ -65,17 +65,19 @@ function RareTracker:OnInitialize()
     -- Register the addon's prefix and the associated communication function.
     RareTracker:RegisterComm("RareTracker")
     
+    -- Add all the requested zones and rares.
+    for primary_id, rare_data in pairs(plugin_data) do
+        self:AddRaresForZone(rare_data)
+        plugin_data[primary_id] = nil
+    end
+    
     -- Load the database.
     self.db = LibStub("AceDB-3.0"):New("RareTrackerDB2", defaults, true)
+    self:InitializeRareTrackerLDB()
+    self:InitializeOptionsMenu()
 
     -- Register the callback to the logout function.
     self.db.RegisterCallback(self, "OnDatabaseShutdown", "OnDatabaseShutdown")
-    
-    -- Add all the requested zones and rares.
-    for key, rare_data in pairs(plugin_data) do
-        self:AddRaresForZone(rare_data)
-        plugin_data[key] = nil
-    end
     
     -- As a precaution, we remove all actively tracked rares from the blacklist.
     for npc_id, _ in pairs(self.tracked_npc_ids) do
@@ -99,6 +101,10 @@ function RareTracker:OnInitialize()
     RareTracker:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
     RareTracker:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
     RareTracker:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
+    
+    -- Register the resired chat commands.
+    RareTracker:RegisterChatCommand("rt2", "OnChatCommand")
+    RareTracker:RegisterChatCommand("raretracker2", "OnChatCommand")
 end
 
 -- A function that is called whenever the addon is enabled by the user.
@@ -120,12 +126,28 @@ end
 -- ##                            Commands                            ##
 -- ####################################################################
 
--- Register the resired chat commands.
-RareTracker:RegisterChatCommand("rt2", "OnChatCommand")
-RareTracker:RegisterChatCommand("raretracker2", "OnChatCommand")
-
 function RareTracker:OnChatCommand(input)
-
+    input = input:trim()
+    if not input or input == "" then
+        InterfaceOptionsFrame_Show()
+        InterfaceOptionsFrame_OpenToCategory(self.options_frame)
+    else
+        local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
+        local zone_id = C_Map.GetBestMapForUnit("player")
+        if cmd == "show" then 
+            if zone_id and self.zone_id_to_primary_id[zone_id] then
+                self.gui:Show()
+                self.db.global.window.hide = false
+            else
+                print("<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules.")
+            end
+        elseif cmd == "hide" then
+            if zone_id and self.zone_id_to_primary_id[zone_id] then
+                self.gui:Hide()
+            end
+            self.db.global.window.hide = true
+        end
+    end
 end
 
 -- ####################################################################

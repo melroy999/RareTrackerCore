@@ -248,6 +248,7 @@ function RareTracker:AcknowledgeRecordedData(spawn_data)
         spawn_data["time_stamp"] = nil
         
         for base64_npc_id, base64_time_passed_since_kill in pairs(spawn_data) do
+            -- TODO Check if the spawn data is appropriate for the current zone.
             local kill_time = arrival_register_time - self:ToBase10(base64_time_passed_since_kill)
             local npc_id = self:ToBase10(base64_npc_id)
             if self.last_recorded_death[npc_id] then
