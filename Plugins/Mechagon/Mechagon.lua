@@ -1,3 +1,6 @@
+-- Redefine often used functions locally.
+local UnitBuff = UnitBuff
+
 -- Get an object we can use for the localization of the addon.
 local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 
@@ -32,7 +35,7 @@ local rare_data = {
     ["zone_name"] = "Mechagon",
     ["plugin_name"] = "Mechagon",
     ["plugin_name_abbreviation"] = "Mechagon",
-    ["entities"] = { 
+    ["entities"] = {
         --npc_id = {name, quest_id, coordinates}
         [151934] = {L[151934], 55512, {["x"] = 52.86, ["y"] = 40.94}}, -- "Arachnoid Harvester"
         [154342] = {L[154342], 55512, {["x"] = 52.86, ["y"] = 40.94}}, -- "Arachnoid Harvester (F)"
@@ -109,4 +112,4 @@ local rare_data = {
         end
     end
 }
-RareTracker:RegisterRaresForZone(rare_data)
+RareTracker.RegisterRaresForZone(rare_data)

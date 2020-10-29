@@ -33,7 +33,7 @@ local rare_data = {
             end
         end
     end,
-    ["entities"] = { 
+    ["entities"] = {
         --npc_id = {name, quest_id, coordinates}
         [160825] = {L[160825], 58300, {["x"] = 20, ["y"] = 75}}, -- "Amber-Shaper Esh'ri"
         [157466] = {L[157466], 57363, {["x"] = 34, ["y"] = 68}}, -- "Anh-De the Loyal"
@@ -80,4 +80,4 @@ local rare_data = {
         [154087] = {L[154087], 56084, {["x"] = 71, ["y"] = 41}}, -- "Zror'um the Infinite"
     }
 }
-RareTracker:RegisterRaresForZone(rare_data)
+RareTracker.RegisterRaresForZone(rare_data)

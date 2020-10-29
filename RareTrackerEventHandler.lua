@@ -1,3 +1,26 @@
+-- Redefine often used functions locally.
+local UnitGUID = UnitGUID
+local strsplit = strsplit
+local UnitHealth = UnitHealth
+local CombatLogGetCurrentEventInfo = CombatLogGetCurrentEventInfo
+local C_VignetteInfo = C_VignetteInfo
+local GetServerTime = GetServerTime
+local CreateFrame = CreateFrame
+local GetChannelList = GetChannelList
+local IsQuestFlaggedCompleted = C_QuestLog.IsQuestFlaggedCompleted
+local PlaySoundFile = PlaySoundFile
+local select = select
+local date = date
+local time = time
+
+-- Redefine often used variables locally.
+local C_Map = C_Map
+local COMBATLOG_OBJECT_TYPE_GUARDIAN = COMBATLOG_OBJECT_TYPE_GUARDIAN
+local COMBATLOG_OBJECT_TYPE_PET = COMBATLOG_OBJECT_TYPE_PET
+local COMBATLOG_OBJECT_TYPE_OBJECT = COMBATLOG_OBJECT_TYPE_OBJECT
+local bit = bit
+local UIParent = UIParent
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -35,17 +58,17 @@ RareTracker.last_recorded_death = {}
 -- Track the reported current coordinates of the rares.
 RareTracker.current_coordinates = {}
 
--- Record all entities that died, such that we don't overwrite existing death.
-local recorded_entity_death_ids = {}
+-- Record all spawn uids that are detected, such that we don't report the same spawn multiple times.
+RareTracker.reported_spawn_uids = {}
 
 -- A list of waypoints.
 RareTracker.waypoints = {}
 
+-- Record all entities that died, such that we don't overwrite existing death.
+local recorded_entity_death_ids = {}
+
 -- Record all vignettes that are detected, such that we don't report the same spawn multiple times.
 local reported_vignettes = {}
-
--- Record all spawn uids that are detected, such that we don't report the same spawn multiple times.
-RareTracker.reported_spawn_uids = {}
 
 -- ####################################################################
 -- ##                           Event Handlers                       ##
@@ -78,7 +101,7 @@ end
 -- Fetch the new list of rares and ensure that these rares are properly displayed.
 function RareTracker:ChangeZone()
     -- Leave the channel associated with the current shard id and save the data.
-    self:LeaveAllShardChannels()
+    self.LeaveAllShardChannels()
     self:SaveRecordedData()
     
     -- Reset all tracked data.
@@ -96,7 +119,7 @@ end
 -- Transfer to a new shard, reset current data and join the appropriate channel.
 function RareTracker:ChangeShard(zone_uid)
     -- Leave the channel associated with the current shard id and save the data.
-    self:LeaveAllShardChannels()
+    self.LeaveAllShardChannels()
     self:SaveRecordedData()
     
     -- Reset all tracked data.
@@ -115,7 +138,7 @@ function RareTracker:ChangeShard(zone_uid)
     end
 end
 
--- Check whether the user has changed shards and proceed accordingly. 
+-- Check whether the user has changed shards and proceed accordingly.
 -- Return true if the shard changed, false otherwise.
 function RareTracker:CheckForShardChange(zone_uid)
     if self.shard_id ~= zone_uid and zone_uid ~= nil then
@@ -135,7 +158,7 @@ function RareTracker:CheckForRedirectedRareIds(npc_id)
     return npc_id
 end
 
--- This event is fired whenever the player's target is changed, including when the target is lost. 
+-- This event is fired whenever the player's target is changed, including when the target is lost.
 function RareTracker:PLAYER_TARGET_CHANGED()
     -- Get information about the target.
     local guid = UnitGUID("target")
@@ -178,7 +201,7 @@ function RareTracker:PLAYER_TARGET_CHANGED()
     end
 end
 
--- Fired whenever a unit's health is affected. 
+-- Fired whenever a unit's health is affected.
 function RareTracker:UNIT_HEALTH(_, unit)
     -- Get information about the target.
     local guid = UnitGUID("target")
@@ -508,7 +531,7 @@ end
 -- Certain updates need to be made every hour because of the lack of daily reset/new world quest events.
 function RareTracker:AddDailyResetHandler()
     -- There is no event for the daily reset, so do a precautionary check every hour.
-    local f = CreateFrame("Frame", string.format("%s.daily_reset_handling_frame", self.addon_code), self.gui)
+    local f = CreateFrame("Frame", "RT.daily_reset_handling_frame", self.gui)
 
     -- Which timestamp was the last hour?
     local time_table = date("*t", GetServerTime())
@@ -521,13 +544,13 @@ function RareTracker:AddDailyResetHandler()
 
     -- Add an OnUpdate checker.
     f:SetScript("OnUpdate",
-        function(f)
-            if GetServerTime() > f.target_time then
-                f.target_time = f.target_time + 3600
+        function(_f)
+            if GetServerTime() > _f.target_time then
+                _f.target_time = _f.target_time + 3600
                 
                 if self.gui.entities_frame ~= nil then
                     self:UpdateAllDailyKillMarks()
-                    self:Debug(string.format(L["<%s> Updating daily kill marks."], self.addon_code))
+                    self:Debug(L["<RT> Updating daily kill marks."])
                 end
             end
         end
@@ -543,7 +566,7 @@ end
 -- One of the issues encountered is that the chat might be joined before the default channels.
 -- In such a situation, the order of the channels changes, which is undesirable.
 -- Thus, we block certain events until these chats have been loaded.
-local message_delay_frame = CreateFrame("Frame", string.format("%s.message_delay_frame", RareTracker.addon_code), UIParent)
+local message_delay_frame = CreateFrame("Frame", "RT.message_delay_frame", UIParent)
 message_delay_frame.start_time = GetServerTime()
 message_delay_frame:SetScript("OnUpdate",
 	function(self)

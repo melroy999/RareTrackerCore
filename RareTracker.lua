@@ -1,3 +1,17 @@
+-- Redefine often used functions locally.
+local GetServerTime = GetServerTime
+local InterfaceOptionsFrame_Show = InterfaceOptionsFrame_Show
+local InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
+local tinsert = tinsert
+local UnitHealthMax = UnitHealthMax
+local UnitHealth = UnitHealth
+local CreateFrame = CreateFrame
+local GetTime = GetTime
+
+-- Redefine global variables locally.
+local C_Map = C_Map
+local UIParent = UIParent
+
 -- ####################################################################
 -- ##                              Core                              ##
 -- ####################################################################
@@ -22,7 +36,7 @@ RareTracker.tracked_npc_ids = {}
 RareTracker.completion_quest_to_npc_ids = {}
     
 -- The short-hand code of the addon.
-RareTracker.addon_code = "RTtest"
+RareTracker.addon_code = "RT"
 
 -- Keep a list of modules that have been registered, such that we can add them when loaded.
 local plugin_data = {}
@@ -34,7 +48,7 @@ local defaults = {
             raid_communication = true,
         },
         debug = {
-            enable = true,
+            enable = false,
         },
         favorite_alert = {
             favorite_sound_alert = 552503,
@@ -108,14 +122,14 @@ function RareTracker:OnInitialize()
 end
 
 -- A function that is called whenever the addon is enabled by the user.
-function RareTracker:OnEnable()
-    
-end
+-- function RareTracker:OnEnable()
+--
+-- end
 
 -- A function that is called whenever the addon is disabled by the user.
-function RareTracker:OnDisable()
-    
-end
+-- function RareTracker:OnDisable()
+--
+-- end
 
 -- Called when the player logs out, such that we can save the current time table for later use.
 function RareTracker:OnDatabaseShutdown()
@@ -134,7 +148,7 @@ function RareTracker:OnChatCommand(input)
     else
         local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
         local zone_id = C_Map.GetBestMapForUnit("player")
-        if cmd == "show" then 
+        if cmd == "show" then
             if zone_id and self.zone_id_to_primary_id[zone_id] then
                 self.gui:Show()
                 self.db.global.window.hide = false
@@ -170,7 +184,7 @@ local rare_data_metatable = {
 }
 
 -- Register a list of rare data that will be processed upon successful load.
-function RareTracker:RegisterRaresForZone(rare_data)
+function RareTracker.RegisterRaresForZone(rare_data)
     tinsert(plugin_data, rare_data)
 end
 
@@ -210,7 +224,7 @@ function RareTracker:AddRaresForZone(rare_data)
         table.insert(ordering, npc_id)
     end
 
-    table.sort(ordering, function(a, b) 
+    table.sort(ordering, function(a, b)
         return rare_data.entities[a].name < rare_data.entities[b].name
     end)
     self.primary_id_to_data[primary_id].ordering = ordering

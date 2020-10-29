@@ -1,3 +1,26 @@
+-- Redefine often used functions locally.
+local GetTime = GetTime
+local strsplit = strsplit
+local UnitName = UnitName
+local GetServerTime = GetServerTime
+local GetChannelName = GetChannelName
+local JoinTemporaryChannel = JoinTemporaryChannel
+local UnitInRaid = UnitInRaid
+local UnitInParty = UnitInParty
+local select = select
+local GetNumDisplayChannels = GetNumDisplayChannels
+local next = next
+local tonumber = tonumber
+local pairs = pairs
+local max = max
+local SendChatMessage = SendChatMessage
+local GetChannelList = GetChannelList
+local LeaveChannelByName = LeaveChannelByName
+
+-- Redefine global variables locally.
+local string = string
+local GENERAL = GENERAL
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -36,12 +59,12 @@ setmetatable(last_health_report["RAID"], {__index = function() return 0 end})
 -- Function that is called when the addon receives a communication.
 function RareTracker:OnCommReceived(_, message, distribution, player)
     -- Skip if the message is sent by the player.
-    -- if player == UnitName("player") then return end
+    if player == UnitName("player") then return end
     
     local header, serialization = strsplit(":", message)
     local prefix, shard_id, message_version = strsplit("-", header)
     message_version = tonumber(message_version)
-    local deserialization_success, payload = self:Deserialize(serialization)
+    local _, payload = self:Deserialize(serialization)
     
     self:Debug("Receiving:", prefix, shard_id, message_version, payload, distribution, player)
     
@@ -105,7 +128,7 @@ end
 -- Send a message with the given type and message.
 function RareTracker:SendAddonMessage(prefix, message, target, target_id)
     -- Serialize the message.
-    payload = self:Serialize(message)
+    local payload = self:Serialize(message)
 
     -- ChatThrottleLib does not take kindly to using the wrong target. Demote to party if needed.
     if target == "RAID" and UnitInParty("player") then
@@ -121,6 +144,7 @@ end
 -- ##            Shard Group Management Register Functions           ##
 -- ####################################################################
 
+-- Announce that you have arrived on the shard.
 function RareTracker:AnnounceArrival()
     -- Save the current channel name and join a channel.
     channel_name = self.addon_code..self.shard_id
@@ -155,15 +179,15 @@ function RareTracker:AnnounceArrival()
 end
 
 -- Present your data through a whisper.
-function RareTracker:PresentRecordedDataThroughWhisper(target, time_stamp)  
+function RareTracker:PresentRecordedDataThroughWhisper(target, time_stamp)
     if next(self.last_recorded_death) then
         local time_table = {}
         for npc_id, kill_time in pairs(self.last_recorded_death) do
-            time_table[self:ToBase64(npc_id)] = self:ToBase64(time_stamp - kill_time)
+            time_table[self.ToBase64(npc_id)] = self.ToBase64(time_stamp - kill_time)
         end
         
         -- Add the time stamp to the table, such that the receiver can verify.
-        time_table["time_stamp"] = self:ToBase64(time_stamp)
+        time_table["time_stamp"] = self.ToBase64(time_stamp)
         
         self:SendAddonMessage("PW", time_table, "WHISPER", target)
     end
@@ -174,31 +198,31 @@ function RareTracker:PresentRecordedDataInGroup(time_stamp)
     if next(self.last_recorded_death) then
         local time_table = {}
         for npc_id, kill_time in pairs(self.last_recorded_death) do
-            time_table[self:ToBase64(npc_id)] = self:ToBase64(time_stamp - kill_time)
+            time_table[self.ToBase64(npc_id)] = self.ToBase64(time_stamp - kill_time)
         end
         
         -- Add the time stamp to the table, such that the receiver can verify.
-        time_table["time_stamp"] = self:ToBase64(time_stamp)
+        time_table["time_stamp"] = self.ToBase64(time_stamp)
         
         self:SendAddonMessage("PP", time_table, "RAID", nil)
     end
 end
 
 -- Leave all the RareTracker shard channels that the player is currently part of.
-function RareTracker:LeaveAllShardChannels()
+function RareTracker.LeaveAllShardChannels()
     local n_channels = GetNumDisplayChannels()
     local channels_to_leave = {}
     
     -- Leave all channels with the addon prefix.
     for i = 1, n_channels do
-        local _, channel_name = GetChannelName(i)
-        if channel_name and channel_name:find(communication_prefix) then
-            channels_to_leave[channel_name] = true
+        local _, _channel_name = GetChannelName(i)
+        if _channel_name and _channel_name:find(communication_prefix) then
+            channels_to_leave[_channel_name] = true
         end
     end
     
-    for channel_name, _ in pairs(channels_to_leave) do
-        LeaveChannelByName(channel_name)
+    for _channel_name, _ in pairs(channels_to_leave) do
+        LeaveChannelByName(_channel_name)
     end
 end
 
@@ -223,7 +247,7 @@ end
 -- Acknowledge the welcome message of other players and parse and import their tables.
 function RareTracker:AcknowledgeRecordedData(spawn_data)
     -- Get the time stamp in base 10.
-    local time_stamp = self:ToBase10(spawn_data["time_stamp"])
+    local time_stamp = self.ToBase10(spawn_data["time_stamp"])
 
     -- Only acknowledge the given data matches your registration time.
     if time_stamp == arrival_register_time then
@@ -232,8 +256,8 @@ function RareTracker:AcknowledgeRecordedData(spawn_data)
         
         for base64_npc_id, base64_time_passed_since_kill in pairs(spawn_data) do
             -- TODO Check if the spawn data is appropriate for the current zone.
-            local kill_time = arrival_register_time - self:ToBase10(base64_time_passed_since_kill)
-            local npc_id = self:ToBase10(base64_npc_id)
+            local kill_time = arrival_register_time - self.ToBase10(base64_time_passed_since_kill)
+            local npc_id = self.ToBase10(base64_npc_id)
             if self.last_recorded_death[npc_id] then
                 self.last_recorded_death[npc_id] = max(self.last_recorded_death[npc_id], kill_time)
             else

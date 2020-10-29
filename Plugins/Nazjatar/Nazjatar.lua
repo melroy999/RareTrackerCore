@@ -53,4 +53,4 @@ local rare_data = {
         [150468] = {L[150468], 55603, nil}, -- "Vor'koth"
     }
 }
-RareTracker:RegisterRaresForZone(rare_data)
+RareTracker.RegisterRaresForZone(rare_data)

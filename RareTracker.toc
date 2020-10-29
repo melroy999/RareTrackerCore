@@ -37,7 +37,6 @@ RareTracker.lua
 Base64.lua
 RareTrackerInterface.lua
 RareTrackerEventHandler.lua
-RareTrackerModuleManagement.lua
 RareTrackerCommunication.lua
 RareTrackerOptions.lua
 

@@ -1,3 +1,22 @@
+-- Redefine often used functions locally.
+local CreateFrame = CreateFrame
+local IsLeftControlKeyDown = IsLeftControlKeyDown
+local IsRightControlKeyDown = IsRightControlKeyDown
+local UnitInRaid = UnitInRaid
+local IsLeftAltKeyDown = IsLeftAltKeyDown
+local IsRightAltKeyDown = IsRightAltKeyDown
+local GetServerTime = GetServerTime
+local GetTime = GetTime
+local C_QuestLog = C_QuestLog
+local IsQuestFlaggedCompleted = C_QuestLog.IsQuestFlaggedCompleted
+local pairs = pairs
+local print = print
+local wipe = wipe
+
+-- Redefine global variables locally.
+local string = string
+local UIParent = UIParent
+
 -- Width and height variables used to customize the window.
 local entity_name_width = 208
 local entity_status_width = 50
@@ -202,11 +221,11 @@ end
 
 -- Create an entry within the entity frame for the given entity.
 function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
-    local f = CreateFrame("Frame", string.format("%s.entities_frame.entities[%s]", self.addon_code, npc_id), parent)
+    local f = CreateFrame("Frame", string.format("RT.entities_frame.entities[%s]", npc_id), parent)
     f:SetSize(entity_name_width + entity_status_width + 3 * frame_padding + 2 * favorite_rares_width, 12)
     
     -- Create the favorite button.
-    f.favorite = CreateFrame("CheckButton", string.format("%s.entities_frame.entities[%s].favorite", self.addon_code, npc_id), f)
+    f.favorite = CreateFrame("CheckButton", string.format("RT.entities_frame.entities[%s].favorite", npc_id), f)
     f.favorite:SetSize(10, 10)
     f.favorite:SetPoint("TOPLEFT", 1, 0)
     
@@ -223,12 +242,12 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
             self.db.global.favorite_rares[npc_id] = true
             f.favorite.texture:SetColorTexture(0, 1, 0, 1)
         end
-        self:NotifyOptionsChange()
+        self.NotifyOptionsChange()
     end)
 
     -- Add a button that announces the rare/adds a waypoint when applicable.
     -- Add the announce/waypoint button.
-    f.announce = CreateFrame("Button", string.format("%s.entities_frame.entities[%s].announce", self.addon_code, npc_id), f)
+    f.announce = CreateFrame("Button", string.format("RT.entities_frame.entities[%s].announce", npc_id), f)
     f.announce:SetSize(10, 10)
     f.announce:SetPoint("TOPLEFT", frame_padding + favorite_rares_width + 1, 0)
     
@@ -288,17 +307,17 @@ end
 -- Initialize the rare table frame.
 function RareTracker:InitializeRareTableFrame(parent)
     -- First, add the frames for the backdrop and make sure that the hierarchy is created.
-    local f = CreateFrame("Frame", string.format("%s.entities_frame", self.addon_code), parent)
+    local f = CreateFrame("Frame", "RT.entities_frame", parent)
     f:SetPoint("TOPLEFT", frame_padding, -(2 * frame_padding + shard_id_frame_height))
     
-    f.entity_name_backdrop = CreateFrame("Frame", string.format("%s.entities_frame.entity_name_backdrop", self.addon_code), f)
+    f.entity_name_backdrop = CreateFrame("Frame", "RT.entities_frame.entity_name_backdrop", f)
     f.entity_name_backdrop:SetPoint("TOPLEFT", f, 2 * frame_padding + 2 * favorite_rares_width, 0)
     
     f.entity_name_backdrop.texture = f.entity_name_backdrop:CreateTexture(nil, "BACKGROUND")
     f.entity_name_backdrop.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     f.entity_name_backdrop.texture:SetAllPoints(f.entity_name_backdrop)
     
-    f.entity_status_backdrop = CreateFrame("Frame", string.format("%s.entities_frame.entity_status_backdrop", self.addon_code), f)
+    f.entity_status_backdrop = CreateFrame("Frame", "RT.entities_frame.entity_status_backdrop", f)
     f.entity_status_backdrop:SetPoint("TOPRIGHT", f, 0, 0)
     
     f.entity_status_backdrop.texture = f.entity_status_backdrop:CreateTexture(nil, "BACKGROUND")
@@ -318,22 +337,19 @@ function RareTracker:InitializeRareTableFrame(parent)
     
     -- Ensure that the data in the window updates periodically.
     f.last_display_update = GetTime()
-    f:SetScript("OnUpdate", function() 
+    f:SetScript("OnUpdate", function()
         if f.last_display_update + 1 < GetTime() then
             f.last_display_update = GetTime()
             self:UpdateStatusTrackedEntities()
         end
     end)
     
-    -- Arrange the table such that it fits the user's wishes. Resize the frames appropriately.
-    -- TODO
-    
     parent.entities_frame = f
 end
 
 -- Display the current shard number at the top of the frame.
-function RareTracker:InitializeShardNumberFrame(parent)
-    local f = CreateFrame("Frame", string.format("%s.shard_id_frame", self.addon_code), parent)
+function RareTracker.InitializeShardNumberFrame(parent)
+    local f = CreateFrame("Frame", "RT.shard_id_frame", parent)
     local width = entity_name_width + entity_status_width + 3 * frame_padding + 2 * favorite_rares_width
     local height = shard_id_frame_height
     f:SetSize(width, height)
@@ -351,49 +367,108 @@ function RareTracker:InitializeShardNumberFrame(parent)
 end
 
 -- Initialize the favorite icon in the rare entities frame.
-function RareTracker:InitializeFavoriteIconFrame(parent)
-    local f = CreateFrame("Frame", string.format("%s.favorite_icon", self.addon_code), parent)
+function RareTracker.InitializeFavoriteIconFrame(parent)
+    local f = CreateFrame("Frame", "RT.favorite_icon", parent)
     f:SetSize(10, 10)
     f:SetPoint("TOPLEFT", parent, frame_padding + 1, -(frame_padding + 3))
 
     f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Favorite.tga")
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
+    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Favorite.tga")
     
-    -- TODO implement tooltip.
+    -- Add the tooltip.
+    f.tooltip = CreateFrame("Frame", nil, UIParent)
+    f.tooltip:SetSize(300, 18)
+    f.tooltip:SetPoint("TOPLEFT", parent, 0, 19)
+    f.tooltip:Hide()
+    
+    f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
+    f.tooltip.texture:SetColorTexture(0, 0, 0, foreground_opacity)
+    f.tooltip.texture:SetAllPoints(f.tooltip)
+    
+    f.tooltip.text = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text:SetPoint("TOPLEFT", f.tooltip, 5, -3)
+    f.tooltip.text:SetJustifyH("LEFT")
+    f.tooltip.text:SetJustifyV("TOP")
+    f.tooltip.text:SetText(L["Click on the squares to add rares to your favorites."])
+    
+    f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
+    f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
+    
     parent.favorite_icon = f
 end
 
 -- Initialize the alternating announce icon in the rare entities frame.
 function RareTracker:InitializeAnnounceIconFrame(parent)
-    local f = CreateFrame("Frame", string.format("%s.broadcast_icon", self.addon_code), parent)
+    local f = CreateFrame("Frame", "RT.broadcast_icon", parent)
     f:SetSize(10, 10)
     f:SetPoint("TOPLEFT", parent, 2 * frame_padding + favorite_rares_width + 1, -(frame_padding + 3))
 
     f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Broadcast.tga")
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
+    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Broadcast.tga")
     
     -- Make the icon swap periodically by adding an update handler.
     f.icon_state = false
     f.last_icon_change = GetTime()
-    f:SetScript("OnUpdate", function() 
+    f:SetScript("OnUpdate", function()
         if f.last_icon_change + 2 < GetTime() then
             f.last_icon_change = GetTime()
             self.CycleReportWaypointIcon(f)
         end
     end)
     
-    -- TODO implement tooltip.
+    -- Add the tooltip.
+    f.tooltip = CreateFrame("Frame", nil, UIParent)
+    f.tooltip:SetSize(273, 68)
+    f.tooltip:SetPoint("TOPLEFT", parent, 0, 69)
+    f.tooltip:Hide()
+    
+    f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
+    f.tooltip.texture:SetColorTexture(0, 0, 0, foreground_opacity)
+    f.tooltip.texture:SetAllPoints(f.tooltip)
+    
+    f.tooltip.text1 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text1:SetJustifyH("LEFT")
+    f.tooltip.text1:SetJustifyV("TOP")
+    f.tooltip.text1:SetPoint("TOPLEFT", f.tooltip, 5, -3)
+    f.tooltip.text1:SetText(L["Click on the squares to announce rare timers."])
+    
+    f.tooltip.text2 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text2:SetJustifyH("LEFT")
+    f.tooltip.text2:SetJustifyV("TOP")
+    f.tooltip.text2:SetPoint("TOPLEFT", f.tooltip, 5, -15)
+    f.tooltip.text2:SetText(L["Left click: report to general chat"])
+    
+    f.tooltip.text3 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text3:SetJustifyH("LEFT")
+    f.tooltip.text3:SetJustifyV("TOP")
+    f.tooltip.text3:SetPoint("TOPLEFT", f.tooltip, 5, -27)
+    f.tooltip.text3:SetText(L["Control-left click: report to party/raid chat"])
+    
+    f.tooltip.text4 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text4:SetJustifyH("LEFT")
+    f.tooltip.text4:SetJustifyV("TOP")
+    f.tooltip.text4:SetPoint("TOPLEFT", f.tooltip, 5, -39)
+    f.tooltip.text4:SetText(L["Alt-left click: report to say"])
+      
+    f.tooltip.text5 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text5:SetJustifyH("LEFT")
+    f.tooltip.text5:SetJustifyV("TOP")
+    f.tooltip.text5:SetPoint("TOPLEFT", f.tooltip, 5, -51)
+    f.tooltip.text5:SetText(L["Right click: set waypoint if available"])
+    
+    f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
+    f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
     
     parent.broadcast_icon = f
 end
 
 -- Initialize the reload button in the rare entities frame.
 function RareTracker:InitializeReloadButton(parent)
-    local f = CreateFrame("Button", string.format("%s.reload_button", self.addon_code), parent)
+    local f = CreateFrame("Button", "RT.reload_button", parent)
     f:SetSize(10, 10)
     f:SetPoint("TOPRIGHT", parent, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3))
 
@@ -402,15 +477,61 @@ function RareTracker:InitializeReloadButton(parent)
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
     
+    -- Add the tooltip.
+    f.tooltip = CreateFrame("Frame", nil, UIParent)
+    f.tooltip:SetSize(390, 34)
+    f.tooltip:SetPoint("TOPLEFT", parent, 0, 35)
+    f.tooltip:Hide()
+    
+    f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
+    f.tooltip.texture:SetColorTexture(0, 0, 0, foreground_opacity)
+    f.tooltip.texture:SetAllPoints(f.tooltip)
+    
+    f.tooltip.text1 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text1:SetJustifyH("LEFT")
+    f.tooltip.text1:SetJustifyV("TOP")
+    f.tooltip.text1:SetPoint("TOPLEFT", f.tooltip, 5, -3)
+    f.tooltip.text1:SetText(L["Reset your data and replace it with the data of others."])
+    
+    f.tooltip.text2 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text2:SetJustifyH("LEFT")
+    f.tooltip.text2:SetJustifyV("TOP")
+    f.tooltip.text2:SetPoint("TOPLEFT", f.tooltip, 5, -15)
+    f.tooltip.text2:SetText(L["Note: you do not need to press this button to receive new timers."])
+    
+    -- Hide and show the tooltip on mouseover.
+    f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
+    f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
+
     -- TODO implement reload button and tooltips.
-    f:SetScript("OnClick", function() end)
+    f.last_data_reload = 0
+    f:SetScript("OnClick", function()
+        if self.shard_id ~= nil and GetServerTime() - f.last_data_reload > 600 then
+            -- Reset all tracked data.
+            self:ResetTrackedData()
+            self.db.global.previous_records[self.shard_id] = nil
+
+            -- Re-register the arrival.
+            f.last_data_reload = GetServerTime()
+            self:AnnounceArrival()
+
+            print(L["<RT> Resetting current rare timers and requesting up-to-date data."])
+        elseif self.shard_id == nil then
+            print(L["<RT> Please target a non-player entity prior to resetting, "..
+                  "such that the addon can determine the current shard id."])
+        else
+            print(L["<RT> The reset button is on cooldown. Please note that a reset is not needed "..
+                  "to receive new timers. If it is your intention to reset the data, "..
+                  "please do a /reload and click the reset button again."])
+        end
+    end)
     
     parent.reload_button = f
 end
 
 -- Initialize the close button in the rare entities frame.
 function RareTracker:InitializeCloseButton(parent)
-    local f = CreateFrame("Button", string.format("%s.close_button", self.addon_code), parent)
+    local f = CreateFrame("Button", "RT.close_button", parent)
     f:SetSize(10, 10)
     f:SetPoint("TOPRIGHT", parent, -2 * frame_padding, -(frame_padding + 3))
 
@@ -429,7 +550,7 @@ end
 
 -- Initialize the addon's entity frame.
 function RareTracker:InitializeInterface()
-    local f = CreateFrame("Frame", self.addon_code, UIParent)
+    local f = CreateFrame("Frame", "RT", UIParent)
     
     f:SetSize(
         entity_name_width + entity_status_width + 2 * favorite_rares_width + 5 * frame_padding,
@@ -442,11 +563,11 @@ function RareTracker:InitializeInterface()
     f.texture:SetAllPoints(f)
     
     -- Create a sub-frame for the entity names.
-    self:InitializeShardNumberFrame(f)
+    self.InitializeShardNumberFrame(f)
     self:InitializeRareTableFrame(f)
     
     -- Add icons for the favorite and broadcast columns.
-    self:InitializeFavoriteIconFrame(f)
+    self.InitializeFavoriteIconFrame(f)
     self:InitializeAnnounceIconFrame(f)
     
     -- Create a reset button.

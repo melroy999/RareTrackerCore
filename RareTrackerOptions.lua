@@ -1,3 +1,13 @@
+-- Redefine often used functions locally.
+local InterfaceOptionsFrame_Show = InterfaceOptionsFrame_Show
+local InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
+local PlaySoundFile = PlaySoundFile
+local pairs = pairs
+local tinsert = tinsert
+
+-- Redefine often used variables locally.
+local C_Map = C_Map
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -17,7 +27,7 @@ function RareTracker:GetOrder()
 end
 
 -- Refresh the option menu.
-function RareTracker:NotifyOptionsChange()
+function RareTracker.NotifyOptionsChange()
     LibStub("AceConfigRegistry-3.0"):NotifyChange("RareTracker")
 end
 
@@ -207,9 +217,9 @@ function RareTracker:InitializeOptionsMenu()
     end
     
     -- Sort each of the lists on alphabetical order.
-    plugin_index_table = {}
+    local plugin_index_table = {}
     for plugin_name, primary_ids in pairs(plugin_to_primary_ids) do
-        table.sort(primary_ids, function(a, b) 
+        table.sort(primary_ids, function(a, b)
             return self.primary_id_to_data[a].zone_name < self.primary_id_to_data[b].zone_name
         end)
         tinsert(plugin_index_table, plugin_name)
