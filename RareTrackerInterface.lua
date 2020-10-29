@@ -123,25 +123,25 @@ function RareTracker:UpdateDisplayList()
                 target_npc_ids[npc_id] = true
             end
         end
-    end
 
-    -- Filter out all ignored entities and count the number of entries we will have in total.
-    -- Give all of the table entries their new positions and show them when appropriate.
-    local n = 0
-    for _, npc_id in pairs(self.primary_id_to_data[primary_id].ordering) do
-        if target_npc_ids[npc_id] then
-            if self.db.global.ignored_rares[npc_id] then
-                target_npc_ids[npc_id] = nil
-            else
-                f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
-                f.entities[npc_id]:Show()
-                n = n + 1
+        -- Filter out all ignored entities and count the number of entries we will have in total.
+        -- Give all of the table entries their new positions and show them when appropriate.
+        local n = 0
+        for _, npc_id in pairs(self.primary_id_to_data[primary_id].ordering) do
+            if target_npc_ids[npc_id] then
+                if self.db.global.ignored_rares[npc_id] then
+                    target_npc_ids[npc_id] = nil
+                else
+                    f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
+                    f.entities[npc_id]:Show()
+                    n = n + 1
+                end
             end
         end
+        
+        -- Resize the appropriate frames.
+        self:UpdateEntityFrameDimensions(n, f)
     end
-    
-    -- Resize the appropriate frames.
-    self:UpdateEntityFrameDimensions(n, f)
 end
 
 -- Resize the entities portion of the tracking window.

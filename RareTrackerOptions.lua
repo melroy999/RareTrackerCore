@@ -215,9 +215,6 @@ function RareTracker:InitializeOptionsMenu()
         tinsert(plugin_index_table, plugin_name)
     end
     table.sort(plugin_index_table)
-    for _, plugin_name in pairs(plugin_index_table) do
-        print(plugin_name)
-    end
     
     -- Add the options for the plugins.
     for _, plugin_name in pairs(plugin_index_table) do
@@ -237,7 +234,7 @@ end
 -- Add the options for the given plugin.
 function RareTracker:InitializeOptionsMenuForPlugin(plugin_name, primary_ids)
     local options = self.options_table.args
-    
+
     -- Add the default options for the given plugin.
     options[plugin_name] = {
         type = "group",
@@ -246,14 +243,14 @@ function RareTracker:InitializeOptionsMenuForPlugin(plugin_name, primary_ids)
         args = {
             description = {
                 type = "description",
-                name = "RareTracker"..plugin_name,
+                name = "RareTracker"..self.primary_id_to_data[primary_ids[1]].plugin_name_abbreviation,
                 order = self:GetOrder(),
                 fontSize = "large",
                 width = "full",
             },
             spacer_1 = {
                 type = "description",
-                name = " ",
+                name = "",
                 order = self:GetOrder(),
                 fontSize = "small",
                 width = "full",
@@ -264,8 +261,8 @@ function RareTracker:InitializeOptionsMenuForPlugin(plugin_name, primary_ids)
     -- Add menu options defined by the plugins.
     for _, primary_id in pairs(primary_ids) do
         local rare_data = self.primary_id_to_data[primary_id]
-        if rare_data.options_table then
-            for key, option in pairs(rare_data.options_table) do
+        if rare_data.GetOptionsTable then
+            for key, option in pairs(rare_data.GetOptionsTable(self)) do
                 options[plugin_name].args[key] = option
             end
         end

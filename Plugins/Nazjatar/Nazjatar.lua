@@ -7,6 +7,7 @@ local rare_data = {
     ["target_zones"] = {1355},
     ["zone_name"] = "Nazjatar",
     ["plugin_name"] = "Nazjatar",
+    ["plugin_name_abbreviation"] = "Nazjatar",
     ["entities"] = {
         --   npc_id = {name, quest_id, coordinates}
         [152415] = {L[152415], 56279, nil}, -- "Alga the Eyeless"
