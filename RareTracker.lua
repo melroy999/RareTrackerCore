@@ -158,6 +158,31 @@ function RareTracker:AddRaresForModule(rare_data)
     self.primary_id_to_data[primary_id].ordering = ordering
 end
 
+-- Extract all the re-usable data from the old databases and put them in the new one.
+function RareTracker:ImportOldSettings()
+    self:ImportOldSettingFromDB(RareTrackerNazjatarDB)
+    self:ImportOldSettingFromDB(RareTrackerMechagonDB)
+    self:ImportOldSettingFromDB(RareTrackerUldumDB)
+    self:ImportOldSettingFromDB(RareTrackerValeDB)
+end
+
+-- Extract all the re-usable data from the old database and put them in the new one.
+function RareTracker:ImportOldSettingFromDB(db)
+    if not db.has_been_imported then
+        if db.global.favorite_rares then
+            for npc_id, _ in pairs(db.global.favorite_rares) do
+                self.db.global.favorite_rares[npc_id] = true
+            end
+        end
+        if db.global.ignore_rares then
+            for npc_id, _ in pairs(db.global.ignore_rares) do
+                self.db.global.ignored_rares[npc_id] = true
+            end
+        end
+        db.has_been_imported = true
+    end
+end
+
 -- ####################################################################
 -- ##                     Standard Ace3 Methods                      ##
 -- ####################################################################
@@ -195,6 +220,9 @@ function RareTracker:OnInitialize()
                 self.db.global.previous_records[shard_id] = nil
             end
         end
+        
+        -- Import previous settings when applicable.
+        self:ImportOldSettings()
         
         -- Initialize the interface.
         self:InitializeInterface()
