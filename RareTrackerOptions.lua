@@ -96,9 +96,9 @@ function RareTracker:InitializeRareTrackerLDB()
     
     -- Register the icon.
     self.icon = LibStub("LibDBIcon-1.0")
-    self.icon:Register("RareTrackerIcon2", self.ldb, self.db.profile.minimap)
+    self.icon:Register("RareTrackerIcon", self.ldb, self.db.profile.minimap)
     if self.db.profile.minimap.hide then
-        self.icon:Hide("RareTrackerIcon2")
+        self.icon:Hide("RareTrackerIcon")
     end
 end
 
@@ -113,12 +113,12 @@ function RareTracker:InitializeOptionsMenu()
         args = {
             general = {
                 type = "group",
-                name = "General",
+                name = L["General"],
                 order = self:GetOrder(),
                 args = {
                     general = {
                         type = "group",
-						name = "Shared Options",
+						name = L["Shared Options"],
 						order = self:GetOrder(),
 						inline = true,
                         args = {
@@ -143,8 +143,7 @@ function RareTracker:InitializeOptionsMenu()
                             communication = {
                                 type = "toggle",
                                 name = L["Enable communication over party/raid channel"],
-                                desc = L["Enable communication over party/raid channel, "..
-                                    "to provide CRZ functionality while in a party or raid group."],
+                                desc = L["Enable communication over party/raid channel, to provide CRZ functionality while in a party or raid group."],
                                 width = "full",
                                 order = self:GetOrder(),
                                 get = function()
@@ -248,7 +247,7 @@ function RareTracker:InitializeOptionsMenuForPlugin(plugin_name, primary_ids)
     -- Add the default options for the given plugin.
     options[plugin_name] = {
         type = "group",
-        name = plugin_name,
+        name = L[plugin_name],
         order = self:GetOrder(),
         args = {
             description = {

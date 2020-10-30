@@ -71,7 +71,7 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
     -- The format of messages might change over time and as such, versioning is needed.
     -- To ensure optimal performance, all users should use the latest version.
     if not self.reported_version_mismatch and version < message_version and message_version ~= 9001 then
-        print(L"<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience.")
+        print(L["<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience."])
         self.reported_version_mismatch = true
     end
     
