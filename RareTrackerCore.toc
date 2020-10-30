@@ -1,5 +1,5 @@
 ## Interface: 90001
-## Title: RareTracker
+## Title: RareTrackerCore
 ## Notes: The core module of the RareTracker addons.
 ## Author: Melroy
 ## Version: 2.0.0
@@ -33,9 +33,9 @@ Locales\zhCN.lua
 Locales\frFR.lua
 Locales\ruRU.lua
 
-RareTracker.lua
+RareTrackerCore.lua
 Base64.lua
-RareTrackerInterface.lua
-RareTrackerEventHandler.lua
-RareTrackerCommunication.lua
-RareTrackerOptions.lua
+RareTrackerCoreInterface.lua
+RareTrackerCoreEventHandler.lua
+RareTrackerCoreCommunication.lua
+RareTrackerCoreOptions.lua

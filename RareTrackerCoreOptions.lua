@@ -65,7 +65,7 @@ function RareTracker:InitializeRareTrackerLDB()
     self.ldb_data = {
         type = "data source",
         text = "RT",
-        icon = "Interface\\AddOns\\RareTracker\\Icons\\RareTrackerIcon",
+        icon = "Interface\\AddOns\\RareTrackerCore\\Icons\\RareTrackerIcon",
         OnClick = function(_, button)
             if button == "LeftButton" then
                 local zone_id = C_Map.GetBestMapForUnit("player")

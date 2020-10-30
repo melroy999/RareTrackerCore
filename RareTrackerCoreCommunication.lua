@@ -366,21 +366,21 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
     local message = nil
     if self.current_health[npc_id] then
         if loc then
-            message = string.format(L["<%s> %s (%s%%) seen at ~(%.2f, %.2f)"], self.addon_code, name, health, loc.x, loc.y)
+            message = string.format(L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"], name, health, loc.x, loc.y)
         else
-            message = string.format(L["<%s> %s (%s%%)"], self.addon_code, name, health)
+            message = string.format(L["<RT> %s (%s%%)"], name, health)
         end
     elseif self.last_recorded_death[npc_id] ~= nil then
         if GetServerTime() - last_death < 60 then
-            message = string.format(L["<%s> %s has died"], self.addon_code, name)
+            message = string.format(L["<RT> %s has died"], name)
         else
-            message = string.format(L["<%s> %s was last seen ~%s minutes ago"], self.addon_code, name, math.floor((GetServerTime() - last_death) / 60))
+            message = string.format(L["<RT> %s was last seen ~%s minutes ago"], name, math.floor((GetServerTime() - last_death) / 60))
         end
     elseif self.is_alive[npc_id] then
         if loc then
-            message = string.format(L["<%s> %s seen alive, vignette at ~(%.2f, %.2f)"], self.addon_code, name, loc.x, loc.y)
+            message = string.format(L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"], name, loc.x, loc.y)
         else
-            message = string.format(L["<%s> %s seen alive (combat log)"], self.addon_code, name)
+            message = string.format(L["<RT> %s seen alive (combat log)"], name)
         end
     end
     

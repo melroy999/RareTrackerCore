@@ -101,7 +101,7 @@ local rare_data_metatable = {
 local rare_tracker_plugins = {}
 for i = 1, GetNumAddOns() do
     local name, _, _, enabled, _, _, _ = GetAddOnInfo(i)
-    if enabled and name:find("RareTracker") and name ~= "RareTracker" then
+    if enabled and name:find("RareTracker") and name ~= "RareTrackerCore" then
         rare_tracker_plugins[name] = true
     end
 end
@@ -168,7 +168,7 @@ end
 
 -- Extract all the re-usable data from the old database and put them in the new one.
 function RareTracker:ImportOldSettingFromDB(db)
-    if not db.has_been_imported then
+    if db and not db.has_been_imported then
         if db.global.favorite_rares then
             for npc_id, _ in pairs(db.global.favorite_rares) do
                 self.db.global.favorite_rares[npc_id] = true

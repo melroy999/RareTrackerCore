@@ -209,9 +209,9 @@ function RareTracker.CycleReportWaypointIcon(f)
     f.icon_state = not f.icon_state
                 
     if f.icon_state then
-        f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Broadcast.tga")
+        f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Broadcast.tga")
     else
-        f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Waypoint.tga")
+        f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Waypoint.tga")
     end
 end
 
@@ -375,7 +375,7 @@ function RareTracker.InitializeFavoriteIconFrame(parent)
     f.texture = f:CreateTexture(nil, "OVERLAY")
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
-    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Favorite.tga")
+    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Favorite.tga")
     
     -- Add the tooltip.
     f.tooltip = CreateFrame("Frame", nil, UIParent)
@@ -408,7 +408,7 @@ function RareTracker:InitializeAnnounceIconFrame(parent)
     f.texture = f:CreateTexture(nil, "OVERLAY")
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
-    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Broadcast.tga")
+    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Broadcast.tga")
     
     -- Make the icon swap periodically by adding an update handler.
     f.icon_state = false
@@ -473,7 +473,7 @@ function RareTracker:InitializeReloadButton(parent)
     f:SetPoint("TOPRIGHT", parent, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3))
 
     f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Reload.tga")
+    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Reload.tga")
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
     
@@ -536,7 +536,7 @@ function RareTracker:InitializeCloseButton(parent)
     f:SetPoint("TOPRIGHT", parent, -2 * frame_padding, -(frame_padding + 3))
 
     f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTracker\\Icons\\Cross.tga")
+    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Cross.tga")
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
     
