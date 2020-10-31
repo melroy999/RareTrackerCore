@@ -19,6 +19,9 @@ local UIParent = UIParent
 -- Create the primary addon object.
 RareTracker = LibStub("AceAddon-3.0"):NewAddon("RareTracker", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceSerializer-3.0")
 
+-- Create the frame, such that the position will be saved correctly.
+RareTracker.gui = CreateFrame("Frame", "RT", UIParent)
+
 -- ####################################################################
 -- ##                      Localization Support                      ##
 -- ####################################################################
@@ -293,16 +296,21 @@ function RareTracker.GetTargetHealthPercentage()
 end
 
 -- A function that enables the delayed execution of a function.
-function RareTracker.DelayedExecution(delay, _function)
+function RareTracker:DelayedExecution(delay, _function)
 	local frame = CreateFrame("Frame", nil, UIParent)
 	frame.start_time = GetTime()
 	frame:SetScript("OnUpdate",
-		function(self)
-			if GetTime() - self.start_time > delay then
-				_function()
-				self:SetScript("OnUpdate", nil)
-				self:Hide()
-                self:SetParent(nil)
+		function(f)
+			if GetTime() - f.start_time > delay then
+                if pcall(_function) then
+                    self:Debug("Delayed function successful.")
+                else
+                    self:Debug("Delayed function failed.")
+                end
+                
+				f:SetScript("OnUpdate", nil)
+				f:Hide()
+                f:SetParent(nil)
 			end
 		end
 	)

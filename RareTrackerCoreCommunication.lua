@@ -42,7 +42,7 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 1
+local version = 9001
 
 -- Track when the last health report was for a given npc.
 local last_health_report = {
@@ -161,12 +161,14 @@ function RareTracker:AnnounceArrival()
         -- Join the appropriate channel.
         JoinTemporaryChannel(channel_name)
         
-        -- We want to avoid overwriting existing channel numbers. So delay the channel join.
-        self.DelayedExecution(1, function()
-                self:Debug("Requesting rare kill data for shard "..self.shard_id)
-                self:SendAddonMessage("A", arrival_register_time, "CHANNEL", select(1, GetChannelName(channel_name)))
-            end
-        )
+        -- The channel join is not always instant. Wait for a second to be sure.
+        self:DelayedExecution(1, function()
+            self:Debug("Requesting rare kill data for shard "..self.shard_id)
+            self:SendAddonMessage("A", arrival_register_time, "CHANNEL", select(1, GetChannelName(channel_name)))
+        end)
+        
+        -- Potentially warn users of previous versions, if applicable.
+        self:WarnUsersUsingPreviousVersion()
     else
         self:Debug("Requesting rare kill data for shard "..self.shard_id)
         self:SendAddonMessage("A", arrival_register_time, "CHANNEL", select(1, GetChannelName(channel_name)))
@@ -175,6 +177,47 @@ function RareTracker:AnnounceArrival()
     -- Register your arrival within the group.
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage("AP", arrival_register_time, "RAID", nil)
+    end
+end
+
+-- The previously used addon prefixes for the given zones.
+local old_channel_prefixes = {
+    [1462] = "RTM",
+    [1522] = "RTM",
+    [1355] = "RTN",
+    [1527] = "RTU",
+    [1530] = "RTV",
+    [1579] = "RTV"
+}
+
+-- Warn users that are still using the previous version of the addon that they need to update.
+function RareTracker:WarnUsersUsingPreviousVersion()
+    if self.zone_id and old_channel_prefixes[self.zone_id] and self.shard_id then
+        local old_channel_name = old_channel_prefixes[self.zone_id]..self.shard_id
+    
+        -- Join the appropriate channel.
+        JoinTemporaryChannel(old_channel_name)
+        self:Debug("Joining old channel", old_channel_name, "for warning purposes")
+        
+        -- Send an empty message over the channel.
+        self:DelayedExecution(1, function()
+            self:Debug("Sending outdated warning over", old_channel_name)
+
+            -- Needs to be done outside of the function, otherwise we error.
+            local target_id = select(1, GetChannelName(old_channel_name))
+            self:SendCommMessage(
+                old_channel_prefixes[self.zone_id], 
+                "OLD-"..self.shard_id.."-"..version..":OLD_VERSION_PLEASE_UPDATE", 
+                "CHANNEL", 
+                target_id
+            )
+        end)
+                
+        -- Leave the channel with a delay.
+        self:DelayedExecution(5, function()
+            self:Debug("Leaving old channel", old_channel_name)
+            LeaveChannelByName(old_channel_name)
+        end)
     end
 end
 

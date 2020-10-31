@@ -550,7 +550,7 @@ end
 
 -- Initialize the addon's entity frame.
 function RareTracker:InitializeInterface()
-    local f = CreateFrame("Frame", "RT", UIParent)
+    local f = self.gui
     
     f:SetSize(
         entity_name_width + entity_status_width + 2 * favorite_rares_width + 5 * frame_padding,
@@ -588,5 +588,4 @@ function RareTracker:InitializeInterface()
     
     -- The default state of the window is hidden.
     f:Hide()
-    self.gui = f
 end

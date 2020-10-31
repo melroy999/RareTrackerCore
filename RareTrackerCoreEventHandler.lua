@@ -439,7 +439,7 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         -- We need to delay the update daily kill mark check, since the servers don't update it instantly.
         local primary_id = self.zone_id
         if primary_id then
-            self.DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id, primary_id) end)
+            self:DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id, primary_id) end)
         end
         
         -- Remove the waypoint if applicable.
@@ -557,6 +557,8 @@ function RareTracker:AddDailyResetHandler()
                 if self.gui.entities_frame ~= nil then
                     self:UpdateAllDailyKillMarks()
                     self:Debug(L["<RT> Updating daily kill marks."])
+                    self:UpdateDisplayList()
+                    self:Debug("Updating display list.")
                 end
             end
         end
