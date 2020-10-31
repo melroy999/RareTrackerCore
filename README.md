@@ -7,6 +7,7 @@ The **RareTrackerCore (RT)** addon is the central component of my collection of 
 - [RareTrackerNazjatar (RTN)](https://www.curseforge.com/wow/addons/raretrackernazjatar-rtn) for Nazjatar
 - [RareTrackerUldum (RTU)](https://www.curseforge.com/wow/addons/raretrackeruldum-rtu) for Uldum
 - [RareTrackerVale (RTV)](https://www.curseforge.com/wow/addons/raretrackervale-rtv) for the Vale of Eternal Blossoms
+- [RareTrackerWorldBosses (RTWB)](https://www.curseforge.com/wow/addons/raretrackerworldbosses-rtwb) for world bosses
 
 ## Instructions
 RareTrackerCore relies on a peer to peer network and as such, it will only function optimally if multiple players are using the addon simultaneously. The communication component will activate once the the player has targeted a non-player entity, or when a combat log event nearby has been processed: this step is required, since it enables the addon to extract an unique identifier for the shard.
