@@ -111,6 +111,7 @@ function RareTracker:ChangeZone()
     
     -- Ensure that the correct data is shown in the window.
     self:UpdateDisplayList()
+    self:UpdateAllDailyKillMarks()
     
     self:Debug("Changing zone to", C_Map.GetBestMapForUnit("player"))
 end
