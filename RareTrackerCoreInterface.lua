@@ -556,7 +556,12 @@ function RareTracker:InitializeInterface()
         entity_name_width + entity_status_width + 2 * favorite_rares_width + 5 * frame_padding,
         shard_id_frame_height + 2 * frame_padding
     )
-    f:SetPoint("CENTER")
+    if self.db.global.window.position then
+        local anchor, x, y = unpack(self.db.global.window.position)
+        f:SetPoint(anchor, x, y)
+    else
+        f:SetPoint("CENTER")
+    end
             
     f.texture = f:CreateTexture(nil, "BACKGROUND")
     f.texture:SetColorTexture(0, 0, 0, background_opacity)
@@ -581,7 +586,12 @@ function RareTracker:InitializeInterface()
     f:SetUserPlaced(true)
     f:EnableMouse(true)
     f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+    f:SetScript("OnDragStop", function(_f)
+        _f:StopMovingOrSizing()
+        local _, _, anchor, x, y = _f:GetPoint()
+        self.db.global.window.position = {anchor, x, y}
+        self:Debug("New frame position", anchor, x, y)
+    end)
     
     -- Enforce the user-defined scale of the window.
     f:SetScale(self.db.global.window.scale)
