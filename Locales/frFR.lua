@@ -5,7 +5,6 @@ if not L then return end
 -- Status messages.
 -- L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = ""
 -- L["<RT> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = ""
--- L["<RT> Updating daily kill marks."] = ""
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> Remise-à-zéro des timers actuels et requête de données à jour."
 L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> Veuillez sélectionner une entité non joueuse avant la remise-à-zéro, afin de permettre à l'addon de déterminer le shard id actuel."
 L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> Le bouton de remise-à-zéro est en recharge. Il est à noté qu'un reset n'est pas nécessaire pour recevoir les nouveaux timers. Si vous voulez effectivement réinitialiser les dnnées, veuillez faire un /reload puis cliquer à nouveau sur le bouton de reset."

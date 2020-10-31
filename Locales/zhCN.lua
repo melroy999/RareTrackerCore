@@ -5,7 +5,6 @@ if not L then return end
 -- Status messages.
 -- L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = ""
 L["<RT> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RT> 版本 RareTracker 插件已过期。请尽快将其更新为最新版本。"
-L["<RT> Updating daily kill marks."] = "<RT> 正在更新日常击杀标记。"
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> 重置当前稀有的计时器并请求最新数据。"
 L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> 重置之前请选中一个非玩家目标，这样插件可用确定当前的共享 ID。"
 L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> 重置按钮处于冷却状态。请注意，如果您打算重置数据，接收新的计时器不需要重置，请使用 /reload 然后再次点击重置按钮。"

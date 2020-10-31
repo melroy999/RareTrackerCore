@@ -549,7 +549,7 @@ function RareTracker:AddDailyResetHandler()
                 
                 if self.gui.entities_frame ~= nil then
                     self:UpdateAllDailyKillMarks()
-                    self:Debug(L["<RT> Updating daily kill marks."])
+                    self:Debug("Updating daily kill marks.")
                     self:UpdateDisplayList()
                     self:Debug("Updating display list.")
                 end

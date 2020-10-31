@@ -5,7 +5,6 @@ if not L then return end
 -- Status messages.
 L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = "<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."
 L["<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience."
-L["<RT> Updating daily kill marks."] = "<RT> Updating daily kill marks."
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> Resetting current rare timers and requesting up-to-date data."
 L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."
 L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."
