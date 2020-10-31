@@ -44,7 +44,7 @@ RareTracker.tracked_npc_ids = {}
 
 -- A master list of all tracked rares.
 RareTracker.completion_quest_to_npc_ids = {}
-    
+
 -- The short-hand code of the addon.
 RareTracker.addon_code = "RT"
 
@@ -195,7 +195,7 @@ end
 function RareTracker:OnInitialize()
     if not next(rare_tracker_plugins) then
         -- Register the addon's prefix and the associated communication function.
-        self:RegisterComm("RareTracker")
+        self:RegisterComm(self.addon_code)
         
         -- Add all the requested zones and rares.
         for primary_id, rare_data in pairs(plugin_data) do

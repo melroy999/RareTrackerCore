@@ -32,9 +32,6 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 -- ##                    Communication Variables                     ##
 -- ####################################################################
 
--- The communication prefix of the addon.
-local communication_prefix = "RareTracker"
-
 -- The time at which the user joined the channel.
 local arrival_register_time = nil
 
@@ -137,7 +134,7 @@ function RareTracker:SendAddonMessage(prefix, message, target, target_id)
     
     self:Debug("Sending:", prefix, self.shard_id, version, message, target, target_id)
     
-    self:SendCommMessage(communication_prefix, prefix.."-"..self.shard_id.."-"..version..":"..payload, target, target_id)
+    self:SendCommMessage(self.addon_code, prefix.."-"..self.shard_id.."-"..version..":"..payload, target, target_id)
 end
 
 -- ####################################################################
