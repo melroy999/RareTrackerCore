@@ -90,7 +90,7 @@ function RareTracker:OnZoneTransition()
     self.zone_id = self.zone_id_to_primary_id[zone_id]
     
     -- Check if the zone id changed. If so, update the list of rares to display when appropriate.
-    if self.zone_id_to_primary_id[zone_id] and self.zone_id_to_primary_id[zone_id] ~= self.zone_id_to_primary_id[last_zone_id] then
+    if self.zone_id_to_primary_id[zone_id] ~= self.zone_id_to_primary_id[last_zone_id] then
         self:ChangeZone()
     end
     
@@ -105,27 +105,20 @@ function RareTracker:OnZoneTransition()
 end
 
 -- Fetch the new list of rares and ensure that these rares are properly displayed.
-function RareTracker:ChangeZone()
-    -- Leave the channel associated with the current shard id and save the data.
-    self.LeaveAllShardChannels()
-    self:SaveRecordedData()
-    
-    -- Reset all tracked data.
-    self:ResetTrackedData()
-    
+function RareTracker:ChangeZone()   
     -- Reset the shard id
     self:ChangeShard(nil)
     
     -- Ensure that the correct data is shown in the window.
     self:UpdateDisplayList()
     
-    self:Debug("Changing zone to", self.zone_id)
+    self:Debug("Changing zone to", C_Map.GetBestMapForUnit("player"))
 end
 
 -- Transfer to a new shard, reset current data and join the appropriate channel.
 function RareTracker:ChangeShard(zone_uid)
     -- Leave the channel associated with the current shard id and save the data.
-    self.LeaveAllShardChannels()
+    self:LeaveAllShardChannels()
     self:SaveRecordedData()
     
     -- Reset all tracked data.
@@ -537,7 +530,7 @@ end
 -- Certain updates need to be made every hour because of the lack of daily reset/new world quest events.
 function RareTracker:AddDailyResetHandler()
     -- There is no event for the daily reset, so do a precautionary check every hour.
-    local f = CreateFrame("Frame", "RT.daily_reset_handling_frame", self.gui)
+    local f = CreateFrame("Frame", "RT.daily_reset_handling_frame", UIParent)
 
     -- Which timestamp was the last hour?
     local time_table = date("*t", GetServerTime())

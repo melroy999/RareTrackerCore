@@ -42,7 +42,7 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 9001
+local version = 1
 
 -- Track when the last health report was for a given npc.
 local last_health_report = {
@@ -160,6 +160,7 @@ function RareTracker:AnnounceArrival()
     if not is_in_channel then
         -- Join the appropriate channel.
         JoinTemporaryChannel(channel_name)
+        self:Debug("Joining channel", channel_name)
         
         -- The channel join is not always instant. Wait for a second to be sure.
         self:DelayedExecution(1, function()
@@ -252,20 +253,21 @@ function RareTracker:PresentRecordedDataInGroup(time_stamp)
 end
 
 -- Leave all the RareTracker shard channels that the player is currently part of.
-function RareTracker.LeaveAllShardChannels()
+function RareTracker:LeaveAllShardChannels()
     local n_channels = GetNumDisplayChannels()
     local channels_to_leave = {}
     
     -- Leave all channels with the addon prefix.
     for i = 1, n_channels do
         local _, _channel_name = GetChannelName(i)
-        if _channel_name and _channel_name:find(communication_prefix) then
+        if _channel_name and _channel_name:find(self.addon_code) then
             channels_to_leave[_channel_name] = true
         end
     end
     
     for _channel_name, _ in pairs(channels_to_leave) do
         LeaveChannelByName(_channel_name)
+        self:Debug("Leaving channel", _channel_name)
     end
 end
 

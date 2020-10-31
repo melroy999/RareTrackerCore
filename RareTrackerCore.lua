@@ -302,10 +302,8 @@ function RareTracker:DelayedExecution(delay, _function)
 	frame:SetScript("OnUpdate",
 		function(f)
 			if GetTime() - f.start_time > delay then
-                if pcall(_function) then
-                    self:Debug("Delayed function successful.")
-                else
-                    self:Debug("Delayed function failed.")
+                if not pcall(_function) then
+                    self:Debug("Delayed execution failed.")
                 end
                 
 				f:SetScript("OnUpdate", nil)
@@ -319,7 +317,7 @@ end
 
 -- A print function used for debug purposes.
 function RareTracker:Debug(...)
-	if self.db.global.debug.enable then
+	if self.db and self.db.global.debug.enable then
 		print("[Debug.RT]", ...)
 	end
 end
