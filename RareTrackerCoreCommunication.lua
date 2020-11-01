@@ -39,7 +39,10 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 1
+local version = 2
+
+-- Track for each rare whether you received the data from others, such that we can overwrite your faulty data.
+RareTracker.is_npc_data_from_other = {}
 
 -- Track when the last health report was for a given npc.
 local last_health_report = {
@@ -204,13 +207,13 @@ function RareTracker:WarnUsersUsingPreviousVersion()
             -- Needs to be done outside of the function, otherwise we error.
             local target_id = select(1, GetChannelName(old_channel_name))
             self:SendCommMessage(
-                old_channel_prefixes[self.zone_id], 
-                "OLD-"..self.shard_id.."-"..version..":OLD_VERSION_PLEASE_UPDATE", 
-                "CHANNEL", 
+                old_channel_prefixes[self.zone_id],
+                "OLD-"..self.shard_id.."-"..version..":OLD_VERSION_PLEASE_UPDATE",
+                "CHANNEL",
                 target_id
             )
         end)
-                
+
         -- Leave the channel with a delay.
         self:DelayedExecution(5, function()
             self:Debug("Leaving old channel", old_channel_name)
@@ -223,8 +226,9 @@ end
 function RareTracker:PresentRecordedDataThroughWhisper(target, time_stamp)
     if next(self.last_recorded_death) then
         local time_table = {}
-        for npc_id, kill_time in pairs(self.last_recorded_death) do
-            time_table[self.ToBase64(npc_id)] = self.ToBase64(time_stamp - kill_time)
+        for npc_id, kill_data in pairs(self.last_recorded_death) do
+            local kill_time, guid = unpack(kill_data)
+            time_table[self.ToBase64(npc_id)] = {self.ToBase64(time_stamp - kill_time), guid}
         end
         
         -- Add the time stamp to the table, such that the receiver can verify.
@@ -238,8 +242,9 @@ end
 function RareTracker:PresentRecordedDataInGroup(time_stamp)
     if next(self.last_recorded_death) then
         local time_table = {}
-        for npc_id, kill_time in pairs(self.last_recorded_death) do
-            time_table[self.ToBase64(npc_id)] = self.ToBase64(time_stamp - kill_time)
+        for npc_id, kill_data in pairs(self.last_recorded_death) do
+            local kill_time, guid = unpack(kill_data)
+            time_table[self.ToBase64(npc_id)] = {self.ToBase64(time_stamp - kill_time), guid}
         end
         
         -- Add the time stamp to the table, such that the receiver can verify.
@@ -296,15 +301,19 @@ function RareTracker:AcknowledgeRecordedData(spawn_data)
         -- Remove the time stamp from the table!
         spawn_data["time_stamp"] = nil
         
-        for base64_npc_id, base64_time_passed_since_kill in pairs(spawn_data) do
+        for base64_npc_id, kill_data in pairs(spawn_data) do
             -- TODO Check if the spawn data is appropriate for the current zone.
+            local base64_time_passed_since_kill, guid = unpack(kill_data)
             local kill_time = arrival_register_time - self.ToBase10(base64_time_passed_since_kill)
             local npc_id = self.ToBase10(base64_npc_id)
-            if self.last_recorded_death[npc_id] then
-                self.last_recorded_death[npc_id] = max(self.last_recorded_death[npc_id], kill_time)
+
+            if self.last_recorded_death[npc_id] and self.is_npc_data_provided_by_other_player[npc_id] then
+                self.last_recorded_death[npc_id] = {max(self.last_recorded_death[npc_id][0], kill_time), guid}
             else
-                self.last_recorded_death[npc_id] = kill_time
+                self.last_recorded_death[npc_id] = {kill_time, guid}
+                self.is_npc_data_provided_by_other_player[npc_id] = true
             end
+            self.recorded_entity_death_ids[guid..npc_id] = true
         end
     end
 end
@@ -412,7 +421,7 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
         else
             message = string.format(L["<RT> %s (%s%%)"], name, health)
         end
-    elseif self.last_recorded_death[npc_id] ~= nil then
+    elseif self.last_recorded_death[npc_id] then
         if GetServerTime() - last_death < 60 then
             message = string.format(L["<RT> %s has died"], name)
         else

@@ -12,6 +12,7 @@ local PlaySoundFile = PlaySoundFile
 local select = select
 local date = date
 local time = time
+local EnumerateServerChannels = EnumerateServerChannels
 
 -- Redefine often used variables locally.
 local C_Map = C_Map
@@ -20,13 +21,6 @@ local COMBATLOG_OBJECT_TYPE_PET = COMBATLOG_OBJECT_TYPE_PET
 local COMBATLOG_OBJECT_TYPE_OBJECT = COMBATLOG_OBJECT_TYPE_OBJECT
 local bit = bit
 local UIParent = UIParent
-
--- ####################################################################
--- ##                      Localization Support                      ##
--- ####################################################################
-
--- Get an object we can use for the localization of the addon.
-local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 
 -- ####################################################################
 -- ##                          Event Variables                       ##
@@ -65,7 +59,7 @@ RareTracker.reported_spawn_uids = {}
 RareTracker.waypoints = {}
 
 -- Record all entities that died, such that we don't overwrite existing death.
-local recorded_entity_death_ids = {}
+RareTracker.recorded_entity_death_ids = {}
 
 -- Record all vignettes that are detected, such that we don't report the same spawn multiple times.
 local reported_vignettes = {}
@@ -105,7 +99,7 @@ function RareTracker:OnZoneTransition()
 end
 
 -- Fetch the new list of rares and ensure that these rares are properly displayed.
-function RareTracker:ChangeZone()   
+function RareTracker:ChangeZone()
     -- Reset the shard id
     self:ChangeShard(nil)
     
@@ -369,8 +363,9 @@ function RareTracker:ResetTrackedData()
     self.is_alive = {}
     self.current_health = {}
     self.last_recorded_death = {}
+    self.is_npc_data_provided_by_other_player = {}
     self.current_coordinates = {}
-    recorded_entity_death_ids = {}
+    self.recorded_entity_death_ids = {}
     self.reported_spawn_uids = {}
     reported_vignettes = {}
 end
@@ -391,6 +386,10 @@ function RareTracker:LoadRecordedData()
         if GetServerTime() - self.db.global.previous_records[self.shard_id].time_stamp < 900 then
             self:Debug("Restoring data from previous session in shard "..self.shard_id)
             self.last_recorded_death = self.db.global.previous_records[self.shard_id].time_table
+            for npc_id, kill_data in pairs(self.last_recorded_death) do
+                local _, guid = unpack(kill_data)
+                self.recorded_entity_death_ids[guid..npc_id] = true
+            end
         else
             self:Debug("Resetting stored data for "..self.shard_id)
             self.db.global.previous_records[self.shard_id] = nil
@@ -417,13 +416,13 @@ end
 
 -- Process that an entity has died.
 function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
-    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+    if not self.recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as dead.
-        self.last_recorded_death[npc_id] = GetServerTime()
+        self.last_recorded_death[npc_id] = {GetServerTime(), spawn_uid}
         self.is_alive[npc_id] = nil
         self.current_health[npc_id] = nil
         self.current_coordinates[npc_id] = nil
-        recorded_entity_death_ids[spawn_uid..npc_id] = true
+        self.recorded_entity_death_ids[spawn_uid..npc_id] = true
         self.reported_spawn_uids[spawn_uid] = nil
         self.reported_spawn_uids[npc_id] = nil
         
@@ -451,7 +450,7 @@ end
 
 -- Process that an entity has been seen alive.
 function RareTracker:ProcessEntityAlive(npc_id, spawn_uid, x, y, make_announcement)
-    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+    if not self.recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as alive.
         self.is_alive[npc_id] = GetServerTime()
         
@@ -482,7 +481,7 @@ end
 
 -- Process that an entity has been targeted.
 function RareTracker:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y, make_announcement)
-    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+    if not self.recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as targeted and alive.
         self.last_recorded_death[npc_id] = nil
         self.is_alive[npc_id] = GetServerTime()
@@ -504,7 +503,7 @@ end
 
 -- Process an enemy health update.
 function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, make_announcement)
-    if not recorded_entity_death_ids[spawn_uid..npc_id] then
+    if not self.recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Update the health of the entity.
         self.last_recorded_death[npc_id] = nil
         self.is_alive[npc_id] = GetServerTime()

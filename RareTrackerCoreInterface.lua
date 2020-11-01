@@ -84,8 +84,8 @@ function RareTracker:UpdateStatus(npc_id)
         f.status:SetText("N/A")
         f.status:SetFontObject("GameFontGreen")
         f.announce.texture:SetColorTexture(0, 1, 0, 1)
-    elseif self.last_recorded_death[npc_id] ~= nil then
-        local last_death = self.last_recorded_death[npc_id]
+    elseif self.last_recorded_death[npc_id] then
+        local last_death, _ = unpack(self.last_recorded_death[npc_id])
         f.status:SetText(math.floor((GetServerTime() - last_death) / 60).."m")
         f.status:SetFontObject("GameFontNormal")
         f.announce.texture:SetColorTexture(0, 0, 1, foreground_opacity)
@@ -259,7 +259,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     f.announce:SetScript("OnClick", function(_, button)
         local name = rare_data.name
         local health = self.current_health[npc_id]
-        local last_death = self.last_recorded_death[npc_id]
+        local last_death, _ = unpack(self.last_recorded_death[npc_id])
         local loc = self.current_coordinates[npc_id]
         
         if button == "LeftButton" then
