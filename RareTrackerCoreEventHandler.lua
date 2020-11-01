@@ -387,8 +387,8 @@ function RareTracker:LoadRecordedData()
             self:Debug("Restoring data from previous session in shard "..self.shard_id)
             self.last_recorded_death = self.db.global.previous_records[self.shard_id].time_table
             for npc_id, kill_data in pairs(self.last_recorded_death) do
-                local _, guid = unpack(kill_data)
-                self.recorded_entity_death_ids[guid..npc_id] = true
+                local _, spawn_uid = unpack(kill_data)
+                self.recorded_entity_death_ids[spawn_uid..npc_id] = true
             end
         else
             self:Debug("Resetting stored data for "..self.shard_id)

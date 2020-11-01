@@ -227,8 +227,8 @@ function RareTracker:PresentRecordedDataThroughWhisper(target, time_stamp)
     if next(self.last_recorded_death) then
         local time_table = {}
         for npc_id, kill_data in pairs(self.last_recorded_death) do
-            local kill_time, guid = unpack(kill_data)
-            time_table[self.ToBase64(npc_id)] = {self.ToBase64(time_stamp - kill_time), guid}
+            local kill_time, spawn_uid = unpack(kill_data)
+            time_table[self.ToBase64(npc_id)] = {self.ToBase64(time_stamp - kill_time), spawn_uid}
         end
         
         -- Add the time stamp to the table, such that the receiver can verify.
@@ -243,8 +243,8 @@ function RareTracker:PresentRecordedDataInGroup(time_stamp)
     if next(self.last_recorded_death) then
         local time_table = {}
         for npc_id, kill_data in pairs(self.last_recorded_death) do
-            local kill_time, guid = unpack(kill_data)
-            time_table[self.ToBase64(npc_id)] = {self.ToBase64(time_stamp - kill_time), guid}
+            local kill_time, spawn_uid = unpack(kill_data)
+            time_table[self.ToBase64(npc_id)] = {self.ToBase64(time_stamp - kill_time), spawn_uid}
         end
         
         -- Add the time stamp to the table, such that the receiver can verify.
@@ -303,17 +303,17 @@ function RareTracker:AcknowledgeRecordedData(spawn_data)
         
         for base64_npc_id, kill_data in pairs(spawn_data) do
             -- TODO Check if the spawn data is appropriate for the current zone.
-            local base64_time_passed_since_kill, guid = unpack(kill_data)
+            local base64_time_passed_since_kill, spawn_uid = unpack(kill_data)
             local kill_time = arrival_register_time - self.ToBase10(base64_time_passed_since_kill)
             local npc_id = self.ToBase10(base64_npc_id)
 
             if self.last_recorded_death[npc_id] and self.is_npc_data_provided_by_other_player[npc_id] then
-                self.last_recorded_death[npc_id] = {max(self.last_recorded_death[npc_id][0], kill_time), guid}
+                self.last_recorded_death[npc_id] = {max(self.last_recorded_death[npc_id][1], kill_time), spawn_uid}
             else
-                self.last_recorded_death[npc_id] = {kill_time, guid}
+                self.last_recorded_death[npc_id] = {kill_time, spawn_uid}
                 self.is_npc_data_provided_by_other_player[npc_id] = true
             end
-            self.recorded_entity_death_ids[guid..npc_id] = true
+            self.recorded_entity_death_ids[spawn_uid..npc_id] = true
         end
     end
 end
