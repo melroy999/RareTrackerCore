@@ -104,7 +104,7 @@ local rare_data_metatable = {
 local rare_tracker_plugins = {}
 for i = 1, GetNumAddOns() do
     local name, _, _, enabled, _, _, _ = GetAddOnInfo(i)
-    if enabled and name:find("RareTracker") and name ~= "RareTrackerCore" then
+    if enabled and name:find("RareTracker") and name ~= "RareTrackerCore" and name ~= "RareTracker" then
         rare_tracker_plugins[name] = true
     end
 end
