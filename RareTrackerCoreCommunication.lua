@@ -147,7 +147,7 @@ end
 -- Announce that you have arrived on the shard.
 function RareTracker:AnnounceArrival()
     -- Save the current channel name and join a channel.
-    channel_name = self.addon_code..self.shard_id
+    channel_name = self.addon_code..self.zone_id.."S"..self.shard_id
             
     local is_in_channel = false
     if select(1, GetChannelName(channel_name)) ~= 0 then
@@ -254,22 +254,32 @@ function RareTracker:PresentRecordedDataInGroup(time_stamp)
     end
 end
 
--- Leave all the RareTracker shard channels that the player is currently part of.
-function RareTracker:LeaveAllShardChannels()
+-- Leave all the RareTracker shard channels that are in other zones.
+function RareTracker:LeaveShardChannelsInOtherZones()
     local n_channels = GetNumDisplayChannels()
     local channels_to_leave = {}
     
     -- Leave all channels with the addon prefix.
     for i = 1, n_channels do
         local _, _channel_name = GetChannelName(i)
-        if _channel_name and _channel_name:find(self.addon_code) then
-            channels_to_leave[_channel_name] = true
+        if _channel_name and _channel_name:find(self.addon_code) and not channel_name == _channel_name then
+            if not self.zone_id or not _channel_name:find(self.addon_code..self.zone_id.."S") then
+                channels_to_leave[_channel_name] = true
+            end
         end
     end
     
     for _channel_name, _ in pairs(channels_to_leave) do
         LeaveChannelByName(_channel_name)
         self:Debug("Leaving channel", _channel_name)
+    end
+end
+
+-- Leave the rare tracker channel the user was previously part of, if any.
+function RareTracker:LeavePreviousShardChannel()
+    if channel_name and self.shard_id then
+        LeaveChannelByName(channel_name)
+        self:Debug("Leaving channel", channel_name)
     end
 end
 

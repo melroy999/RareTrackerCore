@@ -112,9 +112,12 @@ end
 
 -- Transfer to a new shard, reset current data and join the appropriate channel.
 function RareTracker:ChangeShard(zone_uid)
-    -- Leave the channel associated with the current shard id and save the data.
-    self:LeaveAllShardChannels()
+    -- Leave the channel associated with the previous shard id and save the data.
+    self:LeavePreviousShardChannel()
     self:SaveRecordedData()
+    
+    -- As a precaution, leave all other channels not in the current zone.
+    self:LeaveShardChannelsInOtherZones()
     
     -- Reset all tracked data.
     self:ResetTrackedData()
