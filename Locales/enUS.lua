@@ -8,6 +8,7 @@ L["<RT> Your version of the RareTracker addon is outdated. Please update to the 
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> Resetting current rare timers and requesting up-to-date data."
 L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."
 L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."
+L["<RT> Moving to shard "] = "<RT> Moving to shard "
 
 -- Chat messages.
 L["<RT> %s has died"] = "<RT> %s has died"

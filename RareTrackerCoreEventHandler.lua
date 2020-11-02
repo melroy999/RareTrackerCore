@@ -23,6 +23,13 @@ local bit = bit
 local UIParent = UIParent
 
 -- ####################################################################
+-- ##                      Localization Support                      ##
+-- ####################################################################
+
+-- Get an object we can use for the localization of the addon.
+local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
+
+-- ####################################################################
 -- ##                          Event Variables                       ##
 -- ####################################################################
 
@@ -139,7 +146,7 @@ end
 -- Return true if the shard changed, false otherwise.
 function RareTracker:CheckForShardChange(zone_uid)
     if self.shard_id ~= zone_uid and zone_uid ~= nil then
-        self:Debug("Moving to shard "..zone_uid)
+        print(L["<RT> Moving to shard "]..zone_uid..".")
         self:ChangeShard(zone_uid)
         return true
     end

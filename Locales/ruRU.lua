@@ -8,6 +8,7 @@ L["<RT> Your version of the RareTracker addon is outdated. Please update to the 
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> Сброс текущих таймеров рарников и запрос актуальных данных."
 L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> Выберите НПЦ, что бы аддон смог определить ID сервера/слоя."
 L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> Процедура сброса все еще восстанавливается. Имейте в виду, сброс НЕ нужен для получения новых таймеров. Если все же, Вам необходимо сбросить данные, то перезагрузите интерфейс используя /reload и нажмите кнопку сброса повторно."
+L["<RT> Moving to shard "] = "<RT> Перемещаемся на сервер/слой "
 
 -- Chat messages.
 L["<RT> %s has died"] = "<RT> %s был убит"
