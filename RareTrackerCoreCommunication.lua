@@ -39,7 +39,7 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 2
+local version = 3
 
 -- Track for each rare whether you received the data from others, such that we can overwrite your faulty data.
 RareTracker.is_npc_data_from_other = {}
@@ -87,17 +87,17 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
             npc_id = tonumber(npc_id)
             self:AcknowledgeEntityDeath(npc_id, spawn_uid)
         elseif prefix == "EA" then
+            local npc_id, spawn_uid = strsplit("-", payload)
+            npc_id = tonumber(npc_id)
+            self:AcknowledgeEntityAlive(npc_id, spawn_uid)
+        elseif prefix == "EV" then
             local npc_id, spawn_uid, x, y = strsplit("-", payload)
             npc_id, x, y = tonumber(npc_id), tonumber(x), tonumber(y)
-            self:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
-        elseif prefix == "ET" then
+            self:AcknowledgeEntityVignette(npc_id, spawn_uid, x, y)
+        elseif prefix == "EH" then
             local npc_id, spawn_uid, percentage, x, y = strsplit("-", payload)
             npc_id, percentage, x, y = tonumber(npc_id), tonumber(percentage), tonumber(x), tonumber(y)
-            self:AcknowledgeEntityTarget(npc_id, spawn_uid, percentage, x, y)
-        elseif prefix == "EH" then
-            local npc_id, spawn_uid, percentage = strsplit("-", payload)
-            npc_id, percentage = tonumber(npc_id), tonumber(percentage)
-            self:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage)
+            self:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage, x, y, "CHANNEL")
         elseif self.db.global.communication.raid_communication then
             if prefix == "AP" then
                 local time_stamp = tonumber(payload)
@@ -109,17 +109,17 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
                 npc_id = tonumber(npc_id)
                 self:AcknowledgeEntityDeath(npc_id, spawn_uid)
             elseif prefix == "EAP" then
+                local npc_id, spawn_uid = strsplit("-", payload)
+                npc_id = tonumber(npc_id)
+                self:AcknowledgeEntityAlive(npc_id, spawn_uid)
+            elseif prefix == "EVP" then
                 local npc_id, spawn_uid, x, y = strsplit("-", payload)
                 npc_id, x, y = tonumber(npc_id), tonumber(x), tonumber(y)
-                self:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
-            elseif prefix == "ETP" then
+                self:AcknowledgeEntityVignette(npc_id, spawn_uid, x, y)
+            elseif prefix == "EHP" then
                 local npc_id, spawn_uid, percentage, x, y = strsplit("-", payload)
                 npc_id, percentage, x, y = tonumber(npc_id), tonumber(percentage), tonumber(x), tonumber(y)
-                self:AcknowledgeEntityTarget(npc_id, spawn_uid, percentage, x, y)
-            elseif prefix == "EHP" then
-                local npc_id, spawn_uid, percentage = strsplit("-", payload)
-                npc_id, percentage = tonumber(npc_id), tonumber(percentage)
-                self:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
+                self:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage, x, y, "RAID")
             end
         end
     end
@@ -334,53 +334,62 @@ end
 
 -- Inform the others that a specific entity has died.
 function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid)
-    self:SendAddonMessage("ED", npc_id.."-"..spawn_uid, "CHANNEL", select(1, GetChannelName(channel_name)))
-
+    local message = npc_id.."-"..spawn_uid
+    self:SendAddonMessage("ED", message, "CHANNEL", select(1, GetChannelName(channel_name)))
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage("EDP", npc_id.."-"..spawn_uid, "RAID", nil)
+        self:SendAddonMessage("EDP", message, "RAID", nil)
     end
 end
 
 -- Inform the others that you have spotted an alive entity.
 function RareTracker:AnnounceEntityAlive(npc_id, spawn_uid)
-    self:SendAddonMessage("EA", npc_id.."-"..spawn_uid, "CHANNEL", select(1, GetChannelName(channel_name)))
-
+    local message = npc_id.."-"..spawn_uid
+    self:SendAddonMessage("EA", message, "CHANNEL", select(1, GetChannelName(channel_name)))
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage("EAP", npc_id.."-"..spawn_uid, "RAID", nil)
+        self:SendAddonMessage("EAP", message, "RAID", nil)
     end
     
 end
 
 -- Inform the others that you have spotted an alive entity and include the coordinates.
-function RareTracker:AnnounceEntityAliveWithCoordinates(npc_id, spawn_uid, x, y)
-    self:SendAddonMessage("EA", npc_id.."-"..spawn_uid.."-"..x.."-"..y, "CHANNEL", select(1, GetChannelName(channel_name)))
-
+function RareTracker:AnnounceEntityVignette(npc_id, spawn_uid, x, y)
+    local message = npc_id.."-"..spawn_uid.."-"..x.."-"..y
+    self:SendAddonMessage("EV", message, "CHANNEL", select(1, GetChannelName(channel_name)))
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage("EAP", npc_id.."-"..spawn_uid.."-"..x.."-"..y, "RAID", nil)
-    end
-end
-
--- Inform the others that you have spotted an alive entity.
-function RareTracker:AnnounceEntityTarget(npc_id, spawn_uid, percentage, x, y)
-    self:SendAddonMessage("ET", npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y, "CHANNEL", select(1, GetChannelName(channel_name)))
-    
-    if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
-        self:SendAddonMessage("ETP", npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y, "RAID", nil)
+        self:SendAddonMessage("EVP", message, "RAID", nil)
     end
 end
 
 -- Inform the others the health of a specific entity.
 function RareTracker:AnnounceEntityHealth(npc_id, spawn_uid, percentage)
+    local message = npc_id.."-"..spawn_uid.."-"..percentage
+    
     -- Send the health message, using a rate limited function.
     if GetTime() - last_health_report["CHANNEL"][npc_id] > 5 then
-        self:SendAddonMessage("EH", npc_id.."-"..spawn_uid.."-"..percentage, "CHANNEL", select(1, GetChannelName(channel_name)))
+        self:SendAddonMessage("EH", message, "CHANNEL", select(1, GetChannelName(channel_name)))
         last_health_report["CHANNEL"][npc_id] = GetTime()
     end
-    
     if GetTime() - last_health_report["RAID"][npc_id] > 5 then
         if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
             -- Send the health message, using a rate limited function.
-            self:SendAddonMessage("EHP", npc_id.."-"..spawn_uid.."-"..percentage, "RAID", nil)
+            self:SendAddonMessage("EHP", message, "RAID", nil)
+        end
+        last_health_report["RAID"][npc_id] = GetTime()
+    end
+end
+
+-- Inform the others the health of a specific entity, including the most recent coordinates.
+function RareTracker:AnnounceEntityHealthWithCoordinates(npc_id, spawn_uid, percentage, x, y)
+    local message = npc_id.."-"..spawn_uid.."-"..percentage.."-"..x.."-"..y
+    
+    -- Send the health message, using a rate limited function.
+    if GetTime() - last_health_report["CHANNEL"][npc_id] > 5 then
+        self:SendAddonMessage("EH", message, "CHANNEL", select(1, GetChannelName(channel_name)))
+        last_health_report["CHANNEL"][npc_id] = GetTime()
+    end
+    if GetTime() - last_health_report["RAID"][npc_id] > 5 then
+        if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
+            self:SendAddonMessage("EHP", message, "RAID", nil)
         end
         last_health_report["RAID"][npc_id] = GetTime()
     end
@@ -396,25 +405,19 @@ function RareTracker:AcknowledgeEntityDeath(npc_id, spawn_uid)
 end
 
 -- Acknowledge that the entity is alive and set the according flags.
-function RareTracker:AcknowledgeEntityAlive(npc_id, spawn_uid, x, y)
-    self:ProcessEntityAlive(npc_id, spawn_uid, x, y, false)
+function RareTracker:AcknowledgeEntityAlive(npc_id, spawn_uid)
+    self:ProcessEntityAlive(npc_id, spawn_uid, false)
 end
 
 -- Acknowledge that the entity is alive and set the according flags.
-function RareTracker:AcknowledgeEntityTarget(npc_id, spawn_uid, percentage, x, y)
-    self:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y, false)
+function RareTracker:AcknowledgeEntityVignette(npc_id, spawn_uid, x, y)
+    self:ProcessEntityVignette(npc_id, spawn_uid, x, y, false)
 end
 
 -- Acknowledge the health change of the entity and set the according flags.
-function RareTracker:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage)
-    last_health_report["CHANNEL"][npc_id] = GetTime()
-    self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
-end
-
--- Acknowledge the health change of the entity and set the according flags.
-function RareTracker:AcknowledgeEntityHealthRaid(npc_id, spawn_uid, percentage)
-    last_health_report["RAID"][npc_id] = GetTime()
-    self:ProcessEntityHealth(npc_id, spawn_uid, percentage, false)
+function RareTracker:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage, x, y, target)
+    last_health_report[target][npc_id] = GetTime()
+    self:ProcessEntityHealth(npc_id, spawn_uid, percentage, x, y, false)
 end
 
 -- ####################################################################
@@ -427,7 +430,8 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
     local message = nil
     if self.current_health[npc_id] then
         if loc then
-            message = string.format(L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"], name, health, loc.x, loc.y)
+            local x, y = unpack(loc)
+            message = string.format(L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"], name, health, x, y)
         else
             message = string.format(L["<RT> %s (%s%%)"], name, health)
         end
@@ -439,7 +443,8 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
         end
     elseif self.is_alive[npc_id] then
         if loc then
-            message = string.format(L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"], name, loc.x, loc.y)
+            local x, y = unpack(loc)
+            message = string.format(L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"], name, x, y)
         else
             message = string.format(L["<RT> %s seen alive (combat log)"], name)
         end

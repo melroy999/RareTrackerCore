@@ -198,6 +198,7 @@ function RareTracker:UpdateStatusTrackedEntities()
             self.is_alive[npc_id] = nil
             self.current_health[npc_id] = nil
             self.reported_spawn_uids[npc_id] = nil
+            self.current_coordinates[npc_id] = nil
         end
         
         self:UpdateStatus(npc_id)
@@ -280,7 +281,8 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
         else
             -- Does the user have tom tom? if so, add a waypoint if it exists.
             if TomTom ~= nil and loc and not self.waypoints[npc_id] then
-                self.waypoints[npc_id] = TomTom:AddWaypointToCurrentZone(loc.x, loc.y, name)
+                local x, y = unpack(loc)
+                self.waypoints[npc_id] = TomTom:AddWaypointToCurrentZone(x, y, name)
             end
         end
     end)
