@@ -99,16 +99,6 @@ local rare_data_metatable = {
     end
 }
 
--- First, gather a list of addons that are loaded, and find the number of rare tracker addons.
--- A list of all plugin names, such that we can wait for the rare data to be added.
-local rare_tracker_plugins = {}
-for i = 1, GetNumAddOns() do
-    local name, _, _, enabled, _, _, _ = GetAddOnInfo(i)
-    if enabled and name:find("RareTracker") and name ~= "RareTrackerCore" and name ~= "RareTracker" then
-        rare_tracker_plugins[name] = true
-    end
-end
-
 -- ####################################################################
 -- ##                  Module Registration Messages                  ##
 -- ####################################################################
@@ -156,11 +146,6 @@ end
 -- Register a list of rare data that will be processed upon successful load.
 function RareTracker.RegisterRaresForModule(rare_data)
     tinsert(plugin_data, rare_data)
-end
-
--- A function that tracks whether all modules have been loaded, before calling the on initialize.
-function RareTracker:MarkModuleRegistrationFinished(module_name)
-    rare_tracker_plugins[module_name] = nil
 end
 
 -- Register a list of rare entities for a given zone id/zone ids.
