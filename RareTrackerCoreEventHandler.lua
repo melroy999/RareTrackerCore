@@ -183,7 +183,7 @@ function RareTracker:OnHealthDetection(unit, debug_tag)
     -- Get information about the target.
     local guid = UnitGUID(unit)
     
-    if chat_frame_loaded and guid then
+    if chat_frame_loaded and guid and not UnitPlayerControlled(unit) then
         -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
         local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", guid)
         npc_id = tonumber(npc_id)
