@@ -260,7 +260,10 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     f.announce:SetScript("OnClick", function(_, button)
         local name = rare_data.name
         local health = self.current_health[npc_id]
-        local last_death, _ = unpack(self.last_recorded_death[npc_id])
+        local last_death = nil
+        if self.last_recorded_death[npc_id] then
+            last_death, _ = unpack(self.last_recorded_death[npc_id])
+        end
         local loc = self.current_coordinates[npc_id]
         
         if button == "LeftButton" then
