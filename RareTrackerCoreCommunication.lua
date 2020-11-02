@@ -416,7 +416,8 @@ end
 
 -- Acknowledge the health change of the entity and set the according flags.
 function RareTracker:AcknowledgeEntityHealth(npc_id, spawn_uid, percentage, x, y, target)
-    last_health_report[target][npc_id] = GetTime()
+    -- Add a small random factor to avoid having everyone report at the same time after the cooldown is over.
+    last_health_report[target][npc_id] = GetTime() + 3 * (0.5 - math.random())
     self:ProcessEntityHealth(npc_id, spawn_uid, percentage, x, y, false)
 end
 
