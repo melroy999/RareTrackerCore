@@ -282,9 +282,9 @@ end
 -- ####################################################################
 
 -- Get the current health of the entity, rounded down to an integer.
-function RareTracker.GetTargetHealthPercentage()
+function RareTracker.GetTargetHealthPercentage(target)
 	-- Find the current and maximum health of the current target.
-	local max_hp = UnitHealthMax("target")
+	local max_hp = UnitHealthMax(target)
 	
 	-- Check for division by zero.
 	if max_hp == 0 then
@@ -292,7 +292,7 @@ function RareTracker.GetTargetHealthPercentage()
 	end
 	
     -- Return the amount of health as a percentage.
-	return math.floor((100 * UnitHealth("target")) / UnitHealthMax("target"))
+	return math.floor((100 * UnitHealth(target)) / UnitHealthMax(target))
 end
 
 -- A function that enables the delayed execution of a function.

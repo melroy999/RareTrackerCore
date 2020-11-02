@@ -157,8 +157,17 @@ end
 
 -- This event is fired whenever the player's target is changed, including when the target is lost.
 function RareTracker:PLAYER_TARGET_CHANGED()
+    self:OnMouseDiscovery("target")
+end
+
+-- Fired when the mouseover object needs to be updated. 
+function RareTracker:UPDATE_MOUSEOVER_UNIT()
+    self:OnMouseDiscovery("mouseover")
+end
+
+function RareTracker:OnMouseDiscovery(unit)
     -- Get information about the target.
-    local guid = UnitGUID("target")
+    local guid = UnitGUID(unit)
     
     if chat_frame_loaded and guid then
         -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
@@ -171,7 +180,7 @@ function RareTracker:PLAYER_TARGET_CHANGED()
         -- Certain entities retain their zone_uid even after moving shards. Ignore them.
         if not self.db.global.banned_NPC_ids[npc_id] then
             if self:CheckForShardChange(zone_uid) then
-                self:Debug("[Target]", guid)
+                self:Debug("[OnMouse]", unit, guid)
             end
         end
         
@@ -180,13 +189,13 @@ function RareTracker:PLAYER_TARGET_CHANGED()
         
         if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] then
             -- Find the health of the entity.
-            local health = UnitHealth("target")
+            local health = UnitHealth(unit)
         
             if health > 0 then
                 -- Get the current position of the player and the health of the entity.
                 local pos = C_Map.GetPlayerMapPosition(C_Map.GetBestMapForUnit("player"), "player")
                 local x, y = math.floor(pos.x * 10000 + 0.5) / 100, math.floor(pos.y * 10000 + 0.5) / 100
-                local percentage = self.GetTargetHealthPercentage()
+                local percentage = self.GetTargetHealthPercentage(unit)
                 
                 -- Mark the entity as alive and report to your peers.
                 self:ProcessEntityTarget(npc_id, spawn_uid, percentage, x, y, true)
@@ -200,10 +209,14 @@ end
 
 -- Fired whenever a unit's health is affected.
 function RareTracker:UNIT_HEALTH(_, unit)
-    -- Get information about the target.
-    local guid = UnitGUID("target")
+    if unit ~= "target" and not unit:find("nameplate") then
+        return
+    end
     
-    if chat_frame_loaded and unit == "target" and guid then
+    -- Get information about the target.
+    local guid = UnitGUID(unit)
+    
+    if chat_frame_loaded and guid then
         -- unittype, zero, server_id, instance_id, zone_uid, npc_id, spawn_uid
         local unittype, _, _, _, zone_uid, npc_id, spawn_uid = strsplit("-", guid)
         npc_id = tonumber(npc_id)
@@ -213,7 +226,7 @@ function RareTracker:UNIT_HEALTH(_, unit)
         
         if not self.db.global.banned_NPC_ids[npc_id] then
             if self:CheckForShardChange(zone_uid) then
-                self:Debug("[OnUnitHealth]", guid)
+                self:Debug("[OnUnitHealth]", unit, guid)
             end
         end
         
@@ -222,7 +235,7 @@ function RareTracker:UNIT_HEALTH(_, unit)
         
         if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] then
             -- Update the current health of the entity.
-            local percentage = self.GetTargetHealthPercentage()
+            local percentage = self.GetTargetHealthPercentage(unit)
             
             -- Does the entity have any health left?
             if percentage > 0 then
@@ -345,6 +358,7 @@ function RareTracker:RegisterTrackingEvents()
     self:RegisterEvent("UNIT_HEALTH")
     self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self:RegisterEvent("VIGNETTE_MINIMAP_UPDATED")
+    self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
     self:RegisterEvent("CHAT_MSG_MONSTER_YELL", "OnMonsterChatMessage")
     self:RegisterEvent("CHAT_MSG_MONSTER_SAY", "OnMonsterChatMessage")
     self:RegisterEvent("CHAT_MSG_MONSTER_EMOTE", "OnMonsterChatMessage")
@@ -356,6 +370,7 @@ function RareTracker:UnregisterTrackingEvents()
     self:UnregisterEvent("UNIT_HEALTH")
     self:UnregisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
     self:UnregisterEvent("VIGNETTE_MINIMAP_UPDATED")
+    self:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
     self:UnregisterEvent("CHAT_MSG_MONSTER_YELL")
     self:UnregisterEvent("CHAT_MSG_MONSTER_SAY")
     self:UnregisterEvent("CHAT_MSG_MONSTER_EMOTE")
