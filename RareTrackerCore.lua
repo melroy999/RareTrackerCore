@@ -78,7 +78,7 @@ local defaults = {
 }
 
 -- ####################################################################
--- ##                      Module Registration                       ##
+-- ##                  Module Registration Variables                 ##
 -- ####################################################################
 
 -- Keep a list of modules that have been registered, such that we can add them when loaded.
@@ -109,6 +109,50 @@ for i = 1, GetNumAddOns() do
     end
 end
 
+-- ####################################################################
+-- ##                  Module Registration Messages                  ##
+-- ####################################################################
+
+-- Fired when new all rare tracker modules have registered their data to the core.
+function RareTracker:PLAYER_LOGIN()
+    -- We no longer need the player login event. Unsubscribe.
+    self:UnregisterEvent("PLAYER_LOGIN")
+    
+    -- Add all the requested zones and rares.
+    for primary_id, rare_data in pairs(plugin_data) do
+        self:AddRaresForModule(rare_data)
+        plugin_data[primary_id] = nil
+    end
+
+    -- As a precaution, we remove all actively tracked rares from the blacklist.
+    for npc_id, _ in pairs(self.tracked_npc_ids) do
+        self.db.global.banned_NPC_ids[npc_id] = nil
+    end
+    -- Import previous settings when applicable.
+    self:ImportOldSettings()
+
+    self:InitializeOptionsMenu()
+    self:InitializeRareTrackerLDB()
+    
+    -- Register the resired chat commands.
+    self:RegisterChatCommand("rt", "OnChatCommand")
+    self:RegisterChatCommand("raretracker", "OnChatCommand")
+    
+    -- Initialize the interface.
+    self:InitializeInterface()
+    self:CorrectFavoriteMarks()
+    self:AddDailyResetHandler()
+    
+    -- Register all the events that have to be tracked continuously.
+    self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
+    self:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
+end
+
+-- ####################################################################
+-- ##                 Module Registration Functions                  ##
+-- ####################################################################
+
 -- Register a list of rare data that will be processed upon successful load.
 function RareTracker.RegisterRaresForModule(rare_data)
     tinsert(plugin_data, rare_data)
@@ -117,7 +161,6 @@ end
 -- A function that tracks whether all modules have been loaded, before calling the on initialize.
 function RareTracker:MarkModuleRegistrationFinished(module_name)
     rare_tracker_plugins[module_name] = nil
-    self:OnInitialize()
 end
 
 -- Register a list of rare entities for a given zone id/zone ids.
@@ -193,54 +236,25 @@ end
 -- A function that is called when the addon is first loaded.
 -- Note: we have to delay the initialization until all the rare data has been gathered.
 function RareTracker:OnInitialize()
-    if not next(rare_tracker_plugins) then
-        -- Register the addon's prefix and the associated communication function.
-        self:RegisterComm(self.addon_code)
+    -- Register the addon's prefix and the associated communication function.
+    self:RegisterComm(self.addon_code)
         
-        -- Add all the requested zones and rares.
-        for primary_id, rare_data in pairs(plugin_data) do
-            self:AddRaresForModule(rare_data)
-            plugin_data[primary_id] = nil
-        end
-        
-        -- Load the database.
-        self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", defaults, true)
-        self:InitializeRareTrackerLDB()
-        self:InitializeOptionsMenu()
+    -- Load the database.
+    self.db = LibStub("AceDB-3.0"):New("RareTrackerDB", defaults, true)
 
-        -- Register the callback to the logout function.
-        self.db.RegisterCallback(self, "OnDatabaseShutdown", "OnDatabaseShutdown")
-        
-        -- As a precaution, we remove all actively tracked rares from the blacklist.
-        for npc_id, _ in pairs(self.tracked_npc_ids) do
-            self.db.global.banned_NPC_ids[npc_id] = nil
+    -- Register the callback to the logout function.
+    self.db.RegisterCallback(self, "OnDatabaseShutdown", "OnDatabaseShutdown")
+    
+    -- Remove any data in the previous records that have expired.
+    for shard_id, _ in pairs(self.db.global.previous_records) do
+        if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp > 900 then
+            self:Debug("Removing cached data for shard "..shard_id)
+            self.db.global.previous_records[shard_id] = nil
         end
-
-        -- Remove any data in the previous records that have expired.
-        for shard_id, _ in pairs(self.db.global.previous_records) do
-            if GetServerTime() - self.db.global.previous_records[shard_id].time_stamp > 900 then
-                self:Debug("Removing cached data for shard "..shard_id)
-                self.db.global.previous_records[shard_id] = nil
-            end
-        end
-        
-        -- Import previous settings when applicable.
-        self:ImportOldSettings()
-        
-        -- Initialize the interface.
-        self:InitializeInterface()
-        self:CorrectFavoriteMarks()
-        self:AddDailyResetHandler()
-        
-        -- Register all the events that have to be tracked continuously.
-        self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "OnZoneTransition")
-        self:RegisterEvent("PLAYER_ENTERING_WORLD", "OnZoneTransition")
-        self:RegisterEvent("ZONE_CHANGED", "OnZoneTransition")
-        
-        -- Register the resired chat commands.
-        self:RegisterChatCommand("rt", "OnChatCommand")
-        self:RegisterChatCommand("raretracker", "OnChatCommand")
     end
+    
+    -- Wait for the player login event before initializing the rest of the data.
+    self:RegisterEvent("PLAYER_LOGIN")
 end
 
 -- Called when the player logs out, such that we can save the current time table for later use.
