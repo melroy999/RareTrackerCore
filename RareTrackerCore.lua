@@ -238,6 +238,15 @@ function RareTracker:OnInitialize()
         end
     end
     
+    -- Remove any data in the previous records that are outdated because of an addon update.
+    for shard_id, _ in pairs(self.db.global.previous_records) do
+        local version = self.db.global.previous_records[shard_id].version
+        if not version or version < 1 then
+            self:Debug("Removing cached data for shard "..shard_id)
+            self.db.global.previous_records[shard_id] = nil
+        end
+    end
+    
     -- Wait for the player login event before initializing the rest of the data.
     self:RegisterEvent("PLAYER_LOGIN")
 end

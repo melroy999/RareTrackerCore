@@ -77,6 +77,9 @@ local valid_unit_types = {
     ["Vehicle"] = true
 }
 
+-- The version of the db storage scheme.
+local storage_version = 1
+
 -- ####################################################################
 -- ##                           Event Handlers                       ##
 -- ####################################################################
@@ -368,6 +371,7 @@ function RareTracker:SaveRecordedData()
         self.db.global.previous_records[self.shard_id] = {}
         self.db.global.previous_records[self.shard_id].time_stamp = GetServerTime()
         self.db.global.previous_records[self.shard_id].time_table = self.last_recorded_death
+        self.db.global.previous_records[self.shard_id].version = storage_version
     end
 end
 
