@@ -39,7 +39,11 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 3
+local version = 10
+-- Version 1: Initial version
+-- Version 2: Change in format of rare tables, which now include the guid of the kill.
+-- Version 3: Change in format of certain messages. Deleted and added several other messages.
+-- Version 10: Version changed to notify old users that an update is required. 
 
 -- Track for each rare whether you received the data from others, such that we can overwrite your faulty data.
 RareTracker.is_npc_data_from_other = {}
