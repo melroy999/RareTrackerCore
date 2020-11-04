@@ -3,7 +3,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("RareTracker", "zhCN")
 if not L then return end
 
 -- Status messages.
--- L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = ""
+L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = "<RT> 稀有窗口不能被显示，因为当前区域未被任何区域模块覆盖。"
 L["<RT> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RT> 版本 RareTracker 插件已过期。请尽快将其更新为最新版本。"
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> 重置当前稀有的计时器并请求最新数据。"
 L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> 重置之前请选中一个非玩家目标，这样插件可用确定当前的共享 ID。"
@@ -49,8 +49,8 @@ L["Reset Favorites"] = "重置偏好"
 L["Reset the list of favorite rares."] = "重置偏好稀有列表。"
 L["Active Rares"] = "激活稀有"
 L["Show minimap icon"] = "显示小地图图标"
--- L["Shared Options"] = ""
--- L["General"] = ""
+L["Shared Options"] = "共用选项"
+L["General"] = "通用"
 
 -- Rare frame strings.
 L["Shard ID: %s"] = "共享 ID: %s"
