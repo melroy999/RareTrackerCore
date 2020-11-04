@@ -103,6 +103,12 @@ local rare_data_metatable = {
 -- ##                  Module Registration Messages                  ##
 -- ####################################################################
 
+-- NPCs that are banned during shard detection.
+-- Player followers sometimes spawn with the wrong zone id.
+local banned_NPC_ids = {
+    154297, 150202, 154304, 152108, 151300, 151310, 142666, 142668, 69792, 62821, 62822, 32639, 32638, 89715,
+}
+
 -- Fired when new all rare tracker modules have registered their data to the core.
 function RareTracker:PLAYER_LOGIN()
     -- We no longer need the player login event. Unsubscribe.
@@ -118,6 +124,12 @@ function RareTracker:PLAYER_LOGIN()
     for npc_id, _ in pairs(self.tracked_npc_ids) do
         self.db.global.banned_NPC_ids[npc_id] = nil
     end
+    
+    -- There are several npcs that always have to be banned.
+    for _, npc_id in pairs(banned_NPC_ids) do
+        self.db.global.banned_NPC_ids[npc_id] = true
+    end
+    
     -- Import previous settings when applicable.
     self:ImportOldSettings()
 
