@@ -106,7 +106,7 @@ local rare_data_metatable = {
 -- NPCs that are banned during shard detection.
 -- Player followers sometimes spawn with the wrong zone id.
 local banned_NPC_ids = {
-    154297, 150202, 154304, 152108, 151300, 151310, 142666, 142668, 69792, 62821, 62822, 32639, 32638, 89715,
+    154297, 150202, 154304, 152108, 151300, 151310, 142666, 142668, 69792, 62821, 62822, 32639, 32638, 89715, 89713,
 }
 
 -- Fired when new all rare tracker modules have registered their data to the core.
