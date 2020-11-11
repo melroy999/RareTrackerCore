@@ -191,14 +191,19 @@ function RareTracker:AddRaresForModule(rare_data)
     end
     
     -- Create an ordering (alphabetical is the default).
-    local ordering = {}
-    for npc_id, _ in pairs(rare_data.entities) do
-        table.insert(ordering, npc_id)
+    -- If an order is defined by the module, use that order instead!
+    if rare_data.rare_order then
+        self.primary_id_to_data[primary_id].ordering = rare_data.rare_order
+    else
+        local ordering = {}
+        for npc_id, _ in pairs(rare_data.entities) do
+            table.insert(ordering, npc_id)
+        end
+        table.sort(ordering, function(a, b)
+            return rare_data.entities[a].name < rare_data.entities[b].name
+        end)
+        self.primary_id_to_data[primary_id].ordering = ordering
     end
-    table.sort(ordering, function(a, b)
-        return rare_data.entities[a].name < rare_data.entities[b].name
-    end)
-    self.primary_id_to_data[primary_id].ordering = ordering
 end
 
 -- Extract all the re-usable data from the old databases and put them in the new one.

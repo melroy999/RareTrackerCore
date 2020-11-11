@@ -44,8 +44,9 @@ local L = LibStub("AceLocale-3.0"):GetLocale("RareTracker", true)
 
 -- Prepare the window's data and show it on the screen.
 function RareTracker:OpenWindow()
-    -- Update all the kill marks.
+    -- Update all the kill marks. Also make a delayed call in case the quest marks aren't loaded.
     self:UpdateAllDailyKillMarks()
+    self:DelayedExecution(3, function() self:UpdateAllDailyKillMarks() end)
     
     -- Show the window if it is not hidden.
     if not self.db.global.window.hide then
