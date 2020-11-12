@@ -62,9 +62,6 @@ RareTracker.current_coordinates = {}
 -- Record all spawn uids that are detected, such that we don't report the same spawn multiple times.
 RareTracker.reported_spawn_uids = {}
 
--- A list of waypoints.
-RareTracker.waypoints = {}
-
 -- Record all entities that died, such that we don't overwrite existing death.
 RareTracker.recorded_entity_death_ids = {}
 
@@ -428,12 +425,6 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         local primary_id = self.zone_id
         if primary_id then
             self:DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id, primary_id) end)
-        end
-        
-        -- Remove the waypoint if applicable.
-        if self.waypoints[npc_id] and TomTom then
-            TomTom:RemoveWaypoint(self.waypoints[npc_id])
-            self.waypoints[npc_id] = nil
         end
         
         -- Send the death message.

@@ -436,7 +436,14 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
     if self.current_health[npc_id] then
         if loc then
             local x, y = unpack(loc)
-            message = string.format(L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"], name, health, x, y)
+            local previous_waypoint = C_Map.GetUserWaypoint()
+            C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
+            message = string.format(L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"].." "..C_Map.GetUserWaypointHyperlink(), name, health, x, y)
+            if not previous_waypoint then
+                C_Map.ClearUserWaypoint()
+            else
+                C_Map.SetUserWaypoint(previous_waypoint)
+            end
         else
             message = string.format(L["<RT> %s (%s%%)"], name, health)
         end
@@ -449,7 +456,14 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
     elseif self.is_alive[npc_id] then
         if loc then
             local x, y = unpack(loc)
-            message = string.format(L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"], name, x, y)
+            local previous_waypoint = C_Map.GetUserWaypoint()
+            C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
+            message = string.format(L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"].." "..C_Map.GetUserWaypointHyperlink(), name, x, y)
+            if not previous_waypoint then
+                C_Map.ClearUserWaypoint()
+            else
+                C_Map.SetUserWaypoint(previous_waypoint)
+            end
         else
             message = string.format(L["<RT> %s seen alive (combat log)"], name)
         end
@@ -457,6 +471,27 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
     
     -- Send the message.
     if message then
+        if target == "CHANNEL" then
+            SendChatMessage(message, target, nil, self.GetGeneralChatId())
+        else
+            SendChatMessage(message, target, nil, nil)
+        end
+    end
+end
+
+-- Report the status of the given rare in the desired channel.
+function RareTracker:ReportRareCoordinatesInChat(npc_id, target, name, loc)
+    if loc then
+        local x, y = unpack(loc)
+        local previous_waypoint = C_Map.GetUserWaypoint()
+        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
+        local message = "<RT> "..name.." "..C_Map.GetUserWaypointHyperlink()
+        if not previous_waypoint then
+            C_Map.ClearUserWaypoint()
+        else
+            C_Map.SetUserWaypoint(previous_waypoint)
+        end
+        
         if target == "CHANNEL" then
             SendChatMessage(message, target, nil, self.GetGeneralChatId())
         else

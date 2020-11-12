@@ -283,10 +283,15 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
             -- Send the message.
             self:ReportRareInChat(npc_id, target, name, health, last_death, loc)
         else
-            -- Does the user have tom tom? if so, add a waypoint if it exists.
-            if TomTom ~= nil and loc and not self.waypoints[npc_id] then
+            -- Put down a waypoint.
+            local loc = self.current_coordinates[npc_id] or self.primary_id_to_data[self.zone_id].entities[npc_id].coordinates
+            if loc then
                 local x, y = unpack(loc)
-                self.waypoints[npc_id] = TomTom:AddWaypointToCurrentZone(x, y, name)
+                if IsLeftAltKeyDown() or IsRightAltKeyDown() then
+                    self:ReportRareCoordinatesInChat(npc_id, "CHANNEL", name, loc)
+                else
+                    C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
+                end
             end
         end
     end)
@@ -428,8 +433,8 @@ function RareTracker:InitializeAnnounceIconFrame(parent)
     
     -- Add the tooltip.
     f.tooltip = CreateFrame("Frame", nil, UIParent)
-    f.tooltip:SetSize(273, 68)
-    f.tooltip:SetPoint("TOPLEFT", parent, 0, 69)
+    f.tooltip:SetSize(273, 80)
+    f.tooltip:SetPoint("TOPLEFT", parent, 0, 81)
     f.tooltip:Hide()
     
     f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
@@ -465,6 +470,12 @@ function RareTracker:InitializeAnnounceIconFrame(parent)
     f.tooltip.text5:SetJustifyV("TOP")
     f.tooltip.text5:SetPoint("TOPLEFT", f.tooltip, 5, -51)
     f.tooltip.text5:SetText(L["Right click: set waypoint if available"])
+    
+    f.tooltip.text6 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
+    f.tooltip.text6:SetJustifyH("LEFT")
+    f.tooltip.text6:SetJustifyV("TOP")
+    f.tooltip.text6:SetPoint("TOPLEFT", f.tooltip, 5, -63)
+    f.tooltip.text6:SetText(L["Alt-Right click: report pin location if available"])
     
     f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
     f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
