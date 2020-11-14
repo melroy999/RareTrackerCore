@@ -438,7 +438,7 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
             local x, y = unpack(loc)
             local previous_waypoint = C_Map.GetUserWaypoint()
             C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
-            message = string.format(L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"].." "..C_Map.GetUserWaypointHyperlink(), name, health, x, y)
+            message = string.format(L["<RT> %s (%s%%) seen at %s"], name, health, C_Map.GetUserWaypointHyperlink())
             if not previous_waypoint then
                 C_Map.ClearUserWaypoint()
             else
@@ -458,7 +458,7 @@ function RareTracker:ReportRareInChat(npc_id, target, name, health, last_death, 
             local x, y = unpack(loc)
             local previous_waypoint = C_Map.GetUserWaypoint()
             C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
-            message = string.format(L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"].." "..C_Map.GetUserWaypointHyperlink(), name, x, y)
+            message = string.format(L["<RT> %s seen alive, vignette at %s"], name, C_Map.GetUserWaypointHyperlink())
             if not previous_waypoint then
                 C_Map.ClearUserWaypoint()
             else

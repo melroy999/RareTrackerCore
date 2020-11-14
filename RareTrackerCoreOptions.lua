@@ -234,6 +234,11 @@ function RareTracker:InitializeOptionsMenu()
     LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTracker", self.options_table)
     self.options_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTracker", "RareTracker")
     
+    -- Create a pane with info/instructions on how to use the addon.
+    
+    
+    
+    
     -- Create a profiles tab.
     -- self.profile_options = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
     -- LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTracker-Profiles", self.profile_options)

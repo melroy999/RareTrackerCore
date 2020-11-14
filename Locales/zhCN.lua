@@ -13,9 +13,9 @@ L["<RT> Moving to shard "] = "<RT> 移动到分片 "
 -- Chat messages.
 L["<RT> %s has died"] = "<RT> %s 已经挂了"
 L["<RT> %s (%s%%)"] = "<RT> %s (%s%%)"
-L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<RT> %s (%s%%) 发现了 ~(%.2f, %.2f)"
+L["<RT> %s (%s%%) seen at %s"] = "<RT> %s (%s%%) 发现了 %s"
 L["<RT> %s was last seen ~%s minutes ago"] = "<RT> %s 上次刷新在 ~%s 分钟以前"
-L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<RT> %s 还活着, 坐标点在 ~(%.2f, %.2f)"
+L["<RT> %s seen alive, vignette at %s"] = "<RT> %s 还活着, 坐标点在 %s"
 L["<RT> %s seen alive (combat log)"] = "<RT> %s 还活着（战斗记录）"
 
 -- Rare frame instructions.

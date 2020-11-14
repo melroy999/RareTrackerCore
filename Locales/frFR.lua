@@ -13,9 +13,9 @@ L["<RT> The reset button is on cooldown. Please note that a reset is not needed 
 -- Chat messages.
 L["<RT> %s has died"] = "<RT> %s est mort."
 L["<RT> %s (%s%%)"] = "<RT> %s (%s%%)"
-L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<RT> %s (%s%%) vu à ~(%.2f, %.2f)"
+L["<RT> %s (%s%%) seen at %s"] = "<RT> %s (%s%%) vu à %s"
 L["<RT> %s was last seen ~%s minutes ago"] = "<RT> %s vu pour la dernière fois il y a ~%s minutes"
-L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<RT> %s vu en vie à la position ~(%.2f, %.2f)"
+L["<RT> %s seen alive, vignette at %s"] = "<RT> %s vu en vie à la position %s"
 L["<RT> %s seen alive (combat log)"] = "<RT> %s vu en vie (log de combat)"
 
 -- Rare frame instructions.

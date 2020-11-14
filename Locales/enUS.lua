@@ -13,9 +13,9 @@ L["<RT> Moving to shard "] = "<RT> Moving to shard "
 -- Chat messages.
 L["<RT> %s has died"] = "<RT> %s has died"
 L["<RT> %s (%s%%)"] = "<RT> %s (%s%%)"
-L["<RT> %s (%s%%) seen at ~(%.2f, %.2f)"] = "<RT> %s (%s%%) seen at ~(%.2f, %.2f)"
+L["<RT> %s (%s%%) seen at %s"] = "<RT> %s (%s%%) seen at %s"
 L["<RT> %s was last seen ~%s minutes ago"] = "<RT> %s was last seen ~%s minutes ago"
-L["<RT> %s seen alive, vignette at ~(%.2f, %.2f)"] = "<RT> %s seen alive, vignette at ~(%.2f, %.2f)"
+L["<RT> %s seen alive, vignette at %s"] = "<RT> %s seen alive, vignette at %s"
 L["<RT> %s seen alive (combat log)"] = "<RT> %s seen alive (combat log)"
 
 -- Rare frame instructions.
