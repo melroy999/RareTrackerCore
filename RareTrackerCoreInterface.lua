@@ -483,69 +483,6 @@ function RareTracker:InitializeAnnounceIconFrame(parent)
     parent.broadcast_icon = f
 end
 
--- Initialize the reload button in the rare entities frame.
-function RareTracker:InitializeReloadButton(parent)
-    local f = CreateFrame("Button", "RT.reload_button", parent)
-    f:SetSize(10, 10)
-    f:SetPoint("TOPRIGHT", parent, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3))
-
-    f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Reload.tga")
-    f.texture:SetSize(10, 10)
-    f.texture:SetPoint("CENTER", f)
-    
-    -- Add the tooltip.
-    f.tooltip = CreateFrame("Frame", nil, UIParent)
-    f.tooltip:SetSize(390, 34)
-    f.tooltip:SetPoint("TOPLEFT", parent, 0, 35)
-    f.tooltip:Hide()
-    
-    f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
-    f.tooltip.texture:SetColorTexture(0, 0, 0, foreground_opacity)
-    f.tooltip.texture:SetAllPoints(f.tooltip)
-    
-    f.tooltip.text1 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text1:SetJustifyH("LEFT")
-    f.tooltip.text1:SetJustifyV("TOP")
-    f.tooltip.text1:SetPoint("TOPLEFT", f.tooltip, 5, -3)
-    f.tooltip.text1:SetText(L["Reset your data and replace it with the data of others."])
-    
-    f.tooltip.text2 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text2:SetJustifyH("LEFT")
-    f.tooltip.text2:SetJustifyV("TOP")
-    f.tooltip.text2:SetPoint("TOPLEFT", f.tooltip, 5, -15)
-    f.tooltip.text2:SetText(L["Note: you do not need to press this button to receive new timers."])
-    
-    -- Hide and show the tooltip on mouseover.
-    f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
-    f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
-
-    -- TODO implement reload button and tooltips.
-    f.last_data_reload = 0
-    f:SetScript("OnClick", function()
-        if self.shard_id ~= nil and GetServerTime() - f.last_data_reload > 600 then
-            -- Reset all tracked data.
-            self:ResetTrackedData()
-            self.db.global.previous_records[self.shard_id] = nil
-
-            -- Re-register the arrival.
-            f.last_data_reload = GetServerTime()
-            self:AnnounceArrival()
-
-            print(L["<RT> Resetting current rare timers and requesting up-to-date data."])
-        elseif self.shard_id == nil then
-            print(L["<RT> Please target a non-player entity prior to resetting, "..
-                  "such that the addon can determine the current shard id."])
-        else
-            print(L["<RT> The reset button is on cooldown. Please note that a reset is not needed "..
-                  "to receive new timers. If it is your intention to reset the data, "..
-                  "please do a /reload and click the reset button again."])
-        end
-    end)
-    
-    parent.reload_button = f
-end
-
 -- Initialize the close button in the rare entities frame.
 function RareTracker:InitializeCloseButton(parent)
     local f = CreateFrame("Button", "RT.close_button", parent)
@@ -592,8 +529,7 @@ function RareTracker:InitializeInterface()
     self.InitializeFavoriteIconFrame(f)
     self:InitializeAnnounceIconFrame(f)
     
-    -- Create a reset button.
-    self:InitializeReloadButton(f)
+    -- Create a close button.
     self:InitializeCloseButton(f)
     
     -- Make the window moveable and ensure that the window stays where the user puts it.

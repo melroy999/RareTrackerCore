@@ -277,6 +277,9 @@ end
 -- ##                            Commands                            ##
 -- ####################################################################
 
+-- Remember when the last refresh was issued by the user, to block refresh spamming.
+RareTracker.last_data_refresh = 0
+
 -- A function that is called when calling a chat command.
 function RareTracker:OnChatCommand(input)
     input = input:trim()
@@ -298,6 +301,25 @@ function RareTracker:OnChatCommand(input)
                 self.gui:Hide()
             end
             self.db.global.window.hide = true
+        elseif cmd == "refresh" then
+            if self.shard_id ~= nil and GetServerTime() - self.last_data_refresh > 600 then
+                -- Reset all tracked data.
+                self:ResetTrackedData()
+                self.db.global.previous_records[self.shard_id] = nil
+
+                -- Re-register the arrival.
+                self.last_data_refresh = GetServerTime()
+                self:AnnounceArrival()
+
+                print(L["<RT> Resetting current rare timers and requesting up-to-date data."])
+            elseif self.shard_id == nil then
+                print(L["<RT> Please target a non-player entity prior to resetting, "..
+                      "such that the addon can determine the current shard id."])
+            else
+                print(L["<RT> The reset button is on cooldown. Please note that a reset is not needed "..
+                      "to receive new timers. If it is your intention to reset the data, "..
+                      "please do a /reload and click the reset button again."])
+            end
         end
     end
 end
