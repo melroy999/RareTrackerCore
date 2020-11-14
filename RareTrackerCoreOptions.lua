@@ -242,6 +242,18 @@ function RareTracker:InitializeOptionsMenu()
         childGroups = "tree",
         order = self:GetOrder(),
         args = {
+            general_description_1 = {
+                name = L["The RareTracker addon relies on a peer to peer network, and as such, it will require multiple players to be using the addon simultaneously to work optimally. The communication component activates once the the player has targeted a non-player entity, or when a combat log event nearby is processed: this step is required, since it enables the addon to extract an unique identifier for the shard."],
+                type = 'description',
+                order = self:GetOrder(),
+                fontSize = "medium"
+            },
+            spacer = {
+                name = " ",
+                type = 'description',
+                order = self:GetOrder(),
+                fontSize = "medium"
+            },
             favorites = {
                 name = L["Favorites"],
                 type = 'group',
