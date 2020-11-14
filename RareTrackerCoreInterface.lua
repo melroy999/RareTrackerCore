@@ -387,26 +387,7 @@ function RareTracker.InitializeFavoriteIconFrame(parent)
     f.texture:SetSize(10, 10)
     f.texture:SetPoint("CENTER", f)
     f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Favorite.tga")
-    
-    -- Add the tooltip.
-    f.tooltip = CreateFrame("Frame", nil, UIParent)
-    f.tooltip:SetSize(300, 18)
-    f.tooltip:SetPoint("TOPLEFT", parent, 0, 19)
-    f.tooltip:Hide()
-    
-    f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
-    f.tooltip.texture:SetColorTexture(0, 0, 0, foreground_opacity)
-    f.tooltip.texture:SetAllPoints(f.tooltip)
-    
-    f.tooltip.text = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text:SetPoint("TOPLEFT", f.tooltip, 5, -3)
-    f.tooltip.text:SetJustifyH("LEFT")
-    f.tooltip.text:SetJustifyV("TOP")
-    f.tooltip.text:SetText(L["Click on the squares to add rares to your favorites."])
-    
-    f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
-    f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
-    
+
     parent.favorite_icon = f
 end
 
@@ -431,56 +412,26 @@ function RareTracker:InitializeAnnounceIconFrame(parent)
         end
     end)
     
-    -- Add the tooltip.
-    f.tooltip = CreateFrame("Frame", nil, UIParent)
-    f.tooltip:SetSize(273, 80)
-    f.tooltip:SetPoint("TOPLEFT", parent, 0, 81)
-    f.tooltip:Hide()
-    
-    f.tooltip.texture = f.tooltip:CreateTexture(nil, "BACKGROUND")
-    f.tooltip.texture:SetColorTexture(0, 0, 0, foreground_opacity)
-    f.tooltip.texture:SetAllPoints(f.tooltip)
-    
-    f.tooltip.text1 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text1:SetJustifyH("LEFT")
-    f.tooltip.text1:SetJustifyV("TOP")
-    f.tooltip.text1:SetPoint("TOPLEFT", f.tooltip, 5, -3)
-    f.tooltip.text1:SetText(L["Click on the squares to announce rare timers."])
-    
-    f.tooltip.text2 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text2:SetJustifyH("LEFT")
-    f.tooltip.text2:SetJustifyV("TOP")
-    f.tooltip.text2:SetPoint("TOPLEFT", f.tooltip, 5, -15)
-    f.tooltip.text2:SetText(L["Left click: report to general chat"])
-    
-    f.tooltip.text3 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text3:SetJustifyH("LEFT")
-    f.tooltip.text3:SetJustifyV("TOP")
-    f.tooltip.text3:SetPoint("TOPLEFT", f.tooltip, 5, -27)
-    f.tooltip.text3:SetText(L["Control-left click: report to party/raid chat"])
-    
-    f.tooltip.text4 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text4:SetJustifyH("LEFT")
-    f.tooltip.text4:SetJustifyV("TOP")
-    f.tooltip.text4:SetPoint("TOPLEFT", f.tooltip, 5, -39)
-    f.tooltip.text4:SetText(L["Alt-left click: report to say"])
-      
-    f.tooltip.text5 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text5:SetJustifyH("LEFT")
-    f.tooltip.text5:SetJustifyV("TOP")
-    f.tooltip.text5:SetPoint("TOPLEFT", f.tooltip, 5, -51)
-    f.tooltip.text5:SetText(L["Right click: set waypoint if available"])
-    
-    f.tooltip.text6 = f.tooltip:CreateFontString(nil, nil, "GameFontNormal")
-    f.tooltip.text6:SetJustifyH("LEFT")
-    f.tooltip.text6:SetJustifyV("TOP")
-    f.tooltip.text6:SetPoint("TOPLEFT", f.tooltip, 5, -63)
-    f.tooltip.text6:SetText(L["Alt-Right click: report pin location if available"])
-    
-    f:SetScript("OnEnter", function(icon) icon.tooltip:Show() end)
-    f:SetScript("OnLeave", function(icon) icon.tooltip:Hide() end)
-    
     parent.broadcast_icon = f
+end
+
+-- Initialize the close button in the rare entities frame.
+function RareTracker:InitializeInfoButton(parent)
+    local f = CreateFrame("Button", "RT.info_button", parent)
+    f:SetSize(10, 10)
+    f:SetPoint("TOPRIGHT", parent, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3))
+
+    f.texture = f:CreateTexture(nil, "OVERLAY")
+    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Info.tga")
+    f.texture:SetSize(10, 10)
+    f.texture:SetPoint("CENTER", f)
+    
+    f:SetScript("OnClick", function()
+        InterfaceOptionsFrame_Show()
+        InterfaceOptionsFrame_OpenToCategory(self.info_frame)
+    end)
+
+    parent.info_button = f
 end
 
 -- Initialize the close button in the rare entities frame.
@@ -529,7 +480,8 @@ function RareTracker:InitializeInterface()
     self.InitializeFavoriteIconFrame(f)
     self:InitializeAnnounceIconFrame(f)
     
-    -- Create a close button.
+    -- Create an info and close button.
+    self:InitializeInfoButton(f)
     self:InitializeCloseButton(f)
     
     -- Make the window moveable and ensure that the window stays where the user puts it.

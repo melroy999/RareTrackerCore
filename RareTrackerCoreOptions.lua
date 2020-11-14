@@ -235,9 +235,129 @@ function RareTracker:InitializeOptionsMenu()
     self.options_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTracker", "RareTracker")
     
     -- Create a pane with info/instructions on how to use the addon.
+    self.info_table = {
+        name = L["User Manual"],
+        handler = RareTracker,
+        type = 'group',
+        childGroups = "tree",
+        order = self:GetOrder(),
+        args = {
+            favorites = {
+                name = L["Favorites"],
+                type = 'group',
+                inline = true,
+                order = self:GetOrder(),
+                args = {
+                    favorite_description_1 = {
+                        name = L["A rare can be marked as favorite by [clicking] the leftmost square beside the rare's name. When a rare is marked as favorite, a sound alert is given when the rare is seen by yourself or other players."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    }
+                }
+            },
+            announcements = {
+                name = L["Announcements"],
+                type = 'group',
+                inline = true,
+                order = self:GetOrder(),
+                args = {
+                    announcement_description_1 = {
+                        name = L["Given that not everyone is using the addon, it can be useful to share information with other players through. To report the current status of a rare, you can do the following:"],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    spacer = {
+                        name = "",
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "small"
+                    },
+                    announcement_description_2 = {
+                        name = L[" - [Left click] the rightmost square to report to general chat."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    announcement_description_3 = {
+                        name = L[" - [Ctrl-left click] the rightmost square to report to the party/raid chat."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    announcement_description_4 = {
+                        name = L[" - [Alt-left click] the rightmost square to report to say."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                }
+            },
+            waypoints = {
+                name = L["Waypoints"],
+                type = 'group',
+                inline = true,
+                order = self:GetOrder(),
+                args = {
+                    waypoint_description_1 = {
+                        name = L["In patch 9.0.2, Blizzard has added locational pins that players can share with others."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    spacer = {
+                        name = "",
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "small"
+                    },
+                    waypoint_description_2 = {
+                        name = L[" - [Right click] the rightmost square to set a pin on your map."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    waypoint_description_3 = {
+                        name = L[" - [Alt-right click] the rightmost square to share a map pin through the general chat."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                }
+            },
+            chat = {
+                name = "Chat Commands",
+                type = 'group',
+                inline = true,
+                order = self:GetOrder(),
+                args = {
+                    chat_description_1 = {
+                        name = L[" - [/rt show] shows the RareTracker window."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    chat_description_2 = {
+                        name = L[" - [/rt hide] hides the RareTracker window."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                    chat_description_3 = {
+                        name = L[" - [/rt refresh] reset your data and replace it with the data of others."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
+                }
+            },
+        }
+    }
     
-    
-    
+    -- Register the info panel.
+    LibStub("AceConfig-3.0"):RegisterOptionsTable("RareTracker-User Manual", self.info_table)
+    self.info_frame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RareTracker-User Manual", "User Manual", "RareTracker")
     
     -- Create a profiles tab.
     -- self.profile_options = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db)
