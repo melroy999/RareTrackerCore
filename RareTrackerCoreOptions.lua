@@ -268,6 +268,20 @@ function RareTracker:InitializeOptionsMenu()
                     }
                 }
             },
+            filtering = {
+                name = L["Rare Filtering"],
+                type = 'group',
+                inline = true,
+                order = self:GetOrder(),
+                args = {
+                    filtering_description_1 = {
+                        name = L["Rares can be removed from the window by deselecting them in the associated module's option menu. Favorited rares cannot be hidden from the window."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    }
+                }
+            },
             announcements = {
                 name = L["Announcements"],
                 type = 'group',
