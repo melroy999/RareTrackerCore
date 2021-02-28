@@ -247,9 +247,6 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
                 self:Debug("[COMBAT_LOG_EVENT_UNFILTERED]", sourceGUID, destGUID)
             end
         end
-        
-        --A special check for duplicate NPC ids in different environments (Mecharantula).
-        npc_id = self:CheckForRedirectedRareIds(npc_id)
             
         if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if subevent == "UNIT_DIED" then
@@ -280,6 +277,9 @@ function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
         
             -- It might occur that the NPC id is nil. Do not proceed in such a case.
             if not npc_id then return end
+            
+            --A special check for duplicate NPC ids in different environments (Mecharantula).
+            npc_id = self:CheckForRedirectedRareIds(npc_id)
             
             if valid_unit_types[unittype] then
                 if not self.db.global.banned_NPC_ids[npc_id] then

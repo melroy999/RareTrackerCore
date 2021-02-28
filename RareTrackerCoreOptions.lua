@@ -350,6 +350,12 @@ function RareTracker:InitializeOptionsMenu()
                         order = self:GetOrder(),
                         fontSize = "medium"
                     },
+                    waypoint_description_4 = {
+                        name = L[" - [Shift-right click] the rightmost square to share a map pin through party/raid chat."],
+                        type = 'description',
+                        order = self:GetOrder(),
+                        fontSize = "medium"
+                    },
                 }
             },
             chat = {

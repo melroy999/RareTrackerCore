@@ -286,11 +286,18 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
             -- Put down a waypoint.
             local loc = self.current_coordinates[npc_id] or self.primary_id_to_data[self.zone_id].entities[npc_id].coordinates
             if loc then
-                local x, y = unpack(loc)
                 if IsLeftAltKeyDown() or IsRightAltKeyDown() then
-                    self:ReportRareCoordinatesInChat(npc_id, "CHANNEL", name, loc)
+                    self:ReportRareCoordinatesInChat(npc_id, "SAY", name, loc)
+                elseif IsLeftControlKeyDown() or IsRightControlKeyDown() then
+                    local target = "PARTY"
+                    if UnitInRaid("player") then
+                        target = "RAID"
+                    end
+                    self:ReportRareCoordinatesInChat(npc_id, target, name, loc)
                 else
+                    local x, y = unpack(loc)
                     C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(self.zone_id, x/100, y/100))
+                    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
                 end
             end
         end
