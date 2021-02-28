@@ -287,7 +287,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
             local loc = self.current_coordinates[npc_id] or self.primary_id_to_data[self.zone_id].entities[npc_id].coordinates
             if loc then
                 if IsLeftAltKeyDown() or IsRightAltKeyDown() then
-                    self:ReportRareCoordinatesInChat(npc_id, "SAY", name, loc)
+                    self:ReportRareCoordinatesInChat(npc_id, "CHANNEL", name, loc)
                 elseif IsLeftControlKeyDown() or IsRightControlKeyDown() then
                     local target = "PARTY"
                     if UnitInRaid("player") then
