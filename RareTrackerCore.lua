@@ -137,7 +137,7 @@ function RareTracker:PLAYER_LOGIN()
     self:InitializeRareTrackerLDB()
     
     -- Register the resired chat commands.
-    self:RegisterChatCommand("rt", "OnChatCommand")
+    self:RegisterChatCommand("rtc", "OnChatCommand")
     self:RegisterChatCommand("raretracker", "OnChatCommand")
     
     -- Initialize the interface.

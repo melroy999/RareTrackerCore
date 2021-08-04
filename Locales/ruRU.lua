@@ -4,19 +4,19 @@ if not L then return end
 
 -- Status messages.
 -- L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = ""
-L["<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RT> Ваша версия RareTracker устарела. Обновите до актуальной версии при ближайшей возмозможности."
-L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RT> Сброс текущих таймеров рарников и запрос актуальных данных."
-L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RT> Выберите НПЦ, что бы аддон смог определить ID сервера/слоя."
-L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RT> Процедура сброса все еще восстанавливается. Имейте в виду, сброс НЕ нужен для получения новых таймеров. Если все же, Вам необходимо сбросить данные, то перезагрузите интерфейс используя /reload и нажмите кнопку сброса повторно."
-L["<RT> Moving to shard "] = "<RT> Перемещаемся на сервер/слой "
+L["<RT> Your version of the RareTracker addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RTC> Ваша версия RareTracker устарела. Обновите до актуальной версии при ближайшей возмозможности."
+L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RTC> Сброс текущих таймеров рарников и запрос актуальных данных."
+L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RTC> Выберите НПЦ, что бы аддон смог определить ID сервера/слоя."
+L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RTC> Процедура сброса все еще восстанавливается. Имейте в виду, сброс НЕ нужен для получения новых таймеров. Если все же, Вам необходимо сбросить данные, то перезагрузите интерфейс используя /reload и нажмите кнопку сброса повторно."
+L["<RT> Moving to shard "] = "<RTC> Перемещаемся на сервер/слой "
 
 -- Chat messages.
-L["<RT> %s has died"] = "<RT> %s был убит"
-L["<RT> %s (%s%%)"] = "<RT> %s (%s%%)"
-L["<RT> %s (%s%%) seen at %s"] = "<RT> %s (%s%%), координаты %s"
-L["<RT> %s was last seen ~%s minutes ago"] = "<RT> %s, был убит ~%s мин. назад"
-L["<RT> %s seen alive, vignette at %s"] = "<RT> %s в последний раз был замечен %s"
-L["<RT> %s seen alive (combat log)"] = "<RT> %s был замечен (на основании данных лога)"
+L["<RT> %s has died"] = "<RTC> %s был убит"
+L["<RT> %s (%s%%)"] = "<RTC> %s (%s%%)"
+L["<RT> %s (%s%%) seen at %s"] = "<RTC> %s (%s%%), координаты %s"
+L["<RT> %s was last seen ~%s minutes ago"] = "<RTC> %s, был убит ~%s мин. назад"
+L["<RT> %s seen alive, vignette at %s"] = "<RTC> %s в последний раз был замечен %s"
+L["<RT> %s seen alive (combat log)"] = "<RTC> %s был замечен (на основании данных лога)"
 
 -- Rare frame instructions.
 L["Click on the squares to add rares to your favorites."] = "Кликните по квадратам, что бы добавить в список избранных."

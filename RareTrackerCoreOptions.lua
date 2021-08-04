@@ -105,7 +105,7 @@ end
 -- Initialize the options menu for the addon.
 function RareTracker:InitializeOptionsMenu()
     self.options_table = {
-        name = "RareTracker (RT)",
+        name = "RareTracker (RTC)",
         handler = RareTracker,
         type = 'group',
         childGroups = "tree",
@@ -365,19 +365,19 @@ function RareTracker:InitializeOptionsMenu()
                 order = self:GetOrder(),
                 args = {
                     chat_description_1 = {
-                        name = L[" - [/rt show] shows the RareTracker window."],
+                        name = L[" - [/rtc show] shows the RareTracker window."],
                         type = 'description',
                         order = self:GetOrder(),
                         fontSize = "medium"
                     },
                     chat_description_2 = {
-                        name = L[" - [/rt hide] hides the RareTracker window."],
+                        name = L[" - [/rtc hide] hides the RareTracker window."],
                         type = 'description',
                         order = self:GetOrder(),
                         fontSize = "medium"
                     },
                     chat_description_3 = {
-                        name = L[" - [/rt refresh] reset your data and replace it with the data of others."],
+                        name = L[" - [/rtc refresh] reset your data and replace it with the data of others."],
                         type = 'description',
                         order = self:GetOrder(),
                         fontSize = "medium"
