@@ -205,7 +205,7 @@ function RareTracker:InitializeOptionsMenu()
                                 end,
                                 set = function(_, val)
                                     self.db.global.favorite_alert.favorite_sound_alert = val
-                                    PlaySoundFile(val)
+                                    PlaySoundFile(val, self.db.global.favorite_alert.favorite_alert_sound_channel)
                                 end
                             },
                             favorite_alert_sound_channel = {
