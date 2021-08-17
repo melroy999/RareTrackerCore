@@ -58,6 +58,7 @@ local defaults = {
             enable = false,
         },
         favorite_alert = {
+            favorite_alert_sound_channel = "SFX",
             favorite_sound_alert = 552503,
         },
         window = {

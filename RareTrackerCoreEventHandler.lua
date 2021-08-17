@@ -397,7 +397,7 @@ function RareTracker:PlaySoundNotification(npc_id, spawn_uid)
         self.reported_spawn_uids[spawn_uid] = true
         
         if not completion_quest_id or not IsQuestFlaggedCompleted(completion_quest_id) then
-            PlaySoundFile(self.db.global.favorite_alert.favorite_sound_alert)
+            PlaySoundFile(self.db.global.favorite_alert.favorite_sound_alert, self.db.global.favorite_alert.favorite_alert_sound_channel)
         end
     end
 end

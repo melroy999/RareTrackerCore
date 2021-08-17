@@ -60,6 +60,15 @@ local sound_options = {
     [554236] = "I see you",
 }
 
+local sound_channel_options = {
+    ["SFX"] = "SFX",
+    ["Master"] = "Master",
+    ["Music"] = "Music",
+    ["Ambience"] = "Ambience",
+    ["Dialog"] = "Dialog",
+}
+
+
 -- Initialize the minimap button.
 function RareTracker:InitializeRareTrackerLDB()
     self.ldb_data = {
@@ -197,6 +206,20 @@ function RareTracker:InitializeOptionsMenu()
                                 set = function(_, val)
                                     self.db.global.favorite_alert.favorite_sound_alert = val
                                     PlaySoundFile(val)
+                                end
+                            },
+                            favorite_alert_sound_channel = {
+                                type = "select",
+                                name = L["Favorite sound alert channel"],
+                                style = "dropdown",
+                                values = sound_channel_options,
+                                order = self:GetOrder(),
+                                width = 1.2,
+                                get = function()
+                                    return self.db.global.favorite_alert.favorite_alert_sound_channel
+                                end,
+                                set = function(_, val)
+                                    self.db.global.favorite_alert.favorite_alert_sound_channel = val
                                 end
                             }
                         }
