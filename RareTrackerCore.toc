@@ -1,8 +1,8 @@
-## Interface: 90100
+## Interface: 90200
 ## Title: RareTrackerCore
 ## Notes: The core module of the RareTracker addons.
 ## Author: Melroy
-## Version: 2.2.11
+## Version: 2.2.13
 ## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 
