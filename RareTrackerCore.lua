@@ -63,7 +63,8 @@ local defaults = {
         },
         window = {
             hide = false,
-            scale = 1.0
+            scale = 1.0,
+            hide_killed_entities = false,
         },
         previous_records = {},
         favorite_rares = {},

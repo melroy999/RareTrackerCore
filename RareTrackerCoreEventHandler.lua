@@ -424,7 +424,14 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         -- We need to delay the update daily kill mark check, since the servers don't update it instantly.
         local primary_id = self.zone_id
         if primary_id then
-            self:DelayedExecution(3, function() self:UpdateDailyKillMark(npc_id, primary_id) end)
+            self:DelayedExecution(3, 
+                function() 
+                    self:UpdateDailyKillMark(npc_id, primary_id)
+                    if self.db.global.window.hide_killed_entities then
+                        self:UpdateEntityVisibility()
+                    end
+                end
+            )
         end
         
         -- Send the death message.

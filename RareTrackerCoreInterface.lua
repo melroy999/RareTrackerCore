@@ -120,7 +120,48 @@ function RareTracker:UpdateAllDailyKillMarks()
         for npc_id, _ in pairs(self.primary_id_to_data[primary_id].entities) do
             self:UpdateDailyKillMark(npc_id, primary_id)
         end
+
+        -- Update the visibility of entities.
+        self:UpdateEntityVisibility()
     end
+end
+
+-- Update the visibility of rares in the entity frame based on the used settings.
+function RareTracker:UpdateEntityVisibility()
+    local f = self.gui.entities_frame
+    
+    -- Do not continue if the required information is unavailable.
+    local primary_id = self.zone_id
+    if not primary_id or not self.primary_id_to_data[primary_id] then return end
+    
+    -- Show and hide entities based on the used settings.
+    local n = 0
+    for _, npc_id in pairs(self.primary_id_to_data[primary_id].ordering) do
+        -- Note: ignored rares are already removed from the list by the update display list function.
+        if target_npc_ids[npc_id] then
+            if self.db.global.window.hide_killed_entities then
+                -- Find the quest id and hide the entry if already killed today.
+                local quest_id = self.primary_id_to_data[primary_id].entities[npc_id].quest_id
+                if quest_id and IsQuestFlaggedCompleted(quest_id) then
+                    -- Hide the entity, since it has been killed already.
+                    f.entities[npc_id]:Hide()
+                else
+                    -- Display the entity.
+                    f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
+                    f.entities[npc_id]:Show()
+                    n = n + 1
+                end
+            else
+                -- Display the entity.
+                f.entities[npc_id]:SetPoint("TOPLEFT", f, 0, -n * 12 - 5)
+                f.entities[npc_id]:Show()
+                n = n + 1
+            end
+        end
+    end
+  
+    -- Resize the appropriate frames.
+    self:UpdateEntityFrameDimensions(n, f)
 end
 
 -- Update the data that is displayed to apply to the current zone and other parameters.
