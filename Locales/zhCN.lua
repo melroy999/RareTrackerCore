@@ -6,7 +6,7 @@ if not L then return end
 L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."] = "<RTC> 稀有窗口不能被显示，因为当前区域未被任何区域模块覆盖。"
 L["<RT> Your version of the %s addon is outdated. Please update to the most recent version at the earliest convenience."] = "<RTC> 版本 RareTracker 插件已过期。请尽快将其更新为最新版本。"
 L["<RT> Resetting current rare timers and requesting up-to-date data."] = "<RTC> 重置当前稀有的计时器并请求最新数据。"
-L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RTC> 重置之前请选中一个非玩家目标，这样插件可用确定当前的共享 ID。"
+L["<RT> Please target a non-player entity prior to resetting, such that the addon can determine the current shard id."] = "<RTC> 重置之前请选中一个非玩家目标，这样插件可用确定当前的分片 ID。"
 L["<RT> The reset button is on cooldown. Please note that a reset is not needed to receive new timers. If it is your intention to reset the data, please do a /reload and click the reset button again."] = "<RTC> 重置按钮处于冷却状态。请注意，如果您打算重置数据，接收新的计时器不需要重置，请使用 /reload 然后再次点击重置按钮。"
 L["<RT> Moving to shard "] = "<RTC> 移动到分片 "
 
@@ -53,5 +53,5 @@ L["Shared Options"] = "共用选项"
 L["General"] = "通用"
 
 -- Rare frame strings.
-L["Shard ID: %s"] = "共享 ID: %s"
+L["Shard ID: %s"] = "分片 ID: %s"
 L["Unknown"] = "未知"
