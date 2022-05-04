@@ -541,10 +541,10 @@ function RareTracker:AddDailyResetHandler()
                 _f.target_time = _f.target_time + 3600
                 
                 if self.gui.entities_frame ~= nil then
-                    self:UpdateAllDailyKillMarks()
-                    self:Debug("Updating daily kill marks.")
                     self:UpdateDisplayList()
                     self:Debug("Updating display list.")
+                    self:UpdateAllDailyKillMarks()
+                    self:Debug("Updating daily kill marks.")
                 end
             end
         end
