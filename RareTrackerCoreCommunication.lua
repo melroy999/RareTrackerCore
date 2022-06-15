@@ -39,11 +39,12 @@ local arrival_register_time = nil
 local channel_name = nil
 
 -- The communication channel version.
-local version = 10
+local version = 11
 -- Version 1: Initial version
 -- Version 2: Change in format of rare tables, which now include the guid of the kill.
 -- Version 3: Change in format of certain messages. Deleted and added several other messages.
 -- Version 10: Version changed to notify old users that an update is required. 
+-- Version 11: Changed the format of the death message to include an event type.
 
 -- Track for each rare whether you received the data from others, such that we can overwrite your faulty data.
 RareTracker.is_npc_data_from_other = {}
@@ -87,9 +88,9 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
         elseif prefix == "PW" then
             self:AcknowledgeRecordedData(payload)
         elseif prefix == "ED" then
-            local npc_id, spawn_uid = strsplit("-", payload)
+            local npc_id, spawn_uid, event_id = strsplit("-", payload)
             npc_id = tonumber(npc_id)
-            self:AcknowledgeEntityDeath(npc_id, spawn_uid)
+            self:AcknowledgeEntityDeath(npc_id, spawn_uid, event_id)
         elseif prefix == "EA" then
             local npc_id, spawn_uid = strsplit("-", payload)
             npc_id = tonumber(npc_id)
@@ -109,9 +110,9 @@ function RareTracker:OnCommReceived(_, message, distribution, player)
             elseif prefix == "PP" then
                 self:AcknowledgeRecordedData(payload)
             elseif prefix == "EDP" then
-                local npc_id, spawn_uid = strsplit("-", payload)
+                local npc_id, spawn_uid, event_id = strsplit("-", payload)
                 npc_id = tonumber(npc_id)
-                self:AcknowledgeEntityDeath(npc_id, spawn_uid)
+                self:AcknowledgeEntityDeath(npc_id, spawn_uid, event_id)
             elseif prefix == "EAP" then
                 local npc_id, spawn_uid = strsplit("-", payload)
                 npc_id = tonumber(npc_id)
@@ -337,8 +338,8 @@ end
 -- ####################################################################
 
 -- Inform the others that a specific entity has died.
-function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid)
-    local message = npc_id.."-"..spawn_uid
+function RareTracker:AnnounceEntityDeath(npc_id, spawn_uid, event_id)
+    local message = npc_id.."-"..spawn_uid.."-"..event_id
     self:SendAddonMessage("ED", message, "CHANNEL", select(1, GetChannelName(channel_name)))
     if self.db.global.communication.raid_communication and (UnitInRaid("player") or UnitInParty("player")) then
         self:SendAddonMessage("EDP", message, "RAID", nil)
@@ -404,8 +405,9 @@ end
 -- ####################################################################
 
  -- Acknowledge that the entity has died and set the according flags.
-function RareTracker:AcknowledgeEntityDeath(npc_id, spawn_uid)
-    self:ProcessEntityDeath(npc_id, spawn_uid, false)
+function RareTracker:AcknowledgeEntityDeath(npc_id, spawn_uid, event_id)
+    -- TODO: pass the correct message name.
+    self:ProcessEntityDeath(npc_id, spawn_uid, event_id, false)
 end
 
 -- Acknowledge that the entity is alive and set the according flags.

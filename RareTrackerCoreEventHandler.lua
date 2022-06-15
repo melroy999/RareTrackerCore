@@ -164,22 +164,22 @@ end
 
 -- This event is fired whenever the player's target is changed, including when the target is lost.
 function RareTracker:PLAYER_TARGET_CHANGED()
-    self:OnHealthDetection("target", "[PLAYER_TARGET_CHANGED]")
+    self:OnHealthDetection("target", "PLAYER_TARGET_CHANGED")
 end
 
 -- Fired when the mouseover object needs to be updated. 
 function RareTracker:UPDATE_MOUSEOVER_UNIT()
-    self:OnHealthDetection("mouseover", "[UPDATE_MOUSEOVER_UNIT]")
+    self:OnHealthDetection("mouseover", "UPDATE_MOUSEOVER_UNIT")
 end
 
 -- Fired whenever a unit's health is affected.
 function RareTracker:UNIT_HEALTH(_, unit)
     if unit == "target" or unit:find("nameplate") then
-        self:OnHealthDetection(unit, "[UNIT_HEALTH]")
+        self:OnHealthDetection(unit, "UNIT_HEALTH")
     end
 end
 
-function RareTracker:OnHealthDetection(unit, debug_tag)
+function RareTracker:OnHealthDetection(unit, event_id)
     -- Get information about the target.
     local guid = UnitGUID(unit)
     
@@ -194,7 +194,7 @@ function RareTracker:OnHealthDetection(unit, debug_tag)
         -- Certain entities retain their zone_uid even after moving shards. Ignore them.
         if not self.db.global.banned_NPC_ids[npc_id] then
             if self:CheckForShardChange(zone_uid) then
-                self:Debug(debug_tag, unit, guid)
+                self:Debug(event_id, unit, guid)
             end
         end
         
@@ -213,7 +213,7 @@ function RareTracker:OnHealthDetection(unit, debug_tag)
                 self:ProcessEntityHealth(npc_id, spawn_uid, percentage, nil, nil, true)
             else
                 -- Mark the entity has dead and report to your peers.
-                self:ProcessEntityDeath(npc_id, spawn_uid, true)
+                self:ProcessEntityDeath(npc_id, spawn_uid, event_id, true)
             end
         end
     end
@@ -251,7 +251,7 @@ function RareTracker:COMBAT_LOG_EVENT_UNFILTERED()
         if valid_unit_types[unittype] and self.primary_id_to_data[self.zone_id].entities[npc_id] and bit.band(destFlags, companion_type_mask) == 0 then
             if subevent == "UNIT_DIED" then
                 -- Mark the entity has dead and report to your peers.
-                self:ProcessEntityDeath(npc_id, spawn_uid, true)
+                self:ProcessEntityDeath(npc_id, spawn_uid, "COMBAT_LOG_EVENT_UNFILTERED", true)
             elseif subevent ~= "PARTY_KILL" then
                 -- Report the entity as alive to your peers, if it is not marked as alive already.
                 if not self.is_alive[npc_id] then
@@ -406,11 +406,36 @@ end
 -- ##                Process Rare Event Helper Functions             ##
 -- ####################################################################
 
+function RareTracker:GetLastRecordedDeath(spawn_uid, event_id)
+    if event_id == "PLAYER_TARGET_CHANGED" or event_id == "UPDATE_MOUSEOVER_UNIT" then
+        -- For Creature and Vehicle GUIDs the spawnUID component encodes a wrapping spawn time offset of the entity in the 
+        -- low 23 bits of the field, measured in seconds since the UNIX epoch as returned by GetServerTime() modulo 2^23.
+        local spawn_epoch = GetServerTime() - (GetServerTime() % 2^23)
+        local spawn_epoch_offset = bit.band(tonumber(string.sub(spawn_uid, 5), 16), 0x7fffff)
+        local spawn_time = spawn_epoch + spawn_epoch_offset
+        
+        if spawn_time > GetServerTime() then
+            -- This only occurs if the epoch has rolled over since a unit has spawned.
+            spawn_time = spawn_time - ((2^23) - 1)
+        end
+        
+        -- Only consider the spawn time if it is less than 15 minutes ago.
+        if GetServerTime() - spawn_time < 900 then
+            return spawn_time
+        else
+            return GetServerTime()
+        end
+    else
+        return GetServerTime()
+    end
+end
+
 -- Process that an entity has died.
-function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
+function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, event_id, make_announcement)
     if not self.recorded_entity_death_ids[spawn_uid..npc_id] then
         -- Mark the entity as dead.
-        self.last_recorded_death[npc_id] = {GetServerTime(), spawn_uid}
+        local last_recorded_death_time = self:GetLastRecordedDeath(spawn_uid, event_id)
+        self.last_recorded_death[npc_id] = {last_recorded_death_time, spawn_uid}
         self.is_alive[npc_id] = nil
         self.current_health[npc_id] = nil
         self.current_coordinates[npc_id] = nil
@@ -436,7 +461,7 @@ function RareTracker:ProcessEntityDeath(npc_id, spawn_uid, make_announcement)
         
         -- Send the death message.
         if make_announcement then
-            self:AnnounceEntityDeath(npc_id, spawn_uid)
+            self:AnnounceEntityDeath(npc_id, spawn_uid, event_id)
         end
     end
 end
