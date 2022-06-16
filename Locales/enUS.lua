@@ -51,6 +51,8 @@ L["Active Rares"] = "Active Rares"
 L["Show minimap icon"] = "Show minimap icon"
 L["Shared Options"] = "Shared Options"
 L["General"] = "General"
+L["Display and report the death timers with seconds included"] = "Display and report the death timers with seconds included"
+L["Display and report the death timers in the format \"mm:ss\", instead of just minutes."] = "Display and report the death timers in the format \"mm:ss\", instead of just minutes."
 
 -- Rare frame strings.
 L["Shard ID: %s"] = "Shard ID: %s"

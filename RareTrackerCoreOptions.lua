@@ -190,6 +190,19 @@ function RareTracker:InitializeOptionsMenu()
                                     print("<RTC> Please /reload such that the rare names can be updated to the desired language.")
                                 end
                             },
+                            show_time_in_seconds = {
+                                type = "toggle",
+                                name = L["Display and report the death timers with seconds included"],
+                                desc = L["Display and report the death timers in the format \"mm:ss\", instead of just minutes."],
+                                width = "full",
+                                order = self:GetOrder(),
+                                get = function()
+                                    return self.db.global.window.show_time_in_seconds
+                                end,
+                                set = function(_, val)
+                                    self.db.global.window.show_time_in_seconds = val
+                                end
+                            },
                             debug = {
                                 type = "toggle",
                                 name = L["Enable debug mode"],

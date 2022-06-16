@@ -87,7 +87,14 @@ function RareTracker:UpdateStatus(npc_id)
         f.announce.texture:SetColorTexture(0, 1, 0, 1)
     elseif self.last_recorded_death[npc_id] then
         local last_death, _ = unpack(self.last_recorded_death[npc_id])
-        f.status:SetText(math.floor((GetServerTime() - last_death) / 60).."m")
+        local current_time = GetServerTime()
+        local minutes = math.floor((current_time - last_death) / 60)
+        if self.db.global.window.show_time_in_seconds then
+            local seconds = (current_time - last_death) % 60
+            f.status:SetText(minutes..":"..string.format("%02d", seconds))
+        else
+            f.status:SetText(minutes.."m")
+        end
         f.status:SetFontObject("GameFontNormal")
         f.announce.texture:SetColorTexture(0, 0, 1, foreground_opacity)
     else

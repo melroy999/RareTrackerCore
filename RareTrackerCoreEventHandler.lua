@@ -419,8 +419,8 @@ function RareTracker:GetLastRecordedDeath(spawn_uid, event_id)
             spawn_time = spawn_time - ((2^23) - 1)
         end
         
-        -- Only consider the spawn time if it is less than 15 minutes ago.
-        if GetServerTime() - spawn_time < 900 then
+        -- Only consider the spawn time if it is less than 20 minutes ago.
+        if GetServerTime() - spawn_time < 1200 then
             return spawn_time
         else
             return GetServerTime()

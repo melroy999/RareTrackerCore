@@ -66,6 +66,7 @@ local defaults = {
             scale = 1.0,
             hide_killed_entities = false,
             force_display_in_english = false,
+            show_time_in_seconds = false,
         },
         previous_records = {},
         favorite_rares = {},
