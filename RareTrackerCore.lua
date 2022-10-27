@@ -1,7 +1,5 @@
 -- Redefine often used functions locally.
 local GetServerTime = GetServerTime
-local InterfaceOptionsFrame_Show = InterfaceOptionsFrame_Show
-local InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
 local tinsert = tinsert
 local UnitHealthMax = UnitHealthMax
 local UnitHealth = UnitHealth
@@ -288,8 +286,7 @@ RareTracker.last_data_refresh = 0
 function RareTracker:OnChatCommand(input)
     input = input:trim()
     if not input or input == "" then
-        InterfaceOptionsFrame_Show()
-        InterfaceOptionsFrame_OpenToCategory(self.options_frame)
+        Settings.OpenToCategory("RareTracker")
     else
         local _, _, cmd, _ = string.find(input, "%s?(%w+)%s?(.*)")
         local zone_id = C_Map.GetBestMapForUnit("player")

@@ -482,8 +482,7 @@ function RareTracker:InitializeInfoButton(parent)
     f.texture:SetPoint("CENTER", f)
     
     f:SetScript("OnClick", function()
-        InterfaceOptionsFrame_Show()
-        InterfaceOptionsFrame_OpenToCategory(self.info_frame)
+        Settings.OpenToCategory("RareTracker")
     end)
 
     parent.info_button = f

@@ -75,7 +75,7 @@ local next = next
 local strlen = string.len
 local GetFramerate = GetFramerate
 local strlower = string.lower
-local unpack,type,pairs,wipe = unpack,type,pairs,wipe
+local unpack,type,pairs,wipe = unpack,type,pairs,table.wipe
 local UnitInRaid,UnitInParty = UnitInRaid,UnitInParty
 
 
@@ -306,7 +306,7 @@ function ChatThrottleLib:Despool(Prio)
 		end
 		local didSend=false
 		local lowerDest = strlower(msg[3] or "")
-		if lowerDest == "raid" and not UnitInRaid("player") then -- Addon messages to raid get directed to party.
+		if lowerDest == "raid" and not UnitInRaid("player") then
 			-- do nothing
 		elseif lowerDest == "party" and not UnitInParty("player") then
 			-- do nothing
@@ -426,7 +426,7 @@ function ChatThrottleLib:SendChatMessage(prio, prefix,   text, chattype, languag
 	end
 
 	nSize = nSize + self.MSG_OVERHEAD
-    
+
 	-- Check if there's room in the global available bandwidth gauge to send directly
 	if not self.bQueueing and nSize < self:UpdateAvail() then
 		self.avail = self.avail - nSize
@@ -512,6 +512,9 @@ function ChatThrottleLib:SendAddonMessage(prio, prefix, text, chattype, target, 
 
 	self:Enqueue(prio, queueName or (prefix..chattype..(target or "")), msg)
 end
+
+
+
 
 -----------------------------------------------------------------------
 -- Get the ball rolling!

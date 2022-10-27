@@ -1,6 +1,4 @@
 -- Redefine often used functions locally.
-local InterfaceOptionsFrame_Show = InterfaceOptionsFrame_Show
-local InterfaceOptionsFrame_OpenToCategory = InterfaceOptionsFrame_OpenToCategory
 local PlaySoundFile = PlaySoundFile
 local pairs = pairs
 local tinsert = tinsert
@@ -90,8 +88,7 @@ function RareTracker:InitializeRareTrackerLDB()
                     print(L["<RT> The rare window cannot be shown, since the current zone is not covered by any of the zone modules."])
                 end
             else
-                InterfaceOptionsFrame_Show()
-                InterfaceOptionsFrame_OpenToCategory(self.options_frame)
+                Settings.OpenToCategory("RareTracker")
             end
         end,
         OnTooltipShow = function(tooltip)
