@@ -406,7 +406,6 @@ end
 
  -- Acknowledge that the entity has died and set the according flags.
 function RareTracker:AcknowledgeEntityDeath(npc_id, spawn_uid, event_id)
-    -- TODO: pass the correct message name.
     self:ProcessEntityDeath(npc_id, spawn_uid, event_id, false)
 end
 

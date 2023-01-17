@@ -66,6 +66,7 @@ local defaults = {
             force_display_in_english = false,
             show_time_in_seconds = false,
         },
+        current_category = {},
         previous_records = {},
         favorite_rares = {},
         ignored_rares = {},
@@ -166,6 +167,9 @@ end
 function RareTracker:AddRaresForModule(rare_data)
     local primary_id = rare_data.target_zones[1]
     
+    -- TODO: Add categories to track to reduce the size of the rare tracker window.
+    self:FinalizeCategories(primary_id, rare_data)
+    
     -- Only define the data for the zone once by making a pointer to the primary id.
     for _, value in pairs(rare_data.target_zones) do
         self.zone_id_to_primary_id[value] = primary_id
@@ -205,6 +209,44 @@ function RareTracker:AddRaresForModule(rare_data)
             return rare_data.entities[a].name < rare_data.entities[b].name
         end)
         self.primary_id_to_data[primary_id].ordering = ordering
+    end
+end
+
+-- Add a default category that contains all of the remaining rares and assign each category an incremental number.
+function RareTracker:FinalizeCategories(primary_id, rare_data)
+    local categories = {}
+    local id_to_category = {}
+    
+    -- Construct the default category, which initially contains all rares.
+    local current_category_id = 0
+    categories[current_category_id] = {}
+    id_to_category[current_category_id] = rare_data.zone_name
+    for npc_id, _ in pairs(rare_data.entities) do
+        categories[current_category_id][npc_id] = true
+    end
+    current_category_id = current_category_id + 1
+    
+    -- Remove all categorized rares from the default category.
+    if rare_data.special_categories then
+        for category_id, target_entities in pairs(rare_data.special_categories) do
+            categories[current_category_id] = {}
+            id_to_category[current_category_id] = category_id
+            for _, npc_id in pairs(target_entities) do 
+                categories[current_category_id][npc_id] = true
+                categories[0][npc_id] = nil
+            end
+            current_category_id = current_category_id + 1
+        end
+    end
+    
+    -- Add the categories to the rare data.
+    rare_data.categories = categories
+    rare_data.id_to_category = id_to_category
+    rare_data.special_categories = nil
+    
+    -- Ensure that one of the categories is seen as the current selection.
+    if not self.db.global.current_category[primary_id] then
+        self.db.global.current_category[primary_id] = 0
     end
 end
 
@@ -265,7 +307,7 @@ function RareTracker:OnInitialize()
             self.db.global.previous_records[shard_id] = nil
         end
     end
-    
+
     -- Wait for the player login event before initializing the rest of the data.
     self:RegisterEvent("PLAYER_LOGIN")
 end

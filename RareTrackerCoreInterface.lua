@@ -191,6 +191,15 @@ function RareTracker:UpdateDisplayList()
                 target_npc_ids[npc_id] = true
             end
         end
+        
+        -- Filter out all rares that are not part of the currently selected category.
+        local current_category_id = self.db.global.current_category[primary_id]
+        local category_entities = self.primary_id_to_data[primary_id].categories[current_category_id]
+        for npc_id, _ in pairs(target_npc_ids) do
+            if not category_entities[npc_id] then
+                target_npc_ids[npc_id] = nil
+            end
+        end
 
         -- Filter out all ignored entities and count the number of entries we will have in total.
         -- Give all of the table entries their new positions and show them when appropriate.
@@ -209,6 +218,7 @@ function RareTracker:UpdateDisplayList()
         
         -- Resize the appropriate frames.
         self:UpdateEntityFrameDimensions(n, f)
+        self:UpdateCategorySelectionDimensions(primary_id, self.primary_id_to_data[primary_id].id_to_category)
     end
 end
 
@@ -225,6 +235,36 @@ function RareTracker:UpdateEntityFrameDimensions(n, f)
     )
     f.entity_name_backdrop:SetSize(entity_name_width, f:GetHeight())
     f.entity_status_backdrop:SetSize(entity_status_width, f:GetHeight())
+end
+
+-- Resize the category selection portion of the tracking window.
+function RareTracker:UpdateCategorySelectionDimensions(primary_id, id_to_category)
+    -- Hide all category buttons.
+    local parent = self.gui.category_selection_frame
+    for _, f in pairs(parent.category_button_dictionary) do
+        f:Hide()
+    end
+    
+    -- Activate the appropriate category selection buttons and assign them the correct position.
+    -- Hide the frame if only a single category exists.
+    local n = 0
+    for c_id, c_name in pairs(id_to_category) do
+        local f = parent.category_button_dictionary[primary_id..":"..c_name]
+        f:Show()
+        f:SetPoint("TOPLEFT", parent, frame_padding, -frame_padding - n * shard_id_frame_height)
+        n = n + 1
+    end
+    
+    if n > 1 then
+        local width = entity_name_width + entity_status_width + 2 * favorite_rares_width + 5 * frame_padding
+        local height = n * shard_id_frame_height + frame_padding
+        parent:SetSize(width, height)
+        parent:SetPoint("TOPLEFT", self.gui, 0, height)
+        parent:Show()
+    else
+        parent:Hide()
+    end
+    
 end
 
 -- Ensure that all the favorite marks of the entities are set correctly.
@@ -507,6 +547,86 @@ function RareTracker:InitializeCloseButton(parent)
     parent.close_button = f
 end
 
+-- Initialize category buttons for the given zone.
+function RareTracker:InitializeCategoryButtonsForZone(primary_id, rare_data, parent)
+    for category_id, category_name in pairs(rare_data.id_to_category) do
+        local f = CreateFrame("Button", "RT.category_button."..primary_id..":"..category_name, parent)
+        
+        local width = entity_name_width + entity_status_width + 3 * frame_padding + 2 * favorite_rares_width
+        local height = shard_id_frame_height
+        f:SetSize(width, height)
+        f:SetPoint("TOPLEFT", parent, frame_padding, -frame_padding)
+      
+        f.texture = f:CreateTexture(nil, "BACKGROUND")
+        f.texture:SetColorTexture(0, 0, 0, foreground_opacity)
+        f.texture:SetAllPoints(f)
+        
+        f.category_text = f:CreateFontString(nil, nil, "GameFontNormal")
+        f.category_text:SetPoint("TOPLEFT", 10, -3)
+        f.category_text:SetText(L[category_name])
+        
+        if category_id ~= self.db.global.current_category[primary_id] then
+            f.category_text:SetFontObject("GameFontDisable")
+        end
+        
+        -- Have the category change on button click, including changes to the ui.
+        f:SetScript("OnClick", function(_, button)
+            -- Update the current category.
+            self.db.global.current_category[primary_id] = category_id
+            self:UpdateDisplayList()
+            self:UpdateEntityVisibility()
+            
+            -- Assign the correct colors.
+            for c_id, c_name in pairs(rare_data.id_to_category) do
+                local category_button_frame = parent.category_button_dictionary[primary_id..":"..c_name]
+                if c_id ~= self.db.global.current_category[primary_id] then
+                    category_button_frame.category_text:SetFontObject("GameFontDisable")
+                else
+                    category_button_frame.category_text:SetFontObject("GameFontNormal")
+                end
+            end
+        end)
+        self:ApplyHighlightOnMouseOver(f)
+        
+        -- Buttons are not visible by default.
+        f:Hide()
+        
+        parent.category_button_dictionary[primary_id..":"..category_name] = f
+    end
+end
+
+-- Make things more intuitive by highlighting the button on mouseover.
+function RareTracker:ApplyHighlightOnMouseOver(f)
+    f:SetScript("OnEnter", function(button) 
+        button.texture:SetColorTexture(1, 0.75, 0.2, foreground_opacity) 
+    end)
+    f:SetScript("OnLeave", function(button) 
+        button.texture:SetColorTexture(0, 0, 0, foreground_opacity) 
+    end)
+end
+
+-- Initialize the selection bar for the available categories.
+function RareTracker:InitializeCategorySelectionBar(parent)
+    local f = CreateFrame("Frame", "RT.category_selection_frame", parent)
+    
+    local width = entity_name_width + entity_status_width + 2 * favorite_rares_width + 5 * frame_padding
+    local height = shard_id_frame_height + frame_padding
+    f:SetSize(width, height)
+    f:SetPoint("TOPLEFT", parent, 0, height)
+  
+    f.texture = f:CreateTexture(nil, "BACKGROUND")
+    f.texture:SetColorTexture(0, 0, 0, background_opacity)
+    f.texture:SetAllPoints(f)
+    
+    parent.category_selection_frame = f
+    
+    -- Keep a reference to the frames of category buttons.
+    f.category_button_dictionary = {}
+    for primary_id, rare_data in pairs(self.primary_id_to_data) do
+        self:InitializeCategoryButtonsForZone(primary_id, rare_data, f)
+    end
+end
+
 -- Initialize the addon's entity frame.
 function RareTracker:InitializeInterface()
     local f = self.gui
@@ -529,6 +649,9 @@ function RareTracker:InitializeInterface()
     -- Create a sub-frame for the entity names.
     self.InitializeShardNumberFrame(f)
     self:InitializeRareTableFrame(f)
+    
+    -- Create a sub-frame for selecting the desired categories.
+    self:InitializeCategorySelectionBar(f)
     
     -- Add icons for the favorite and broadcast columns.
     self.InitializeFavoriteIconFrame(f)
