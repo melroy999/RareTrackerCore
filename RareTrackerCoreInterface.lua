@@ -73,6 +73,41 @@ function RareTracker:UpdateShardNumber()
     end
 end
 
+-- Set the appropriate highlight on the button based solely on mouseover characteristics and the desired opacity.
+function RareTracker.SetSimpleHighlight(f, opacity)
+    if f.is_mouseover then
+        f.texture:SetColorTexture(1, 0.75, 0.2, opacity) 
+    else
+        f.texture:SetColorTexture(0, 0, 0, opacity)
+    end
+end
+
+-- Set the appropriate highlight on the favorite button for the given rare.
+function RareTracker:SetFavoriteHighlight(f, npc_id)
+    if self.db.global.favorite_rares[npc_id] then
+        f.texture:SetColorTexture(0, 1, 0, 1)
+    elseif f.is_mouseover then
+        f.texture:SetColorTexture(1, 0.75, 0.2, foreground_opacity) 
+    else
+        f.texture:SetColorTexture(0, 0, 0, foreground_opacity)
+    end
+end
+
+-- Set the appropriate highlight on the announce button for the given rare.
+function RareTracker:SetAnnounceHighlight(f, npc_id)
+    if self.current_health[npc_id] then
+        f.texture:SetColorTexture(0, 1, 0, 1)
+    elseif self.is_alive[npc_id] then
+        f.texture:SetColorTexture(0, 1, 0, 1)
+    elseif self.last_recorded_death[npc_id] then
+        f.texture:SetColorTexture(0, 0, 1, foreground_opacity)
+    elseif f.is_mouseover then
+        f.texture:SetColorTexture(1, 0.75, 0.2, foreground_opacity) 
+    else
+        f.texture:SetColorTexture(0, 0, 0, foreground_opacity)
+    end
+end
+
 -- Update the status for the given entity.
 function RareTracker:UpdateStatus(npc_id)
     local f = self.gui.entities_frame.entities[npc_id]
@@ -80,11 +115,9 @@ function RareTracker:UpdateStatus(npc_id)
     if self.current_health[npc_id] then
         f.status:SetText(self.current_health[npc_id].."%")
         f.status:SetFontObject("GameFontGreen")
-        f.announce.texture:SetColorTexture(0, 1, 0, 1)
     elseif self.is_alive[npc_id] then
         f.status:SetText("N/A")
         f.status:SetFontObject("GameFontGreen")
-        f.announce.texture:SetColorTexture(0, 1, 0, 1)
     elseif self.last_recorded_death[npc_id] then
         local last_death, _ = unpack(self.last_recorded_death[npc_id])
         local current_time = GetServerTime()
@@ -96,12 +129,11 @@ function RareTracker:UpdateStatus(npc_id)
             f.status:SetText(minutes.."m")
         end
         f.status:SetFontObject("GameFontNormal")
-        f.announce.texture:SetColorTexture(0, 0, 1, foreground_opacity)
     else
         f.status:SetText("--")
         f.status:SetFontObject("GameFontNormal")
-        f.announce.texture:SetColorTexture(0, 0, 0, foreground_opacity)
     end
+    self:SetAnnounceHighlight(f.announce, npc_id)
 end
 
 -- Update the daily kill mark of the given entity.
@@ -324,15 +356,24 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     f.favorite.texture:SetAllPoints(f.favorite)
     
      -- Add an action listener.
-    f.favorite:SetScript("OnClick", function()
+    f.favorite:SetScript("OnClick", function(button)
         if self.db.global.favorite_rares[npc_id] then
             self.db.global.favorite_rares[npc_id] = nil
-            f.favorite.texture:SetColorTexture(0, 0, 0, foreground_opacity)
         else
             self.db.global.favorite_rares[npc_id] = true
-            f.favorite.texture:SetColorTexture(0, 1, 0, 1)
         end
+        self:SetFavoriteHighlight(button, npc_id, true)
         self.NotifyOptionsChange()
+    end)
+  
+    -- Make things more intuitive by highlighting the button on mouseover.
+    f.favorite:SetScript("OnEnter", function(button)
+        button.is_mouseover = true
+        self:SetFavoriteHighlight(button, npc_id)
+    end)
+    f.favorite:SetScript("OnLeave", function(button)
+        button.is_mouseover = false
+        self:SetFavoriteHighlight(button, npc_id)
     end)
 
     -- Add a button that announces the rare/adds a waypoint when applicable.
@@ -389,6 +430,16 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
                 end
             end
         end
+    end)
+  
+    -- Make things more intuitive by highlighting the button on mouseover.
+    f.announce:SetScript("OnEnter", function(button)
+        button.is_mouseover = true
+        self:SetAnnounceHighlight(button, npc_id)
+    end)
+    f.announce:SetScript("OnLeave", function(button)
+        button.is_mouseover = false
+        self:SetAnnounceHighlight(button, npc_id)
     end)
 
     -- Add the entities name.
@@ -517,12 +568,26 @@ function RareTracker:InitializeInfoButton(parent)
     f:SetPoint("TOPRIGHT", parent, -3 * frame_padding - favorite_rares_width, -(frame_padding + 3))
 
     f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Info.tga")
-    f.texture:SetSize(10, 10)
-    f.texture:SetPoint("CENTER", f)
+    f.texture:SetColorTexture(0, 0, 0, 0)
+    f.texture:SetAllPoints(f)
+    
+    f.texture_overlay = f:CreateTexture(nil, "OVERLAY")
+    f.texture_overlay:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Info.tga")
+    f.texture_overlay:SetSize(10, 10)
+    f.texture_overlay:SetPoint("CENTER", f)
     
     f:SetScript("OnClick", function()
         Settings.OpenToCategory("RareTracker")
+    end)
+  
+    -- Make things more intuitive by highlighting the button on mouseover.
+    f:SetScript("OnEnter", function(button)
+        button.is_mouseover = true
+        self.SetSimpleHighlight(button, 0.7)
+    end)
+    f:SetScript("OnLeave", function(button) 
+        button.is_mouseover = false
+        self.SetSimpleHighlight(button, 0)
     end)
 
     parent.info_button = f
@@ -535,13 +600,27 @@ function RareTracker:InitializeCloseButton(parent)
     f:SetPoint("TOPRIGHT", parent, -2 * frame_padding, -(frame_padding + 3))
 
     f.texture = f:CreateTexture(nil, "OVERLAY")
-    f.texture:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Cross.tga")
-    f.texture:SetSize(10, 10)
-    f.texture:SetPoint("CENTER", f)
+    f.texture:SetColorTexture(0, 0, 0, 0)
+    f.texture:SetAllPoints(f)
+
+    f.texture_overlay = f:CreateTexture(nil, "OVERLAY")
+    f.texture_overlay:SetTexture("Interface\\AddOns\\RareTrackerCore\\Icons\\Cross.tga")
+    f.texture_overlay:SetSize(10, 10)
+    f.texture_overlay:SetPoint("CENTER", f)
     
     f:SetScript("OnClick", function()
         parent:Hide()
         self.db.global.window.hide = true
+    end)
+  
+    -- Make things more intuitive by highlighting the button on mouseover.
+    f:SetScript("OnEnter", function(button)
+        button.is_mouseover = true
+        self.SetSimpleHighlight(button, 0.7)
+    end)
+    f:SetScript("OnLeave", function(button) 
+        button.is_mouseover = false
+        self.SetSimpleHighlight(button, 0)
     end)
 
     parent.close_button = f
@@ -586,23 +665,22 @@ function RareTracker:InitializeCategoryButtonsForZone(primary_id, rare_data, par
                 end
             end
         end)
-        self:ApplyHighlightOnMouseOver(f)
+
+        -- Make things more intuitive by highlighting the button on mouseover.
+        f:SetScript("OnEnter", function(button)
+            button.is_mouseover = true
+            self.SetSimpleHighlight(button, foreground_opacity)
+        end)
+        f:SetScript("OnLeave", function(button) 
+            button.is_mouseover = false
+            self.SetSimpleHighlight(button, foreground_opacity)
+        end)
         
         -- Buttons are not visible by default.
         f:Hide()
         
         parent.category_button_dictionary[primary_id..":"..category_name] = f
     end
-end
-
--- Make things more intuitive by highlighting the button on mouseover.
-function RareTracker:ApplyHighlightOnMouseOver(f)
-    f:SetScript("OnEnter", function(button) 
-        button.texture:SetColorTexture(1, 0.75, 0.2, foreground_opacity) 
-    end)
-    f:SetScript("OnLeave", function(button) 
-        button.texture:SetColorTexture(0, 0, 0, foreground_opacity) 
-    end)
 end
 
 -- Initialize the selection bar for the available categories.
