@@ -10,6 +10,8 @@ The **RareTrackerCore (RT)** addon is the central component of my collection of 
 - [RareTrackerWorldBosses (RTWB)](https://www.curseforge.com/wow/addons/raretrackerworldbosses-rtwb) for World Bosses
 - [RareTrackerMaw (RTMW)](https://www.curseforge.com/wow/addons/raretrackermaw-rtmw) for The Maw
 - [RareTrackerZerethMortis (RTZ)](https://www.curseforge.com/wow/addons/raretrackermaw-rtmw) for Zereth Mortis
+- [RareTrackerDragonflight (RTD)](https://www.curseforge.com/wow/addons/raretrackerdragonflight-rtd) for the Dragonflight zones
+- [RareTrackerTimelessIsle (RTTI)](https://www.curseforge.com/wow/addons/raretrackertimelessisle-rtti) for the Timeless Isle
 
 Alternatively, you can download the [RareTracker (RT)](https://www.curseforge.com/wow/addons/raretracker-rt) addon, which will automatically add all modules, including those that I might add in the future!
 
