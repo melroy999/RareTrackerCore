@@ -86,6 +86,9 @@ function RareTracker:OnZoneTransition()
     -- The zone the player is in.
     local zone_id = C_Map.GetBestMapForUnit("player")
     
+    -- The map id may not always be available. See bug #2 in the Dragonflight module.
+    if not zone_id then return end
+    
     -- Update the zone id and keep the last id.
     local last_zone_id = self.zone_id
     self.zone_id = self.zone_id_to_primary_id[zone_id]
@@ -267,7 +270,12 @@ end
 function RareTracker:VIGNETTE_MINIMAP_UPDATED(_, vignetteGUID, _)
     if chat_frame_loaded then
         local vignetteInfo = C_VignetteInfo.GetVignetteInfo(vignetteGUID)
-        local vignetteLocation = C_VignetteInfo.GetVignettePosition(vignetteGUID, C_Map.GetBestMapForUnit("player"))
+        local uiMapID = C_Map.GetBestMapForUnit("player")
+        
+        -- The map id may not always be available. See bug #2 in the Dragonflight module.
+        if not uiMapID then return end
+        
+        local vignetteLocation, _ = C_VignetteInfo.GetVignettePosition(vignetteGUID, uiMapID)
 
         if vignetteInfo and vignetteLocation then
             -- Report the entity.
@@ -527,8 +535,12 @@ function RareTracker:ProcessEntityHealth(npc_id, spawn_uid, percentage, x, y, ma
                 -- This code should only be reached when make_announcement is false.
                 self.current_coordinates[npc_id] = {x, y}
             else
+                -- The map id may not always be available. See bug #2 in the Dragonflight module.
+                local uiMapID = C_Map.GetBestMapForUnit("player")
+                if not uiMapID then return end
+                
                 -- Get the current position of the player.
-                local pos = C_Map.GetPlayerMapPosition(C_Map.GetBestMapForUnit("player"), "player")
+                local pos = C_Map.GetPlayerMapPosition(uiMapID, "player")
                 self.current_coordinates[npc_id] = {math.floor(pos.x * 10000 + 0.5) / 100, math.floor(pos.y * 10000 + 0.5) / 100}
             end
         end
