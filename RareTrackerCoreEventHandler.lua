@@ -161,8 +161,8 @@ function RareTracker:CheckForShardChange(zone_uid)
     if zone_uid ~= nil then
         local player_name, _ = UnitName("player")
         local player_realm = GetRealmName()
-        local zone_name = GetZoneText();
-        self.db.global.last_known_location[player_name.."-"..player_realm] = zone_name.." "..zone_uid.." "..date("%m/%d/%y %H:%M")
+        local zone_name = GetZoneText()
+        self.db.global.last_known_location[player_name.."-"..player_realm] = {zone_name=zone_name, zone_uid=zone_uid, time_stamp=time()}
     end
     
     return false
