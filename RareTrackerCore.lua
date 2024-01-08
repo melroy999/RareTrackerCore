@@ -72,6 +72,7 @@ local defaults = {
         ignored_rares = {},
         banned_NPC_ids = {},
         version = 0,
+        last_known_location = {},
     },
     profile = {
         minimap = {
@@ -362,6 +363,20 @@ function RareTracker:OnChatCommand(input)
                 print(L["<RT> The reset button is on cooldown. Please note that a reset is not needed "..
                       "to receive new timers. If it is your intention to reset the data, "..
                       "please do a /reload and click the reset button again."])
+            end
+        elseif cmd == "last" then
+            local ordered_keys = {}
+            for key, _ in pairs(self.db.global.last_known_location) do 
+                ordered_keys[#ordered_keys+1] = key 
+            end
+            table.sort(ordered_keys)
+            for i=1, #ordered_keys do
+                local key = ordered_keys[i]
+                print(key.." "..self.db.global.last_known_location[key])
+            end
+        elseif cmd == "resetlast" then
+            for key, value in pairs(self.db.global.last_known_location) do
+                self.db.global.last_known_location[key] = nil
             end
         end
     end

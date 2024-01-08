@@ -7,8 +7,11 @@ local C_VignetteInfo = C_VignetteInfo
 local GetServerTime = GetServerTime
 local CreateFrame = CreateFrame
 local GetChannelList = GetChannelList
+local UnitName = UnitName
+local GetZoneText = GetZoneText
 local IsQuestFlaggedCompleted = C_QuestLog.IsQuestFlaggedCompleted
 local PlaySoundFile = PlaySoundFile
+local GetRealmName = GetRealmName
 local select = select
 local date = date
 local time = time
@@ -153,6 +156,15 @@ function RareTracker:CheckForShardChange(zone_uid)
         self:ChangeShard(zone_uid)
         return true
     end
+    
+    -- Record which shard a given player was last on.
+    if zone_uid ~= nil then
+        local player_name, _ = UnitName("player")
+        local player_realm = GetRealmName()
+        local zone_name = GetZoneText();
+        self.db.global.last_known_location[player_name.."-"..player_realm] = zone_name.." "..zone_uid.." "..date("%m/%d/%y %H:%M")
+    end
+    
     return false
 end
 
