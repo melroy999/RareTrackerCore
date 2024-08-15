@@ -1,8 +1,8 @@
-## Interface: 100206
+## Interface: 110002
 ## Title: RareTrackerCore
 ## Notes: The core module of the RareTracker addons.
 ## Author: Melroy
-## Version: 2.4.12
+## Version: 2.4.14
 ## SavedVariables: RareTrackerDB
 ## OptionalDeps: TomTom
 ## IconTexture: Interface\AddOns\RareTrackerCore\Icons\RareTrackerIcon

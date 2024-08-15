@@ -455,7 +455,7 @@ function RareTracker:InitializeRareTableEntry(npc_id, rare_data, parent)
     f.status:SetSize(entity_status_width, 12)
     f.status:SetPoint("TOPRIGHT", 0, 0)
     f.status:SetText("--")
-    f.status:SetJustifyH("MIDDLE")
+    --f.status:SetJustifyH("CENTER")
     f.status:SetJustifyV("TOP")
     
     parent.entities[npc_id] = f
