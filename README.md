@@ -1,3 +1,9 @@
+# [DISCONTINUED] Broken by Patch 12.0 API Changes.
+
+As of Patch 12.0 (Midnight), Blizzard has implemented a **secret value** system for unit identity and health data. Unfortunately. this addon relies heavily on reading unit names and health states to function, and therefore, its core logic and functionality is now completely blocked by the game engine. 
+
+I don't see a way to work around these restrictions. Therefore, I have decided that this is a good point to retire the project. Thank you to everyone that used this addon and for all the support over the years.
+
 # RareTrackerCore (RT)
 
 The **RareTrackerCore (RT)** addon is the central component of my collection of rare tracker addons, used to track and share rare spawn timers in popular zones. The addon takes inspiration from the [RareCoordinator](https://www.curseforge.com/wow/addons/rarecoordinator) addon authored by [elvador](https://www.curseforge.com/members/elvador/followers), which is an addon that has served a similar purpose on the Timeless Isle. RareTrackerCore uses a hidden chat channel to communicate with other clients located in the same shard, such that it can always provide the most up-to-date rare spawn timers.
